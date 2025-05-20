@@ -1,5 +1,11 @@
 # @slub/edb-build-helper
 
+## 0.3.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
 ## 0.2.3
 
 ### Patch Changes

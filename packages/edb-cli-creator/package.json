@@ -1,6 +1,6 @@
 {
   "name": "@graviola/edb-cli-creator",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "CLI creator from the EDB framework",
   "type": "module",
   "main": "./dist/index.cjs",

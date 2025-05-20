@@ -1,7 +1,7 @@
 {
   "name": "@graviola/edb-debug-utils",
   "description": "Frontend Debug utilities for the EDB framework",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

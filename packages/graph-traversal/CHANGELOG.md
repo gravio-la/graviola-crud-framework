@@ -1,5 +1,17 @@
 # @slub/edb-graph-traversal
 
+## 1.3.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-core-utils@1.4.0
+  - @graviola/json-schema-utils@1.3.0
+
 ## 1.2.5
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@graviola/edb-wikidata-utils",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "provides some simple lookup methods for wikidata",
   "type": "module",
   "main": "./dist/index.cjs",

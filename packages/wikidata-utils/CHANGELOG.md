@@ -1,5 +1,13 @@
 # @graviola/edb-wikidata-utils
 
+## 1.0.5
+
+### Patch Changes
+
+- stabelize, streamline query hooks, cleanup
+- Updated dependencies
+  - @graviola/sparql-schema@1.3.0
+
 ## 1.0.4
 
 ### Patch Changes

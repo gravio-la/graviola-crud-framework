@@ -1,5 +1,11 @@
 # @graviola/edb-authorities
 
+## 0.2.4
+
+### Patch Changes
+
+- stabelize, streamline query hooks, cleanup
+
 ## 0.2.3
 
 ### Patch Changes

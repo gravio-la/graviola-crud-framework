@@ -1,5 +1,12 @@
 # @graviola/edb-virtualized-components
 
+## 1.0.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-ui-utils@0.2.6
+
 ## 1.0.6
 
 ### Patch Changes

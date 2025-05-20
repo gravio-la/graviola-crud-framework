@@ -1,5 +1,13 @@
 # @graviola/edb-ui-utils
 
+## 0.2.6
+
+### Patch Changes
+
+- stabelize, streamline query hooks, cleanup
+- Updated dependencies
+  - @graviola/edb-core-utils@1.4.0
+
 ## 0.2.5
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@graviola/restfull-fetch-db-impl",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Store implementation that fetches and stores data from a RESTful API",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 {
   "name": "@graviola/edb-global-types",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "types for EDB",
   "type": "module",
   "types": "./index.d.ts",

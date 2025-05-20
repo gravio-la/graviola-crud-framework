@@ -1,7 +1,7 @@
 {
   "name": "@graviola/test-prisma-cli",
   "description": "a test project to perform various tests on the prisma implementations",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "main": "index.js",
   "scripts": {

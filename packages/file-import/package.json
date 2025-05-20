@@ -1,6 +1,6 @@
 {
   "name": "@graviola/edb-file-import",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "nodejs file RDF file import utilities",
   "type": "module",
   "module": "./dist/index.js",

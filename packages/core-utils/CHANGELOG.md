@@ -1,5 +1,11 @@
 # @slub/edb-core-utils
 
+## 1.4.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
 ## 1.3.0
 
 ### Minor Changes

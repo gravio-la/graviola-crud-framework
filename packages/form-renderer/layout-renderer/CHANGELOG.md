@@ -1,5 +1,16 @@
 # @graviola/edb-layout-renderer
 
+## 1.2.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-ui-utils@0.2.6
+
 ## 1.1.5
 
 ### Patch Changes

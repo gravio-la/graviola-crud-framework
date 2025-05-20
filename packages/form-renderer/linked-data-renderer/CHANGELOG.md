@@ -1,5 +1,22 @@
 # @graviola/edb-linked-data-renderer
 
+## 2.0.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-advanced-components@1.3.0
+  - @graviola/edb-basic-components@1.2.0
+  - @graviola/edb-core-utils@1.4.0
+  - @graviola/json-schema-utils@1.3.0
+  - @graviola/edb-state-hooks@1.3.0
+  - @graviola/edb-ui-utils@0.2.6
+  - @graviola/edb-data-mapping@0.2.6
+
 ## 1.1.6
 
 ### Patch Changes

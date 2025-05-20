@@ -1,5 +1,11 @@
 # @graviola/semantic-jsonform-types
 
+## 1.2.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
 ## 1.1.4
 
 ### Patch Changes

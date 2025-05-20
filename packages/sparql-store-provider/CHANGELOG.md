@@ -1,5 +1,18 @@
 # @graviola/sparql-store-provider
 
+## 2.0.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/sparql-db-impl@1.3.0
+  - @graviola/edb-state-hooks@1.3.0
+  - @graviola/remote-query-implementations@1.2.4
+
 ## 1.1.5
 
 ### Patch Changes

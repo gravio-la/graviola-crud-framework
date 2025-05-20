@@ -1,5 +1,20 @@
 # @slub/edb-api
 
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-core-utils@1.4.0
+  - @graviola/edb-graph-traversal@1.3.0
+  - @graviola/json-schema-utils@1.3.0
+  - @graviola/sparql-db-impl@1.3.0
+  - @graviola/sparql-schema@1.3.0
+  - @slub/exhibition-schema@1.3.4
+  - @graviola/remote-query-implementations@1.2.4
+  - @slub/exhibition-sparql-config@1.2.5
+  - @graviola/prisma-db-impl@1.5.2
+
 ## 1.1.8
 
 ### Patch Changes

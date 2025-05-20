@@ -1,5 +1,16 @@
 # @graviola/edb-basic-components
 
+## 1.2.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.3.0
+
 ## 1.1.8
 
 ### Patch Changes

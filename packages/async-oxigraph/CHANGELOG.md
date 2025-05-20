@@ -1,5 +1,11 @@
 # @graviola/async-oxigraph
 
+## 0.2.0
+
+### Minor Changes
+
+- stabelize, streamline query hooks, cleanup
+
 ## 0.1.3
 
 ### Patch Changes

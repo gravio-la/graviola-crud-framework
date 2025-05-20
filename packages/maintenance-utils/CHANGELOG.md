@@ -1,5 +1,13 @@
 # @graviola/edb-maintenance-utils
 
+## 1.1.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-graph-traversal@1.3.0
+  - @graviola/json-schema-utils@1.3.0
+
 ## 1.1.5
 
 ### Patch Changes

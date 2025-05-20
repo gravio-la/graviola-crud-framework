@@ -1,6 +1,6 @@
 {
   "name": "@graviola/async-oxigraph",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "author": "Mads Holten Rasmussen<mads@qaecy.com>",
   "description": "",
   "main": "dist/index.js",
