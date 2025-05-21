@@ -26,6 +26,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTranslation } from "next-i18next";
 import { type ReactNode, useCallback, useState } from "react";
 
 const Search = styled("div")(({ theme }) => ({
@@ -54,7 +55,6 @@ export type MuiEditDialogProps = {
   editMode?: boolean;
   open?: boolean;
   title?: string;
-  search?: ReactNode;
   children?: ReactNode;
   actions?: ReactNode;
 };
@@ -69,17 +69,13 @@ export const MuiEditDialog = ({
   onRemove,
   onEdit,
   editMode,
-  search,
   actions,
 }: MuiEditDialogProps) => {
   const theme = useTheme();
   const [forceFullscreen, setForceFullscreen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
-  const [showSearch, setShowSearch] = useState(true);
 
-  const toggleSearch = useCallback(() => {
-    setShowSearch((prev) => !prev);
-  }, [setShowSearch]);
+  const { t } = useTranslation();
 
   return (
     <Dialog
@@ -102,16 +98,8 @@ export const MuiEditDialog = ({
       <AppBar position="static">
         <Toolbar variant="dense">
           <Typography variant="h6" color="inherit" component="div">
-            {title || "Bearbeiten oder Erstellen"}
+            {title || t("edit-dialog.title")}
           </Typography>
-          <Box sx={{ display: { xs: "block", md: "none" } }}>
-            <IconButton onClick={toggleSearch} color="inherit">
-              {showSearch ? <SearchOff /> : <SearchIcon />}
-            </IconButton>
-          </Box>
-          <Box sx={{ display: { xs: "none", md: "block" }, flexGrow: 3 }}>
-            <Search>{search}</Search>
-          </Box>
           <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: "flex" }}>
             {editMode && (
@@ -119,7 +107,7 @@ export const MuiEditDialog = ({
                 {onSave && (
                   <IconButton
                     size="large"
-                    aria-label="save your edits!"
+                    aria-label={t("edit-dialog.save")}
                     onClick={onSave}
                     color="inherit"
                   >
@@ -136,7 +124,7 @@ export const MuiEditDialog = ({
             {onEdit && (
               <IconButton
                 size="large"
-                aria-label="toggle edit mode"
+                aria-label={t("edit-dialog.toggle-edit-mode")}
                 onClick={onEdit}
                 color="inherit"
               >
@@ -146,7 +134,7 @@ export const MuiEditDialog = ({
             {onReload && (
               <IconButton
                 size="large"
-                aria-label="reload from server"
+                aria-label={t("edit-dialog.reload")}
                 onClick={onReload}
                 color="inherit"
               >
@@ -156,7 +144,7 @@ export const MuiEditDialog = ({
             <Box sx={{ display: { xs: "none", md: "block" } }}>
               <IconButton
                 size="large"
-                aria-label="close without saving"
+                aria-label={t("edit-dialog.fullscreen")}
                 onClick={() => setForceFullscreen((ff) => !ff)}
                 color="inherit"
               >
@@ -165,7 +153,7 @@ export const MuiEditDialog = ({
             </Box>
             <IconButton
               size="large"
-              aria-label="close without saving"
+              aria-label={t("edit-dialog.close")}
               onClick={onClose}
               color="inherit"
             >
@@ -175,35 +163,24 @@ export const MuiEditDialog = ({
             </IconButton>
           </Box>
         </Toolbar>
-        {showSearch && (
-          <Box sx={{ display: { xs: "block", md: "none" } }}>
-            <Toolbar variant="dense">
-              <Box sx={{ flexGrow: 3 }}>
-                <Search>{search}</Search>
-              </Box>
-            </Toolbar>
-          </Box>
-        )}
       </AppBar>
       <DialogContent>{children}</DialogContent>
-      <Box sx={{ display: { xs: "none", md: "block" } }}>
-        <DialogActions>
-          {actions || (
-            <>
-              {onCancel && (
-                <Button autoFocus onClick={onCancel}>
-                  abbrechen
-                </Button>
-              )}
-              {onSave && (
-                <Button onClick={onSave} autoFocus>
-                  speichern
-                </Button>
-              )}
-            </>
-          )}
-        </DialogActions>
-      </Box>
+      <DialogActions>
+        {actions || (
+          <>
+            {onCancel && (
+              <Button autoFocus onClick={onCancel}>
+                {t("cancel")}
+              </Button>
+            )}
+            {onSave && (
+              <Button onClick={onSave} autoFocus>
+                {t("save")}
+              </Button>
+            )}
+          </>
+        )}
+      </DialogActions>
     </Dialog>
   );
 };
