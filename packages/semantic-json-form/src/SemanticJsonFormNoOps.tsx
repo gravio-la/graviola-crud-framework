@@ -6,11 +6,7 @@ import {
   useRightDrawerState,
 } from "@graviola/edb-state-hooks";
 import { SemanticJsonFormNoOpsProps } from "@graviola/semantic-jsonform-types";
-import {
-  generateDefaultUISchema,
-  JsonFormsCore,
-  JsonSchema,
-} from "@jsonforms/core";
+import { JsonFormsCore, JsonSchema } from "@jsonforms/core";
 import { JsonForms } from "@jsonforms/react";
 import { Card, CardContent, Grid } from "@mui/material";
 import { merge } from "lodash-es";
@@ -18,7 +14,6 @@ import { useTranslation } from "next-i18next";
 import React, { FunctionComponent, useCallback, useMemo } from "react";
 
 import { OptionsModal } from "./OptionsModal";
-import { cleanProperty } from "@graviola/jsonld-utils";
 
 const WithCard = ({
   children,
@@ -65,8 +60,8 @@ export const SemanticJsonFormNoOps: FunctionComponent<
 
   const handleFormChange = useCallback(
     (state: Pick<JsonFormsCore, "data" | "errors">) => {
-      const cleaned = cleanProperty(state.data);
-      onChange?.(cleaned, "user");
+      console.log("state", state);
+      onChange?.(state.data, "user");
       if (onError) onError(state.errors);
     },
     [onChange, onError],

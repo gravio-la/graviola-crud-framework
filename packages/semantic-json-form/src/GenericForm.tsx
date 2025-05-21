@@ -4,8 +4,7 @@ import {
   useFormDataStore,
 } from "@graviola/edb-state-hooks";
 import { SemanticJsonForm } from "./SemanticJsonForm";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Typography } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { SemanticJsonFormProps } from "@graviola/semantic-jsonform-types";
 
 type OwnProps = {
