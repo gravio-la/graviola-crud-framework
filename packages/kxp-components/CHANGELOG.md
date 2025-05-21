@@ -1,5 +1,12 @@
 # @graviola/edb-kxp-components
 
+## 1.0.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-basic-components@1.2.1
+
 ## 1.0.7
 
 ### Patch Changes

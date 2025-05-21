@@ -1,5 +1,11 @@
 # @graviola/edb-basic-components
 
+## 1.2.1
+
+### Patch Changes
+
+- cleanup and mobile view + i18next
+
 ## 1.2.0
 
 ### Minor Changes
