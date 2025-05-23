@@ -38,7 +38,7 @@ export const SemanticJsonFormNoOps: FunctionComponent<
   onError,
   typeIRI,
   schema,
-  jsonFormsProps = {},
+  jsonFormsProps,
   onEntityDataChange,
   toolbar,
   searchText,
@@ -60,7 +60,6 @@ export const SemanticJsonFormNoOps: FunctionComponent<
 
   const handleFormChange = useCallback(
     (state: Pick<JsonFormsCore, "data" | "errors">) => {
-      console.log("state", state);
       onChange?.(state.data, "user");
       if (onError) onError(state.errors);
     },
@@ -122,7 +121,7 @@ export const SemanticJsonFormNoOps: FunctionComponent<
     renderers: jfpRenderers,
     config,
     ...jfpProps
-  } = jsonFormsProps;
+  } = jsonFormsProps || {};
   const finalJsonFormsProps = useMemo(() => {
     return {
       ...jfpProps,
