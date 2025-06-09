@@ -69,6 +69,7 @@ const uiSchemaWithImageUpload: Layout = {
       scope: "#/properties/description",
       options: {
         imageUploadOptions: {
+          uploadImage: (file: File) => Promise.resolve(file.name),
           openImageSelectDialog: () =>
             Promise.resolve({
               url: "https://example.com/image.png",

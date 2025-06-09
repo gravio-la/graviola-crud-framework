@@ -25,7 +25,7 @@ type ImageUploadOptions = {
   openImageSelectDialog?: (
     selectedText: string,
   ) => Promise<UploadedImage | null>;
-  uploadImage?: (file: File) => Promise<string>;
+  uploadImage?: (file: File) => Promise<UploadedImage | null>;
   deleteImage?: (imageUrl: string) => Promise<void>;
 };
 
@@ -44,8 +44,8 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
   } = props;
   const isValid = errors.length === 0;
   const appliedUiSchemaOptions = merge({}, config, uischema.options);
-  const { openImageSelectDialog, uploadImage, deleteImage } =
-    appliedUiSchemaOptions.imageUploadOptions || {};
+  const { openImageSelectDialog, uploadImage } =
+    (appliedUiSchemaOptions.imageUploadOptions || {}) as ImageUploadOptions;
 
   const [editMode, setEditMode] = useState(false);
 
@@ -97,6 +97,79 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
       handleChange_(newText);
     },
     [handleChange_],
+  );
+
+  // Drag and drop handlers for image upload
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    },
+    [],
+  );
+
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault();
+    },
+    [],
+  );
+
+  const handleDragLeave = useCallback(
+    (e: React.DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault();
+    },
+    [],
+  );
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault();
+
+      if (!uploadImage) return;
+
+      const files = Array.from(e.dataTransfer.files);
+      const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+      if (imageFiles.length === 0) return;
+
+      // Use current cursor position or insert at the end
+      const textarea = e.currentTarget;
+      const insertPosition =
+        textarea.selectionStart !== undefined
+          ? textarea.selectionStart
+          : textarea.value.length;
+
+      try {
+        const uploadPromises = imageFiles.map(async (file) => {
+          const uploadedImage = await uploadImage(file);
+          if (!uploadedImage) return null;
+          const altText =
+            uploadedImage?.alt || file.name.replace(/\.[^/.]+$/, "");
+          return `![${altText}](${uploadedImage?.url})`;
+        });
+
+        const imageMarkdowns = await Promise.all(uploadPromises);
+        const imagesText = imageMarkdowns.join("\n\n");
+
+        // Insert images at cursor position or end
+        const text = textarea.value;
+        const before = text.substring(0, insertPosition);
+        const after = text.substring(insertPosition);
+        const newText = before + imagesText + after;
+
+        handleChange_(newText);
+
+        // Set cursor position after inserted images
+        setTimeout(() => {
+          const newCursorPosition = insertPosition + imagesText.length;
+          textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+        }, 0);
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+      }
+    },
+    [uploadImage, handleChange_],
   );
 
   // Custom command for inserting images
@@ -154,6 +227,10 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
             textareaProps={{
               id: id + "-input",
               onPaste: handlePaste,
+              onDragOver: handleDragOver,
+              onDragEnter: handleDragEnter,
+              onDragLeave: handleDragLeave,
+              onDrop: handleDrop,
             }}
             value={(data || "") as string}
             onChange={handleChange_}
