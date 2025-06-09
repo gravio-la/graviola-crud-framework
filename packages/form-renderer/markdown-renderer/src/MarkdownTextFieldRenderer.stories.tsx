@@ -1,5 +1,5 @@
 import { materialCustomAnyOfControlTester } from "@graviola/edb-layout-renderer";
-import { JsonFormsCore } from "@jsonforms/core";
+import { JsonFormsCore, rankWith, scopeEndsWith } from "@jsonforms/core";
 import {
   materialCells,
   materialRenderers,
@@ -30,7 +30,7 @@ const schema = {
 const renderers = [
   ...materialRenderers,
   {
-    tester: materialCustomAnyOfControlTester,
+    tester: rankWith(10, scopeEndsWith("description")),
     renderer: MarkdownTextFieldRenderer,
   },
 ];
