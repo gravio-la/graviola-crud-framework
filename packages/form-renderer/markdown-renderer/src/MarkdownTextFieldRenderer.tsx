@@ -48,16 +48,36 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
     (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       e.preventDefault();
 
-      const htmlContent = e.clipboardData.getData("text/html"),
-        turndownService = new TurndownService(),
-        markdownContent = turndownService.turndown(htmlContent);
+      let contentToInsert = "";
+      const plainText = e.clipboardData.getData("text/plain");
+
+      // If shift key is pressed, insert as plain text by default
+      if ((e as any).shiftKey) {
+        contentToInsert = plainText;
+      } else {
+        const htmlContent = e.clipboardData.getData("text/html");
+
+        if (htmlContent) {
+          const turndownService = new TurndownService();
+          const markdownContent = turndownService.turndown(htmlContent);
+
+          if (markdownContent.trim()) {
+            contentToInsert = markdownContent;
+          } else {
+            contentToInsert = plainText;
+          }
+        } else {
+          contentToInsert = plainText;
+        }
+      }
+
       //insert text at cursor position
       const start = e.currentTarget.selectionStart,
         end = e.currentTarget.selectionEnd,
         text = e.currentTarget.value,
         before = text.substring(0, start),
         after = text.substring(end, text.length),
-        newText = before + markdownContent + after;
+        newText = before + contentToInsert + after;
       handleChange_(newText);
     },
     [handleChange_],
