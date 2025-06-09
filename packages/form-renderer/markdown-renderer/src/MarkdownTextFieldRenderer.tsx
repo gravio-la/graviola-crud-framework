@@ -1,6 +1,6 @@
 import { ControlProps, showAsRequired } from "@jsonforms/core";
 import { withJsonFormsControlProps } from "@jsonforms/react";
-import { Edit, EditOff } from "@mui/icons-material";
+import { Edit, EditOff, Image } from "@mui/icons-material";
 import {
   FormControl,
   FormLabel,
@@ -15,6 +15,19 @@ import rehypeSanitize from "rehype-sanitize";
 import TurndownService from "turndown";
 
 import MDEditor, { MDEditorMarkdown } from "./MDEditor";
+
+type UploadedImage = {
+  url: string;
+  alt: string;
+};
+
+type ImageUploadOptions = {
+  openImageSelectDialog?: (
+    selectedText: string,
+  ) => Promise<UploadedImage | null>;
+  uploadImage?: (file: File) => Promise<string>;
+  deleteImage?: (imageUrl: string) => Promise<void>;
+};
 
 const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
   const {
@@ -31,6 +44,9 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
   } = props;
   const isValid = errors.length === 0;
   const appliedUiSchemaOptions = merge({}, config, uischema.options);
+  const { openImageSelectDialog, uploadImage, deleteImage } =
+    appliedUiSchemaOptions.imageUploadOptions || {};
+
   const [editMode, setEditMode] = useState(false);
 
   const handleChange_ = useCallback(
@@ -83,6 +99,31 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
     [handleChange_],
   );
 
+  // Custom command for inserting images
+  const imageCommand = useMemo(() => {
+    if (!openImageSelectDialog) return null;
+
+    return {
+      name: "insertImage",
+      keyCommand: "insertImage",
+      buttonProps: { "aria-label": "Insert image" },
+      icon: <Image style={{ width: 12, height: 12 }} />,
+      execute: async (state: any, api: any) => {
+        try {
+          const uploadedImage = await openImageSelectDialog(
+            state.selectedText || "",
+          );
+          if (uploadedImage) {
+            const imageMarkdown = `![${uploadedImage.alt}](${uploadedImage.url})`;
+            api.replaceSelection(imageMarkdown);
+          }
+        } catch (error) {
+          console.error("Failed to insert image:", error);
+        }
+      },
+    };
+  }, [openImageSelectDialog]);
+
   return (
     <Hidden xsUp={!visible}>
       <FormControl
@@ -124,6 +165,7 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
                 ? false
                 : cmd
             }
+            extraCommands={imageCommand ? [imageCommand] : []}
           />
         ) : (
           <MDEditorMarkdown

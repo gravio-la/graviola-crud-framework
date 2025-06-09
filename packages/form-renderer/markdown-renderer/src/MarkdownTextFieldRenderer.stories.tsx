@@ -1,5 +1,11 @@
 import { materialCustomAnyOfControlTester } from "@graviola/edb-layout-renderer";
-import { JsonFormsCore, rankWith, scopeEndsWith } from "@jsonforms/core";
+import {
+  JsonFormsCore,
+  Layout,
+  rankWith,
+  Scopable,
+  scopeEndsWith,
+} from "@jsonforms/core";
 import {
   materialCells,
   materialRenderers,
@@ -51,6 +57,47 @@ export const MarkdownTextFieldRendererDefault = () => {
       cells={materialCells}
       onChange={handleFormChange}
       schema={schema}
+    />
+  );
+};
+
+const uiSchemaWithImageUpload: Layout = {
+  type: "VerticalLayout",
+  elements: [
+    {
+      type: "Control",
+      scope: "#/properties/description",
+      options: {
+        imageUploadOptions: {
+          openImageSelectDialog: () =>
+            Promise.resolve({
+              url: "https://example.com/image.png",
+              alt: "Example image",
+            }),
+        },
+      },
+    },
+  ],
+};
+
+export const MarkdownTextFieldRendererWithImageUpload = () => {
+  const [data, setData] = useState<any>({});
+
+  const handleFormChange = useCallback(
+    ({ data }: Pick<JsonFormsCore, "data" | "errors">) => {
+      setData(data);
+    },
+    [setData],
+  );
+
+  return (
+    <JsonForms
+      data={data}
+      renderers={renderers}
+      cells={materialCells}
+      onChange={handleFormChange}
+      schema={schema}
+      uischema={uiSchemaWithImageUpload}
     />
   );
 };
