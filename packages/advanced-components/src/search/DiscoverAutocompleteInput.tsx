@@ -19,6 +19,7 @@ import {
   extractFieldIfString,
 } from "@graviola/edb-data-mapping";
 import { useTranslation } from "next-i18next";
+import { withEllipsis } from "@graviola/edb-ui-utils";
 
 interface OwnProps {
   selected?: AutocompleteSuggestion | null;
@@ -66,7 +67,11 @@ export const DiscoverAutocompleteInput: FunctionComponent<
   allowHtmlLabel = false,
 }) => {
   const {
-    queryBuildOptions: { primaryFields, typeIRItoTypeName },
+    queryBuildOptions: {
+      primaryFields,
+      primaryFieldExtracts,
+      typeIRItoTypeName,
+    },
   } = useAdbContext();
   const { dataStore } = useDataStore();
   const [selectedValue, setSelectedUncontrolled] =
@@ -117,7 +122,8 @@ export const DiscoverAutocompleteInput: FunctionComponent<
           ).map((doc) => {
             const { label, image, description } = applyToEachField(
               doc,
-              primaryFields[typeName] as PrimaryField,
+              primaryFieldExtracts[typeName] ||
+                (primaryFields[typeName] as PrimaryField),
               extractFieldIfString,
             );
             const suggestion = {
@@ -129,7 +135,7 @@ export const DiscoverAutocompleteInput: FunctionComponent<
             return suggestion;
           })
         : [],
-    [typeIRI, limit, dataStore, primaryFields],
+    [typeIRI, limit, dataStore, primaryFields, primaryFieldExtracts],
   );
 
   const { data: basicFields } = useQuery({
@@ -139,9 +145,9 @@ export const DiscoverAutocompleteInput: FunctionComponent<
       if (value && typeIRI) {
         const typeName = typeIRItoTypeName(typeIRI);
         const data = await dataStore.loadDocument(typeName, value);
-        const fieldDeclaration = primaryFields[typeName] as
-          | PrimaryField
-          | undefined;
+        const fieldDeclaration =
+          primaryFieldExtracts[typeName] ||
+          (primaryFields[typeName] as PrimaryField | undefined);
         return applyToEachField(data, fieldDeclaration, extractFieldIfString);
       }
       return null;
@@ -184,7 +190,13 @@ export const DiscoverAutocompleteInput: FunctionComponent<
       renderOption={(props, option: AutocompleteSuggestion) =>
         !option.value && onCreateNew ? (
           <ListItem disablePadding {...props} key="create-new">
-            <ListItemButton>
+            <ListItemButton
+              onKeyUp={(e) => {
+                if (e.key === "Enter") {
+                  onCreateNew?.(searchString);
+                }
+              }}
+            >
               <AddIcon />
               <ListItemText primary={t("Create new entity", { typeName })} />
             </ListItemButton>
@@ -203,7 +215,7 @@ export const DiscoverAutocompleteInput: FunctionComponent<
                 },
               }}
               primary={allowHtmlLabel ? parse(option.label) : option.label}
-              secondary={option.description}
+              secondary={withEllipsis(option.description, 50)}
             />
           </ListItem>
         )

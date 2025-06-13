@@ -79,7 +79,6 @@ export const EntityChip = ({
   const showDetailModal = useCallback(
     (e: MouseEvent) => {
       e.preventDefault();
-      console.log("showDetailModal", entityIRI, classIRI);
       NiceModal.show(EntityDetailModal, {
         entityIRI,
         typeIRI: classIRI,
