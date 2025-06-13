@@ -90,13 +90,20 @@ export const DiscoverAutocompleteInput: FunctionComponent<
     (e: React.SyntheticEvent, item: AutocompleteSuggestion | null) => {
       //e.stopPropagation();
       //e.preventDefault();
+      if (item?.value === null) {
+        onCreateNew?.(searchString);
+        // Reset selection state immediately after triggering create new
+        onSelectionChange?.(null);
+        setSelectedUncontrolled(null);
+        onSearchValueChange?.(searchString);
+        setSearchString(searchString);
+        return;
+      }
+
       onSelectionChange?.(item);
       setSelectedUncontrolled(item);
       onSearchValueChange?.(null);
       setSearchString(null);
-      if (item?.value === null) {
-        onCreateNew?.(searchString);
-      }
     },
     [
       onSelectionChange,
