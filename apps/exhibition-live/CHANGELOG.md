@@ -1,5 +1,17 @@
 # adb-next
 
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-basic-components@1.2.1
+  - @graviola/edb-advanced-components@1.3.1
+  - @graviola/entity-finder@1.2.1
+  - @graviola/edb-linked-data-renderer@2.0.1
+  - @graviola/semantic-json-form@1.2.1
+  - @graviola/edb-table-components@1.2.1
+
 ## 0.2.7
 
 ### Patch Changes

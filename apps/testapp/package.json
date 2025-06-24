@@ -1,7 +1,7 @@
 {
   "name": "testapp",
   "private": true,
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,9 +22,9 @@
     "@graviola/entity-finder": "workspace:*",
     "@graviola/json-schema-utils": "workspace:*",
     "@graviola/jsonld-utils": "workspace:*",
-    "@graviola/sparql-store-provider": "workspace:*",
-    "@graviola/semantic-jsonform-types": "workspace:*",
     "@graviola/semantic-json-form": "workspace:*",
+    "@graviola/semantic-jsonform-types": "workspace:*",
+    "@graviola/sparql-store-provider": "workspace:*",
     "@jsonforms/core": "^3.5.1",
     "@jsonforms/material-renderers": "^3.5.1",
     "@jsonforms/react": "^3.5.1",
