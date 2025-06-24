@@ -33,5 +33,3 @@ jobs:
       - run: bun build:packages
       - name: Publish packages
         run: bun run publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
