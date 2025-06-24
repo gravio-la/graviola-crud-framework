@@ -30,7 +30,7 @@
     "@graviola/json-schema-prisma-utils": "workspace:*",
     "@graviola/remote-query-implementations": "workspace:*",
     "@graviola/sparql-schema": "workspace:*",
-    "@tpluscode/sparql-builder": "^0.3.31",
+    "@tpluscode/sparql-builder": "^3.0.1",
     "cmd-ts": "^0.13.0",
     "json-schema": "^0.4.0",
     "@prisma/client": "^5.17.0",

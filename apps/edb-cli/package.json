@@ -34,7 +34,7 @@
     "@graviola/edb-data-mapping": "workspace:*",
     "@graviola/edb-cli-creator": "workspace:*",
     "@graviola/edb-file-import": "workspace:*",
-    "@tpluscode/sparql-builder": "^0.3.31",
+    "@tpluscode/sparql-builder": "^3.0.1",
     "cmd-ts": "^0.13.0",
     "uuid": "^10.0.0",
     "csv-parse": "^5.5.6"

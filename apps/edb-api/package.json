@@ -41,7 +41,7 @@
     "@graviola/remote-query-implementations": "workspace:*",
     "@graviola/sparql-schema": "workspace:*",
     "@graviola/json-schema-utils": "workspace:*",
-    "@tpluscode/sparql-builder": "^0.3.31",
+    "@tpluscode/sparql-builder": "^3.0.1",
     "qs": "^6.12.3",
     "cmd-ts": "^0.13.0",
     "elysia": "^1.1",

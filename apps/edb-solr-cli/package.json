@@ -29,7 +29,7 @@
     "@graviola/edb-graph-traversal": "workspace:*",
     "@graviola/remote-query-implementations": "workspace:*",
     "@graviola/sparql-schema": "workspace:*",
-    "@tpluscode/sparql-builder": "^0.3.31",
+    "@tpluscode/sparql-builder": "^3.0.1",
     "node-fetch": "^3.3.2",
     "lodash-es": "^4.17.21",
     "cmd-ts": "^0.13.0"
