@@ -34,13 +34,15 @@
   },
   "dependencies": {
     "@graviola/edb-core-utils": "workspace:*",
-    "@graviola/jsonld-utils": "workspace:*",
+    "@graviola/edb-graph-traversal": "workspace:*",
     "@graviola/json-schema-utils": "workspace:*",
-    "@graviola/edb-graph-traversal": "workspace:*"
+    "@graviola/jsonld-utils": "workspace:*",
+    "@tpluscode/rdf-ns-builders": "^5",
+    "@tpluscode/rdf-string": "^1.3.4",
+    "@tpluscode/sparql-builder": "^3.0.1"
   },
   "devDependencies": {
-    "@rdfjs/types": "^1.1.0",
-    "@tpluscode/rdf-ns-builders": "^4.3.0",
+    "@rdfjs/types": "^2.0.1",
     "@graviola/edb-build-helper": "workspace:*",
     "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-tsconfig": "workspace:*",
@@ -55,7 +57,6 @@
   "peerDependencies": {
     "@rdfjs/data-model": "^2.0.2",
     "@rdfjs/parser-jsonld": "^2.1.1",
-    "@tpluscode/sparql-builder": "^0.3.31",
     "json-schema": "^0.4.0",
     "jsonld": "^8.3.2",
     "jsonld-context-parser": "^2.4.0",

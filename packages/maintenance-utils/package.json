@@ -28,7 +28,7 @@
     "publish-clean": "bun run clean-package && npm publish --access public && bun run clean-package restore"
   },
   "devDependencies": {
-    "@rdfjs/types": "^1.1.0",
+    "@rdfjs/types": "^2.0.1",
     "@graviola/edb-build-helper": "workspace:*",
     "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-tsconfig": "workspace:*",
@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^2.0.2",
-    "@tpluscode/rdf-ns-builders": "^4.3.0",
+    "@tpluscode/rdf-ns-builders": "^5",
     "@graviola/json-schema-utils": "workspace:*",
     "@graviola/edb-graph-traversal": "workspace:*"
   },

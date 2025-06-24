@@ -18,11 +18,11 @@
   },
   "peerDependencies": {
     "@rdfjs/namespace": "^2.0.1",
-    "@rdfjs/types": "^1.1.0"
+    "@rdfjs/types": "^2.0.1"
   },
   "devDependencies": {
     "@rdfjs/namespace": "^2.0.1",
-    "@rdfjs/types": "^1.1.0"
+    "@rdfjs/types": "^2.0.1"
   },
   "typedocOptions": {
     "entryPoints": [

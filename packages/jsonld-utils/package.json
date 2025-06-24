@@ -41,7 +41,7 @@
     "@graviola/edb-tsconfig": "workspace:*",
     "@graviola/edb-tsup-config": "workspace:*",
     "eslint-config-edb": "workspace:*",
-    "@rdfjs/types": "^1.1.0",
+    "@rdfjs/types": "^2.0.1",
     "json-schema": "^0.4.0",
     "typescript": "^5.8.2"
   },

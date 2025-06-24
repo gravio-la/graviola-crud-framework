@@ -29,7 +29,7 @@
     "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-tsconfig": "workspace:*",
     "@graviola/edb-tsup-config": "workspace:*",
-    "@rdfjs/types": "^1.1.0",
+    "@rdfjs/types": "^2.0.1",
     "@types/jest": "^29.5.12",
     "@types/json-schema": "^7.0.14",
     "eslint-config-edb": "workspace:*",

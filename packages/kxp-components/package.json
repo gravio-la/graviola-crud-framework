@@ -24,11 +24,11 @@
     "@graviola/edb-kxp-utils": "workspace:*",
     "@graviola/edb-marc-to-rdf": "workspace:*",
     "@graviola/edb-basic-components": "workspace:*",
-    "@tpluscode/rdf-ns-builders": "^4.3.0"
+    "@tpluscode/rdf-ns-builders": "^5"
   },
   "devDependencies": {
     "@graviola/edb-tsup-config": "workspace:*",
-    "@rdfjs/types": "^1.1.0"
+    "@rdfjs/types": "^2.0.1"
   },
   "peerDependencies": {
     "@ebay/nice-modal-react": ">=1.2",
