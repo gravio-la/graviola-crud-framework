@@ -100,6 +100,21 @@ Consult the [Oxigraph GitHub repository](https://github.com/oxigraph/oxigraph) f
 
 Storage endpoints can be configured either dynamically at runtime using the settings modal or by providing a `SPARQL_ENDPOINT` environment variable at build time.
 
+## Security Disclaimer
+
+**Warning**: The SPARQL implementation in this framework was designed primarily for use with open knowledge bases, with a focus on supporting SPARQL-compliant endpoints. Security considerations were not the primary focus during development, and as such, there are potential vulnerabilities that users should be aware of:
+
+- **Query Injection**: The current implementation may be susceptible to SPARQL query injection attacks.
+- **Data Exposure**: There is a risk of unintended exposure of data from the graph due to insufficient access controls.
+
+We acknowledge these limitations and plan to address them in future releases by implementing:
+
+- Access Control Lists (ACLs)
+- Query sanitization and validation (currently done by using @tpluscode/sparql-builder and @tpluscode/rdf-strings)
+- Data masking and filtering capabilities
+
+If you are using this framework in a production environment with sensitive data, we strongly recommend implementing additional security measures at the application or infrastructure level.
+
 ## Development
 
 ### Committing and Contributing
@@ -159,8 +174,7 @@ The framework uses the [RDFJS](https://rdf.js.org/) stack for RDF processing, en
 - **@rdfjs/dataset**: Temporary in-memory RDF store
 - **oxigraph**: SPARQL 1.1 compliant RDF storage in browser (WebWorker) or server
 - **@tpluscode/rdfine**: Common RDF vocabularies and typesafe namespaces
-- **SPARQL.js**: SPARQL query generation
-- **sparql-http-client**: SPARQL query execution and triple streaming
+- **@tpluscode/sparql-builder**: SPARQL query generation
 - **clownface**: RDF graph traversal
 
 ### Database Implementations
@@ -173,11 +187,15 @@ The framework uses the [RDFJS](https://rdf.js.org/) stack for RDF processing, en
 ### React and UI
 
 - **React**: UI component library
-- **Material UI**: Component design system
+- **Material UI**: Component design system (up to Version 6)
 - **JSON Forms**: Form generation from JSON Schema
 - **React Query**: Data fetching and caching
 - **Zustand**: State management
-- **Next.js**: Application framework (for the exhibition-live app)
+
+### React compatibility
+
+- **Next.js**: Next.js is supported and tested with the exhibition-live app
+- **Vite React**: best React compatibility for the frontend
 
 ## Copyright and License
 
