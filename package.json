@@ -44,7 +44,7 @@
     "precommit": "lint-staged",
     "changeset:init": "changeset init",
     "changeset": "changeset",
-    "publish": "turbo run publish-clean --continue --concurrency 2; bun run restore",
+    "publish": "turbo run publish-clean --continue --concurrency 1; bun run restore",
     "helper:deps": "bun ./packages/build-helper/get-dependencies.js",
     "build:prisma": "turbo run build:prisma && sed -i \"s/env(\\\"DATABASE_PROVIDER\\\")/\\\"${DATABASE_PROVIDER:-sqlite}\\\"/g\" ./prisma/*.prisma",
     "prisma:exhibition:generate": "prisma generate --schema ./prisma/exhibition.prisma",
