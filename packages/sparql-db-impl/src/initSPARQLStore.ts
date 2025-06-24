@@ -21,9 +21,7 @@ import type { JSONSchema7 } from "json-schema";
 
 import type { SPARQLDataStoreConfig } from "./SPARQLDataStoreConfig";
 
-export const initSPARQLStore = <S extends AbstractDatastore>(
-  dataStoreConfig,
-): S => {
+export const initSPARQLStore = (dataStoreConfig): AbstractDatastore => {
   const {
     defaultPrefix,
     jsonldContext,
@@ -115,7 +113,7 @@ export const initSPARQLStore = <S extends AbstractDatastore>(
       },
     };
   };
-  return {
+  const store: AbstractDatastore = {
     typeNameToTypeIRI,
     typeIRItoTypeName: (iri: string) => iri.replace(defaultPrefix, ""),
     importDocument: async (typeName, entityIRI, importStore) => {
@@ -284,7 +282,7 @@ export const initSPARQLStore = <S extends AbstractDatastore>(
       return getClasses(entityIRI, selectFetch, {
         defaultPrefix,
         queryBuildOptions,
-      });
+      }).then((classes) => classes || []);
     },
     iterableImplementation: {
       listDocuments: (typeName, limit) => {
@@ -294,5 +292,7 @@ export const initSPARQLStore = <S extends AbstractDatastore>(
         return findDocumentsIterable(typeName, limit, query.search);
       },
     },
-  } as unknown as S;
+  };
+
+  return store;
 };
