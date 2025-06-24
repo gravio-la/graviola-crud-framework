@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   ButtonGroup,
   Container,
@@ -7,34 +8,55 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import CodeIcon from "@mui/icons-material/Code";
 import "./App.css";
 import { GenericForm } from "@graviola/semantic-json-form";
 import { useState } from "react";
 
 function App() {
   const [itemUrl, setItemUrl] = useState<string | undefined>(
-    "https://www.example.org/Item/1yjpjqkptbn",
+    "https://www.example.org/WeldedComponent/1yjpjqkptbn",
   );
   const [inputURL, setInputURL] = useState<string>(
-    "http://www.example.org/Item/1yjpjqkptbn",
+    "http://www.example.org/WeldedComponent/1yjpjqkptbn",
   );
   const [formData, setFormData] = useState<any>(undefined);
 
+  const [showControls, setShowControls] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const [hideForm, setHideForm] = useState(false);
   const handleHideAndShow = () => {
     setHideForm(!hideForm);
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Generic Form with Linked Data Example
-      </Typography>
-      <Typography variant="h6" component="h2" gutterBottom align="center">
-        {itemUrl}
-      </Typography>
+    <Box sx={{ mt: 4, width: "600px" }}>
+      <ButtonGroup sx={{ mb: 2 }}>
+        <Button
+          onClick={() => setShowControls(!showControls)}
+          variant={showControls ? "contained" : "outlined"}
+          startIcon={<VisibilityIcon />}
+        >
+          Controls
+        </Button>
+        <Button
+          onClick={() => setShowDebug(!showDebug)}
+          variant={showDebug ? "contained" : "outlined"}
+          startIcon={<CodeIcon />}
+        >
+          Debug
+        </Button>
+      </ButtonGroup>
 
-      <Paper sx={{ mb: 2, p: 4, textAlign: "left" }}>
+      <Paper
+        sx={{
+          mb: 2,
+          p: 4,
+          textAlign: "left",
+          display: showControls ? "block" : "none",
+        }}
+      >
         <FormGroup
           sx={{
             display: "flex",
@@ -62,8 +84,9 @@ function App() {
       {!hideForm ? (
         <GenericForm
           entityIRI={itemUrl}
-          typeName="Item"
+          typeName="WeldedComponent"
           onFormDataChange={setFormData}
+          wrapWithinCard={false}
         />
       ) : (
         <Typography variant="h4" component="h1" gutterBottom align="center">
@@ -71,12 +94,19 @@ function App() {
         </Typography>
       )}
 
-      <Paper sx={{ mt: 4, p: 2, textAlign: "left" }}>
+      <Paper
+        sx={{
+          mt: 4,
+          p: 2,
+          textAlign: "left",
+          display: showDebug ? "block" : "none",
+        }}
+      >
         <code>
           <pre>{formData && JSON.stringify(formData, null, 2)}</pre>
         </code>
       </Paper>
-    </Container>
+    </Box>
   );
 }
 

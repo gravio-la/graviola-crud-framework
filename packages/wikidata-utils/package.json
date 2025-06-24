@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@comunica/types": "^2.10.0",
-    "@rdfjs/types": "^1.0.2",
+    "@rdfjs/types": "^2.0.1",
     "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-tsconfig": "workspace:*",
     "@graviola/edb-tsup-config": "workspace:*",
