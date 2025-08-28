@@ -7,16 +7,13 @@ import {
   Search as SearchIcon,
   Edit as EditIcon,
   EditOff as EditOffIcon,
-  SearchOff,
 } from "@mui/icons-material";
 import {
-  alpha,
   AppBar,
   Backdrop,
   Badge,
   Box,
   IconButton,
-  styled,
   Toolbar,
   Typography,
 } from "@mui/material";
@@ -27,23 +24,7 @@ import DialogContent from "@mui/material/DialogContent";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTranslation } from "next-i18next";
-import { type ReactNode, useCallback, useState } from "react";
-
-const Search = styled("div")(({ theme }) => ({
-  position: "relative",
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  "&:hover": {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  width: "100%",
-  [theme.breakpoints.up("sm")]: {
-    marginLeft: theme.spacing(3),
-    width: "auto",
-  },
-}));
+import { type ReactNode, useState } from "react";
 
 export type MuiEditDialogProps = {
   onCancel?: () => void;
