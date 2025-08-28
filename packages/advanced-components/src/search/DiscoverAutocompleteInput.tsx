@@ -116,32 +116,50 @@ export const DiscoverAutocompleteInput: FunctionComponent<
   );
 
   const load = useCallback(
-    async (searchString?: string) =>
-      typeIRI
-        ? (
-            await dataStore.findDocuments(
-              typeName,
-              {
-                search: searchString || null,
-              },
-              limit,
-            )
-          ).map((doc) => {
-            const { label, image, description } = applyToEachField(
-              doc,
-              primaryFieldExtracts[typeName] ||
-                (primaryFields[typeName] as PrimaryField),
-              extractFieldIfString,
-            );
-            const suggestion = {
-              label,
-              description,
-              image,
-              value: doc["@id"],
-            } as AutocompleteSuggestion;
-            return suggestion;
-          })
-        : [],
+    async (searchString?: string) => {
+      if (!typeIRI) {
+        return [];
+      }
+      if (typeof dataStore.findEntityByTypeName === "function") {
+        const items = await dataStore.findEntityByTypeName(
+          typeName,
+          searchString,
+          limit,
+        );
+        return items.map((item) => {
+          return {
+            label: item.label,
+            description: item.description,
+            image: item.image,
+            value: item.entityIRI,
+          } as AutocompleteSuggestion;
+        });
+      }
+      return (
+        await dataStore.findDocuments(
+          typeName,
+          {
+            search: searchString || null,
+          },
+          limit,
+        )
+      ).map((doc) => {
+        const { label, image, description } = doc;
+        applyToEachField(
+          doc,
+          primaryFieldExtracts[typeName] ||
+            (primaryFields[typeName] as PrimaryField),
+          extractFieldIfString,
+        );
+        const suggestion = {
+          label,
+          description,
+          image,
+          value: doc["@id"],
+        } as AutocompleteSuggestion;
+        return suggestion;
+      });
+    },
     [typeIRI, limit, dataStore, primaryFields, primaryFieldExtracts],
   );
 
