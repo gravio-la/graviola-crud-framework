@@ -26,26 +26,22 @@ import { Box, Grid, IconButton, List, Paper, Tooltip } from "@mui/material";
 import { ErrorObject } from "ajv";
 import { JSONSchema7 } from "json-schema";
 import { JSONSchema } from "json-schema-to-ts";
-import { orderBy, uniqBy } from "lodash-es";
+import { cloneDeep, orderBy, uniqBy } from "lodash-es";
 import merge from "lodash-es/merge";
 import { useTranslation } from "next-i18next";
 import { useSnackbar } from "notistack";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ArrayLayoutToolbar } from "./ArrayToolbar";
 import { SemanticFormsInline } from "./SemanticFormsInline";
-import { SemanticFormsModal } from "./SemanticFormsModal";
 import { SimpleExpandPanelRenderer } from "./SimpleExpandPanelRenderer";
 
 const uiSchemaOptionsSchema = {
   type: "object",
   properties: {
+    dropdown: {
+      type: "boolean",
+    },
     labelAsHeadline: {
       type: "boolean",
     },
@@ -78,6 +74,12 @@ const uiSchemaOptionsSchema = {
     },
     imagePath: {
       type: "string",
+    },
+    showCreateButton: {
+      type: "boolean",
+    },
+    allowCreateMultiple: {
+      type: "boolean",
     },
   },
 } as const satisfies JSONSchema;
@@ -133,7 +135,6 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
     () => typeIRIToTypeName(typeIRI),
     [typeIRI, typeIRIToTypeName],
   );
-  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const { t } = useTranslation();
 
@@ -153,11 +154,55 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
     },
     [setFormData],
   );
+  const {
+    isReifiedStatement,
+    orderBy: orderByPropertyPath,
+    autoFocusOnValid,
+    additionalKnowledgeSources,
+    elementDetailItemPath,
+    elementLabelTemplate,
+    elementLabelProp = "label",
+    imagePath,
+    labelAsHeadline,
+    hideRequiredAsterisk,
+    prepareNewEntityData,
+    dropdown,
+    showCreateButton,
+    allowCreateMultiple,
+  } = useMemo(() => {
+    const appliedUiSchemaOptions = merge({}, config, uischema.options);
+    try {
+      if (validate(uiSchemaOptionsSchema, appliedUiSchemaOptions)) {
+        const prepareNewEntityData =
+          typeof appliedUiSchemaOptions.prepareNewEntityData === "function"
+            ? appliedUiSchemaOptions.prepareNewEntityData
+            : undefined;
+        return {
+          ...appliedUiSchemaOptions,
+          prepareNewEntityData,
+        };
+      } else {
+        throw new Error("Invalid uiSchemaOptions");
+      }
+    } catch (e) {
+      console.error("Invalid uiSchemaOptions", appliedUiSchemaOptions);
+      return {
+        prepareNewEntityData: undefined,
+      };
+    }
+  }, [config, uischema.options]);
 
-  const handleCreateNew = useCallback(() => {
-    setFormData(irisToData(createEntityIRI(typeName), typeIRI));
-    setModalIsOpen(true);
-  }, [setModalIsOpen, setFormData, typeIRI, typeName]);
+  const prepareNewEntityDataFinal = useCallback(
+    (stub: any) => {
+      const _data =
+        prepareNewEntityData && typeof prepareNewEntityData === "function"
+          ? prepareNewEntityData(cloneDeep(core.data))
+          : {};
+      return { ..._data, ...(stub || {}) };
+    },
+    [core.data, prepareNewEntityData],
+  );
+
   const subSchema = useMemo(
     () =>
       bringDefinitionToTop(rootSchema as JSONSchema7, typeName) as JsonSchema,
@@ -188,32 +233,6 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
         });
       });
   }, [saveMutation, typeIRI, typeName, createEntityIRI, addItem, setFormData]);
-
-  const handleAddNew = useCallback(() => {
-    setModalIsOpen(false);
-    //if(typeof saveMethod === 'function')  saveMethod();
-    addItem(path, formData)();
-    setFormData({});
-  }, [setModalIsOpen, addItem, formData, setFormData, typeIRI]);
-
-  const {
-    isReifiedStatement,
-    orderBy: orderByPropertyPath,
-    autoFocusOnValid,
-    additionalKnowledgeSources,
-    elementDetailItemPath,
-    elementLabelTemplate,
-    elementLabelProp = "label",
-    imagePath,
-    labelAsHeadline,
-    hideRequiredAsterisk,
-  } = useMemo(() => {
-    const appliedUiSchemaOptions = merge({}, config, uischema.options);
-    if (validate(uiSchemaOptionsSchema, appliedUiSchemaOptions)) {
-      return appliedUiSchemaOptions;
-    }
-    return {};
-  }, [config, uischema.options]);
 
   const [inlineErrors, setInlineErrors] = useState<ErrorObject[] | null>(null);
   const handleErrors = useCallback(
@@ -308,30 +327,16 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
         path={path}
         schema={schema as JsonSchema7 | undefined}
         addItem={handleAddItem}
-        onCreate={handleCreateNew}
         createDefault={innerCreateDefaultValue}
         isReifiedStatement={isReifiedStatement}
         formsPath={makeFormsPath(config?.formsPath, path)}
         additionalKnowledgeSources={additionalKnowledgeSources}
         typeIRI={typeIRI}
+        prepareNewEntityData={prepareNewEntityDataFinal}
+        dropdown={Boolean(dropdown)}
+        showCreateButton={showCreateButton}
+        allowCreateMultiple={allowCreateMultiple}
       />
-      {modalIsOpen && (
-        <SemanticFormsModal
-          schema={subSchema}
-          entityIRI={formData["@id"]}
-          formData={formData}
-          typeIRI={typeIRI}
-          label={label}
-          open={modalIsOpen}
-          askClose={handleAddNew}
-          askCancel={() => setModalIsOpen(false)}
-          onChange={(entityIRI) =>
-            entityIRI && setFormData({ "@id": entityIRI })
-          }
-          onFormDataChange={(data) => setFormData(data)}
-          formsPath={makeFormsPath(config?.formsPath, path)}
-        />
-      )}
       {isReifiedStatement && (
         <Paper elevation={1} sx={{ p: 2, marginTop: 2, marginBottom: 1 }}>
           <Grid
@@ -369,6 +374,7 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
                     </>
                   )
                 }
+                enhance
                 onClose={() => setTooltipEnabled(false)}
                 open={tooltipEnabled && inlineErrors?.length > 0}
               >

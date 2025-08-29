@@ -34,6 +34,7 @@ import { JSONSchema7 } from "json-schema";
 import merge from "lodash-es/merge";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFormHelper } from "./formHelper";
+import cloneDeep from "lodash-es/cloneDeep";
 
 const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
   const {
@@ -60,12 +61,27 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
   const appliedUiSchemaOptions = merge({}, config, uischema.options);
   const { $ref, typeIRI } = appliedUiSchemaOptions.context || {};
   const enableFinder = appliedUiSchemaOptions.enableFinder || false;
+  const ctx = useJsonForms();
+  const prepareNewEntityData =
+    typeof appliedUiSchemaOptions.prepareNewEntityData === "function"
+      ? appliedUiSchemaOptions.prepareNewEntityData
+      : undefined;
+  const prepareNewEntityDataFinal = useCallback(
+    (stub: any) => {
+      const _data =
+        prepareNewEntityData && typeof prepareNewEntityData === "function"
+          ? prepareNewEntityData(cloneDeep(ctx?.core?.data || {}))
+          : {};
+      return { ..._data, ...(stub || {}) };
+    },
+    [ctx?.core?.data, prepareNewEntityData],
+  );
+
   const { registerModal } = useModalRegistry(NiceModal);
   const typeName = useMemo(
     () => typeIRI && typeIRIToTypeName(typeIRI),
     [typeIRI, typeIRIToTypeName],
   );
-  const ctx = useJsonForms();
   const [realLabel, setRealLabel] = useState("");
   const formsPath = useMemo(
     () => makeFormsPath(config?.formsPath, path),
@@ -184,14 +200,16 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
     const modalID = `edit-${typeIRI}-${entityIRI}`;
     registerModal(modalID, EditEntityModal);
     setDisabled(true);
+    const newItemStub = {
+      "@id": entityIRI,
+      "@type": typeIRI,
+      [defaultLabelKey]: searchString,
+    };
+    const newItem = prepareNewEntityDataFinal(newItemStub);
     NiceModal.show(modalID, {
       entityIRI,
       typeIRI,
-      data: {
-        "@id": entityIRI,
-        "@type": typeIRI,
-        [defaultLabelKey]: searchString,
-      },
+      data: newItem,
       disableLoad: true,
     })
       .then(
@@ -216,6 +234,7 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
     primaryFields,
     searchString,
     setDisabled,
+    prepareNewEntityDataFinal,
   ]);
 
   const handleMappedDataIntermediate = useCallback(
