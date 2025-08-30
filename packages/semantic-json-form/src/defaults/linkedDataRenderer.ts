@@ -1,7 +1,20 @@
-
-import { InlineCondensedSemanticFormsRenderer, inlineDropdownRendererTester, InlineDropdownSemanticFormsRenderer, inlineSemanticFormsRendererTester, materialArrayChipsLayoutTester, MaterialArrayOfLinkedItemChipsRenderer, MaterialArrayOfLinkedItemRenderer, materialArrayOfLinkedItemTester, materialLinkedObjectControlTester, MaterialLinkedObjectRenderer } from '@graviola/edb-linked-data-renderer';
-import { JsonFormsRendererRegistryEntry, rankWith, scopeEndsWith } from '@jsonforms/core';
-
+import {
+  InlineCondensedSemanticFormsRenderer,
+  inlineDropdownRendererTester,
+  InlineDropdownSemanticFormsRenderer,
+  inlineSemanticFormsRendererTester,
+  materialArrayChipsLayoutTester,
+  MaterialArrayOfLinkedItemChipsRenderer,
+  MaterialArrayOfLinkedItemRenderer,
+  materialArrayOfLinkedItemTester,
+  materialLinkedObjectControlTester,
+  MaterialLinkedObjectRenderer,
+} from "@graviola/edb-linked-data-renderer";
+import {
+  JsonFormsRendererRegistryEntry,
+  rankWith,
+  scopeEndsWith,
+} from "@jsonforms/core";
 
 export const graviolaRenderers: JsonFormsRendererRegistryEntry[] = [
   {
@@ -25,10 +38,6 @@ export const graviolaRenderers: JsonFormsRendererRegistryEntry[] = [
     renderer: MaterialArrayOfLinkedItemRenderer,
   },
   {
-    tester: materialArrayChipsLayoutTester,
-    renderer: MaterialArrayOfLinkedItemChipsRenderer,
-  },
-  {
     tester: rankWith(10, scopeEndsWith("@id")),
     renderer: () => null,
   },
@@ -36,4 +45,4 @@ export const graviolaRenderers: JsonFormsRendererRegistryEntry[] = [
     tester: rankWith(10, scopeEndsWith("@type")),
     renderer: () => null,
   },
-]
+];
