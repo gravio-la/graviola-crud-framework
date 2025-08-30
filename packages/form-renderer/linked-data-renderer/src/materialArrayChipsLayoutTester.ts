@@ -5,8 +5,9 @@ import {
   RankedTester,
   rankWith,
 } from "@jsonforms/core";
+import { isArrayOfLinkedItems } from "./isArrayOfLinkedItems";
 
 export const materialArrayChipsLayoutTester: RankedTester = rankWith(
   6,
-  and(optionIs("chips", true), isObjectArray),
+  and(optionIs("chips", true), isArrayOfLinkedItems),
 );
