@@ -13,7 +13,6 @@ import {
   KnowledgeSources,
   EntityFinderProps,
 } from "@graviola/semantic-jsonform-types";
-import { Resolve } from "@jsonforms/core";
 import { NoteAdd } from "@mui/icons-material";
 import {
   Button,
@@ -23,7 +22,6 @@ import {
   Menu,
   MenuItem,
   TextField,
-  useControlled,
 } from "@mui/material";
 import { debounce, uniq } from "lodash-es";
 import { useTranslation } from "next-i18next";
@@ -133,6 +131,7 @@ export const EntityFinder = <
   knowledgeSources,
   additionalKnowledgeSources,
   allKnowledgeBases,
+  prepareNewEntityData,
 }: EntityFinderProps<FindResultType, FullEntityType, SourceType>) => {
   const {
     queryBuildOptions,
@@ -324,7 +323,7 @@ export const EntityFinder = <
     return fieldDefinitions?.label || "title";
   }, [primaryFields, typeName]);
 
-  const showEditDialog = useCallback(() => {
+  const showEditDialog = useCallback(async () => {
     const defaultLabelKey = getDefaultLabelKey();
     const newItem = {
       "@id": createEntityIRI(typeName),
@@ -333,10 +332,13 @@ export const EntityFinder = <
     };
     const modalID = `edit-${newItem["@type"]}-${newItem["@id"]}`;
     registerModal(modalID, EditEntityModal);
+    const preparedData = prepareNewEntityData
+      ? await prepareNewEntityData(newItem)
+      : newItem;
     NiceModal.show(modalID, {
       entityIRI: newItem["@id"],
       typeIRI: newItem["@type"],
-      data: newItem,
+      data: preparedData,
       disableLoad: true,
     }).then(({ entityIRI, data }: { entityIRI: string; data: any }) => {
       handleEntityChange(entityIRI, data);
@@ -350,6 +352,7 @@ export const EntityFinder = <
     createEntityIRI,
     getDefaultLabelKey,
     EditEntityModal,
+    prepareNewEntityData,
   ]);
 
   /**

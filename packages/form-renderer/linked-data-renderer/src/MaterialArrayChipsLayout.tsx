@@ -18,11 +18,10 @@ import { JSONSchema7 } from "json-schema";
 import { orderBy, uniqBy } from "lodash-es";
 import merge from "lodash-es/merge";
 import { useSnackbar } from "notistack";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ArrayLayoutToolbar } from "./ArrayToolbar";
 import { SemanticFormsInline } from "./SemanticFormsInline";
-import { SemanticFormsModal } from "./SemanticFormsModal";
 import { SimpleChipRenderer } from "./SimpleChipRenderer";
 
 const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
@@ -52,6 +51,8 @@ const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
     elementLabelProp,
     dropdown,
     context,
+    showCreateButton,
+    allowCreateMultiple,
   } = useMemo(
     () => merge({}, config, props.uischema.options),
     [config, props.uischema.options],
@@ -59,7 +60,6 @@ const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
   const { core } = useJsonForms();
   const realData = Resolve.data(core.data, path);
   const typeIRI = context?.typeIRI ?? schema.properties?.["@type"]?.const;
-  const [modalIsOpen, setModalIsOpen] = useState(false);
   const typeName = useMemo(
     () => typeIRIToTypeName(typeIRI),
     [typeIRI, typeIRIToTypeName],
@@ -69,10 +69,6 @@ const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
     irisToData(createEntityIRI(typeName), typeIRI),
   );
 
-  const handleCreateNew = useCallback(() => {
-    setFormData(irisToData(createEntityIRI(typeName), typeIRI));
-    setModalIsOpen(true);
-  }, [setModalIsOpen, setFormData, typeIRI, typeName]);
   const subSchema = useMemo(
     () =>
       bringDefinitionToTop(rootSchema as JSONSchema7, typeName) as JsonSchema,
@@ -109,21 +105,9 @@ const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
       });
   }, [saveMutation, typeIRI, typeName, addItem, setFormData]);
 
-  const handleAddNew = useCallback(() => {
-    setModalIsOpen(false);
-    //if(typeof saveMethod === 'function')  saveMethod();
-    addItem(path, formData)();
-    setFormData({});
-  }, [setModalIsOpen, addItem, formData, setFormData, typeIRI]);
-
-  const formsPath = useMemo(
-    () => makeFormsPath(config?.formsPath, path),
-    [config?.formsPath, path],
-  );
-
   useEffect(() => {
     setFormData(irisToData(createEntityIRI(typeName), typeIRI));
-  }, [formsPath, typeIRI, typeName, setFormData]);
+  }, [typeIRI, typeName, setFormData]);
 
   return (
     <Box>
@@ -137,31 +121,15 @@ const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
         path={path}
         schema={schema as JsonSchema7 | undefined}
         addItem={addItem}
-        onCreate={handleCreateNew}
         createDefault={innerCreateDefaultValue}
         enabled={enabled}
         dropdown={dropdown}
         isReifiedStatement={Boolean(isReifiedStatement)}
         formsPath={makeFormsPath(config?.formsPath, path)}
         additionalKnowledgeSources={additionalKnowledgeSources}
+        showCreateButton={showCreateButton}
+        allowCreateMultiple={allowCreateMultiple}
       />
-      {modalIsOpen && (
-        <SemanticFormsModal
-          schema={subSchema}
-          entityIRI={formData["@id"]}
-          formData={formData}
-          typeIRI={typeIRI}
-          label={label}
-          open={modalIsOpen}
-          askClose={handleAddNew}
-          askCancel={() => setModalIsOpen(false)}
-          onChange={(entityIRI) =>
-            entityIRI && setFormData({ "@id": entityIRI })
-          }
-          onFormDataChange={(data) => setFormData(data)}
-          formsPath={formsPath}
-        />
-      )}
       {isReifiedStatement && (
         <Grid
           display={"flex"}

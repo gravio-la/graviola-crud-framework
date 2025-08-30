@@ -15,11 +15,20 @@ import {
 } from "@graviola/edb-state-hooks";
 import { KnowledgeSources } from "@graviola/semantic-jsonform-types";
 import { JsonSchema7 } from "@jsonforms/core";
-import { Box, FormControl, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControl,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import { Add as AddIcon } from "@mui/icons-material";
 import { JSONSchema7 } from "json-schema";
 import { useTranslation } from "next-i18next";
 import * as React from "react";
 import { useCallback, useMemo } from "react";
+import { HowManyItemsModal } from "./HowManyItemsModal";
 
 export interface ArrayLayoutToolbarProps {
   label: string;
@@ -35,18 +44,15 @@ export interface ArrayLayoutToolbarProps {
   createDefault(): any;
 
   typeIRI?: string;
-  onCreate?: () => void;
   isReifiedStatement?: boolean;
   additionalKnowledgeSources?: string[];
+
+  showCreateButton?: boolean;
+  allowCreateMultiple?: boolean;
+
+  prepareNewEntityData?: (newDataStub: any) => Promise<any>;
 }
 
-const getDefaultLabelKey = (
-  typeName: string,
-  primaryFields: PrimaryFieldDeclaration,
-) => {
-  const fieldDefinitions = primaryFields[typeName] as PrimaryField | undefined;
-  return fieldDefinitions?.label;
-};
 export const ArrayLayoutToolbar = ({
   label,
   labelAsHeadline,
@@ -55,12 +61,14 @@ export const ArrayLayoutToolbar = ({
   enabled,
   path,
   schema,
-  onCreate,
   isReifiedStatement,
   formsPath,
   additionalKnowledgeSources,
   typeIRI: _typeIRI,
   dropdown,
+  showCreateButton,
+  allowCreateMultiple,
+  prepareNewEntityData,
 }: ArrayLayoutToolbarProps & {
   schema?: JsonSchema7;
   formsPath?: string;
@@ -132,7 +140,7 @@ export const ArrayLayoutToolbar = ({
 
   const [disabled, setDisabled] = React.useState(false);
   const { registerModal } = useModalRegistry(NiceModal);
-  const showEditDialog = useCallback(() => {
+  const showEditDialog = useCallback(async () => {
     const fieldDefinitions = primaryFields[typeName] as
       | PrimaryField
       | undefined;
@@ -140,15 +148,19 @@ export const ArrayLayoutToolbar = ({
     const entityIRI = createEntityIRI(typeName);
     const modalID = `edit-${typeIRI}-${entityIRI}`;
     registerModal(modalID, EditEntityModal);
+    const newItem = {
+      "@id": createEntityIRI(typeName),
+      "@type": typeIRI,
+      [defaultLabelKey]: searchString,
+    };
+    const preparedData = prepareNewEntityData
+      ? await prepareNewEntityData(newItem)
+      : newItem;
     setDisabled(true);
     NiceModal.show(modalID, {
       entityIRI,
       typeIRI,
-      data: {
-        "@id": entityIRI,
-        "@type": typeIRI,
-        [defaultLabelKey]: searchString,
-      },
+      data: preparedData,
       disableLoad: true,
     })
       .then(
@@ -173,7 +185,38 @@ export const ArrayLayoutToolbar = ({
     primaryFields,
     searchString,
     setDisabled,
+    prepareNewEntityData,
   ]);
+
+  const createAndAddItem = useCallback(async () => {
+    const newItem = {
+      "@id": createEntityIRI(typeName),
+      "@type": typeIRI,
+    };
+    const preparedData = prepareNewEntityData
+      ? await prepareNewEntityData(newItem)
+      : newItem;
+    setDisabled(true);
+    addItem(path, preparedData)();
+  }, [createEntityIRI, typeIRI, typeName, searchString]);
+
+  const handleCreateButtonClick = useCallback(() => {
+    if (allowCreateMultiple) {
+      NiceModal.show(HowManyItemsModal, {
+        entityType: typeName,
+      }).then(async (n: number) => {
+        console.log("n", n);
+        for (let i: number = 0; i < n; i++) {
+          await createAndAddItem();
+        }
+      });
+    } else {
+      createAndAddItem();
+    }
+  }, [allowCreateMultiple, typeName, createAndAddItem]);
+
+  const { t } = useTranslation();
+
   return (
     <Box>
       {(isReifiedStatement || labelAsHeadline) && (
@@ -181,7 +224,20 @@ export const ArrayLayoutToolbar = ({
           <Typography variant={"h4"}>{label}</Typography>
         </Box>
       )}
-      <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "stretch",
+          gap: 0,
+          marginTop: (theme) =>
+            theme.spacing(
+              !dropdown && (keepMounted || sidebarOpen) && !isReifiedStatement
+                ? 1
+                : 2,
+            ),
+          marginBottom: (theme) => theme.spacing(1),
+        }}
+      >
         {!dropdown && (keepMounted || sidebarOpen) && !isReifiedStatement ? (
           <TextField
             fullWidth
@@ -189,25 +245,21 @@ export const ArrayLayoutToolbar = ({
             label={labelAsHeadline ? typeName : label}
             onChange={(ev) => handleSearchStringChange(ev.target.value)}
             value={searchString || ""}
-            sx={(theme) => ({
-              marginTop: theme.spacing(1),
-              marginBottom: theme.spacing(1),
-            })}
             inputProps={{
               ref: inputRef,
               onFocus: handleFocus,
               onKeyUp: handleKeyUp,
             }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderTopRightRadius: showCreateButton ? 0 : undefined,
+                borderBottomRightRadius: showCreateButton ? 0 : undefined,
+              },
+            }}
           />
         ) : (
           !isReifiedStatement && (
-            <FormControl
-              fullWidth
-              sx={{
-                marginTop: (theme) => theme.spacing(2),
-                marginBottom: (theme) => theme.spacing(1),
-              }}
-            >
+            <FormControl fullWidth>
               <DiscoverAutocompleteInput
                 onCreateNew={showEditDialog}
                 loadOnStart={true}
@@ -221,11 +273,40 @@ export const ArrayLayoutToolbar = ({
                 searchString={searchString || ""}
                 inputProps={{
                   onFocus: handleFocus,
+                  sx: {
+                    "& .MuiOutlinedInput-root": {
+                      borderTopRightRadius: showCreateButton ? 0 : undefined,
+                      borderBottomRightRadius: showCreateButton ? 0 : undefined,
+                    },
+                  },
                 }}
               />
             </FormControl>
           )
         )}
+        {showCreateButton && (
+          <Tooltip title={t("arrayToolbar.createMultiple", { typeName })}>
+            <Button
+              onClick={handleCreateButtonClick}
+              disabled={!enabled}
+              variant="outlined"
+              sx={{
+                minWidth: "auto",
+                px: 1.5,
+                borderTopLeftRadius: 0,
+                borderBottomLeftRadius: 0,
+                borderLeft: 0,
+                "&:hover": {
+                  borderLeft: 0,
+                },
+              }}
+            >
+              <AddIcon />
+            </Button>
+          </Tooltip>
+        )}
+      </Box>
+      <Box>
         {globalPath === formsPath && !dropdown && (
           <SearchbarWithFloatingButton>
             <SimilarityFinder
@@ -239,6 +320,7 @@ export const ArrayLayoutToolbar = ({
               additionalKnowledgeSources={
                 additionalKnowledgeSources as KnowledgeSources[]
               }
+              prepareNewEntityData={prepareNewEntityData}
             />
           </SearchbarWithFloatingButton>
         )}

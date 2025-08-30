@@ -82,6 +82,7 @@ export type EntityFinderProps<
   onSelectedEntityChange?: (id: string, authorityIRI: string) => void;
   search?: string;
   data?: any;
+  prepareNewEntityData?: (data: any) => Promise<any>;
   onSearchChange?: (search: string) => void;
   hideFooter?: boolean;
   knowledgeSources?: SourceType[];
