@@ -23,10 +23,6 @@ const MaterialArrayOfLinkedItemChipsRendererComponent = ({
   removeItems,
   arraySchema,
 }: ArrayLayoutProps) => {
-  const addItemCb = useCallback(
-    (p: string, value: any) => addItem(p, value),
-    [addItem],
-  );
   if (!visible) {
     return null;
   }
@@ -42,7 +38,7 @@ const MaterialArrayOfLinkedItemChipsRendererComponent = ({
       visible={visible}
       data={data}
       path={path}
-      addItem={addItemCb}
+      addItem={addItem}
       removeItems={removeItems}
       renderers={renderers}
       cells={cells}

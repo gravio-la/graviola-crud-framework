@@ -2,10 +2,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { DiscoverAutocompleteInput } from "@graviola/edb-advanced-components";
 import { SearchbarWithFloatingButton } from "@graviola/edb-basic-components";
 import { AutocompleteSuggestion } from "@graviola/edb-core-types";
-import {
-  PrimaryField,
-  PrimaryFieldDeclaration,
-} from "@graviola/edb-core-types";
+import { PrimaryField } from "@graviola/edb-core-types";
 import {
   useAdbContext,
   useGlobalSearchWithHelper,
@@ -29,6 +26,8 @@ import { useTranslation } from "next-i18next";
 import * as React from "react";
 import { useCallback, useMemo } from "react";
 import { HowManyItemsModal } from "./HowManyItemsModal";
+import trim from "lodash-es/trim";
+import cloneDeep from "lodash-es/cloneDeep";
 
 export interface ArrayLayoutToolbarProps {
   label: string;
@@ -149,10 +148,12 @@ export const ArrayLayoutToolbar = ({
     const modalID = `edit-${typeIRI}-${entityIRI}`;
     registerModal(modalID, EditEntityModal);
     const newItem = {
-      "@id": createEntityIRI(typeName),
+      "@id": entityIRI,
       "@type": typeIRI,
-      [defaultLabelKey]: searchString,
     };
+    if (searchString && trim(searchString).length > 0) {
+      newItem[defaultLabelKey] = searchString;
+    }
     const preparedData = prepareNewEntityData
       ? await prepareNewEntityData(newItem)
       : newItem;
@@ -163,16 +164,11 @@ export const ArrayLayoutToolbar = ({
       data: preparedData,
       disableLoad: true,
     })
-      .then(
-        ({ entityIRI, data }: { entityIRI: string; data: any }) => {
-          addItem(path, {
-            ...data,
-            "@id": entityIRI,
-            "@type": typeIRI,
-          })();
-        },
-        () => {},
-      )
+      .then(({ data }: { data: any }) => {
+        if (data["@id"] && data["@type"]) {
+          addItem(path, cloneDeep(data))();
+        }
+      })
       .finally(() => {
         setDisabled(false);
       });
@@ -192,20 +188,19 @@ export const ArrayLayoutToolbar = ({
     const newItem = {
       "@id": createEntityIRI(typeName),
       "@type": typeIRI,
+      __draft: true,
     };
     const preparedData = prepareNewEntityData
       ? await prepareNewEntityData(newItem)
       : newItem;
-    setDisabled(true);
     addItem(path, preparedData)();
-  }, [createEntityIRI, typeIRI, typeName, searchString]);
+  }, [prepareNewEntityData, createEntityIRI, typeIRI, typeName, searchString]);
 
   const handleCreateButtonClick = useCallback(() => {
     if (allowCreateMultiple) {
       NiceModal.show(HowManyItemsModal, {
         entityType: typeName,
       }).then(async (n: number) => {
-        console.log("n", n);
         for (let i: number = 0; i < n; i++) {
           await createAndAddItem();
         }

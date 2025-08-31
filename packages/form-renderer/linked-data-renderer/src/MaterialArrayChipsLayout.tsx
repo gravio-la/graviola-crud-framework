@@ -90,9 +90,9 @@ const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
     //if(typeof saveMethod === 'function')  saveMethod();
     saveMutation
       .mutateAsync(finalData)
-      .then((res) => {
+      .then(({ mainDocument }) => {
         enqueueSnackbar("Saved", { variant: "success" });
-        addItem(path, res)();
+        addItem(path, mainDocument)();
         setFormData({
           "@id": createEntityIRI(typeName),
           "@type": typeIRI,

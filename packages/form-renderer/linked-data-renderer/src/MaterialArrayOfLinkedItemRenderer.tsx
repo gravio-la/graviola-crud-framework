@@ -1,7 +1,5 @@
 import { ArrayLayoutProps } from "@jsonforms/core";
 import { withJsonFormsArrayLayoutProps } from "@jsonforms/react";
-import { Hidden } from "@mui/material";
-import React, { useCallback } from "react";
 
 import { MaterialArrayLayout } from "./MaterialArrayLayout";
 
@@ -23,10 +21,6 @@ const MaterialArrayOfLinkedItemRendererComponent = ({
   removeItems,
   arraySchema,
 }: ArrayLayoutProps) => {
-  const addItemCb = useCallback(
-    (p: string, value: any) => addItem(p, value),
-    [addItem],
-  );
   if (!visible) {
     return null;
   }
@@ -42,7 +36,7 @@ const MaterialArrayOfLinkedItemRendererComponent = ({
       visible={visible}
       data={data}
       path={path}
-      addItem={addItemCb}
+      addItem={addItem}
       removeItems={removeItems}
       renderers={renderers}
       cells={cells}

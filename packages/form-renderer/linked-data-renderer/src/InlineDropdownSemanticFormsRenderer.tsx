@@ -59,13 +59,18 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
     components: { SimilarityFinder, EditEntityModal },
   } = useAdbContext();
   const appliedUiSchemaOptions = merge({}, config, uischema.options);
-  const { $ref, typeIRI } = appliedUiSchemaOptions.context || {};
+  const typeIRI =
+    appliedUiSchemaOptions.context?.typeIRI ||
+    schema.properties?.["@type"]?.const ||
+    appliedUiSchemaOptions.typeIRI;
+  const { $ref } = appliedUiSchemaOptions || {};
   const enableFinder = appliedUiSchemaOptions.enableFinder || false;
   const ctx = useJsonForms();
   const prepareNewEntityData =
     typeof appliedUiSchemaOptions.prepareNewEntityData === "function"
       ? appliedUiSchemaOptions.prepareNewEntityData
       : undefined;
+
   const prepareNewEntityDataFinal = useCallback(
     (stub: any) => {
       const _data =
@@ -90,9 +95,12 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
   const selected = useMemo(
     () =>
       data
-        ? { value: data || null, label: realLabel }
+        ? {
+            value: path.endsWith("@id") ? data : data["@id"] || null,
+            label: realLabel,
+          }
         : { value: null, label: null },
-    [data, realLabel],
+    [data, realLabel, path],
   );
   const subSchema = useMemo(() => {
     if (!$ref) return;
@@ -123,10 +131,30 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
         closeDrawer();
         return;
       }
-      if (v.value !== data) handleChange(path, v.value);
+      if (v.value !== data)
+        if (path.endsWith("@id")) {
+          handleChange(path, v.value);
+        } else {
+          handleChange(path, {
+            "@id": v.value,
+            "@type": typeIRI,
+            __label: v.label,
+          });
+        }
       setRealLabel(v.label);
     },
-    [path, handleChange, data, setRealLabel, closeDrawer],
+    [path, handleChange, data, setRealLabel, closeDrawer, typeIRI],
+  );
+  const handleAcceptNewEntity = useCallback(
+    (data: any) => {
+      if (path.endsWith("@id") && data["@id"]) {
+        handleChange(path, data["@id"]);
+      } else {
+        handleChange(path, data);
+      }
+      setRealLabel(data.label || data["@id"]);
+    },
+    [path, handleChange, setRealLabel],
   );
 
   useEffect(() => {
@@ -212,15 +240,9 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
       data: newItem,
       disableLoad: true,
     })
-      .then(
-        ({ entityIRI, data }: { entityIRI: string; data: any }) => {
-          handleSelectedChange({
-            value: entityIRI,
-            label: data.label || entityIRI,
-          });
-        },
-        () => {},
-      )
+      .then(({ data }: { data: any }) => {
+        handleAcceptNewEntity(data);
+      })
       .finally(() => {
         setDisabled(false);
       });

@@ -103,8 +103,8 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
     uischema,
     enabled,
   } = props;
-  const { core } = useJsonForms();
-  const realData = Resolve.data(core.data, path);
+  const ctx = useJsonForms();
+  const realData = Resolve.data(ctx?.core?.data, path);
   const {
     createEntityIRI,
     typeIRIToTypeName,
@@ -196,11 +196,11 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
     (stub: any) => {
       const _data =
         prepareNewEntityData && typeof prepareNewEntityData === "function"
-          ? prepareNewEntityData(cloneDeep(core.data))
+          ? prepareNewEntityData(cloneDeep(ctx?.core?.data || {}))
           : {};
       return { ..._data, ...(stub || {}) };
     },
-    [core.data, prepareNewEntityData],
+    [ctx?.core?.data, prepareNewEntityData],
   );
 
   const subSchema = useMemo(
@@ -222,9 +222,9 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
     };
     saveMutation
       .mutateAsync(finalData)
-      .then((res) => {
+      .then(({ mainDocument }) => {
         enqueueSnackbar(t("successfully saved"), { variant: "success" });
-        addItem(path, res)();
+        addItem(path, mainDocument)();
         setEntityIRI(createEntityIRI(typeName));
       })
       .catch((e) => {
@@ -374,7 +374,6 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
                     </>
                   )
                 }
-                enhance
                 onClose={() => setTooltipEnabled(false)}
                 open={tooltipEnabled && inlineErrors?.length > 0}
               >
