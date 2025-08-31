@@ -90,6 +90,8 @@ export const EntityDetailModal = NiceModal.create(
           typeIRI: typeIRI,
           data,
           disableLoad: true,
+        }).catch((e) => {
+          console.error(e);
         });
       } else {
         const typeName = typeIRIToTypeName(typeIRI);
@@ -136,6 +138,7 @@ export const EntityDetailModal = NiceModal.create(
         disableScrollLock={false}
         maxWidth={false}
         fullScreen={xsDown}
+        disableEnforceFocus={true}
         sx={{
           display: "flex",
           flexDirection: "column",
