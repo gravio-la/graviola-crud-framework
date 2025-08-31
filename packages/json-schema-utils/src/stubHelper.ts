@@ -131,6 +131,7 @@ export const definitionsToStubDefinitions = (
     const stubKey = `${key}Stub`;
     const stub = {
       ...(isObject(value) ? value : {}),
+      required: [],
       properties: isObject(value)
         ? filterForPrimitives((value as any)?.properties)
         : undefined,
