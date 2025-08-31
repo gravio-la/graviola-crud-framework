@@ -1,5 +1,21 @@
 # testapp
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-linked-data-renderer@3.0.0
+  - @graviola/edb-advanced-components@1.4.0
+  - @graviola/semantic-json-form@1.3.0
+  - @graviola/edb-state-hooks@1.4.0
+  - @graviola/semantic-jsonform-types@1.2.1
+  - @graviola/json-schema-utils@1.3.1
+  - @graviola/edb-basic-components@1.2.3
+  - @graviola/entity-finder@1.2.2
+  - @graviola/sparql-store-provider@3.0.0
+  - @graviola/jsonld-utils@1.2.1
+
 ## 0.0.7
 
 ### Patch Changes

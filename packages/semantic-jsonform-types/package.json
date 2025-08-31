@@ -1,6 +1,6 @@
 {
   "name": "@graviola/semantic-jsonform-types",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Prop types for Semantic JSON Forms",
   "type": "module",
   "types": "./index.d.ts",

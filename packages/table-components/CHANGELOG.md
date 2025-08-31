@@ -1,5 +1,16 @@
 # @graviola/edb-table-components
 
+## 1.2.2
+
+### Patch Changes
+
+- fix a lot of issues concerning linked data renderer (arrays and objects)
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.4.0
+  - @graviola/json-schema-utils@1.3.1
+  - @graviola/edb-basic-components@1.2.3
+  - @graviola/sparql-schema@1.3.1
+
 ## 1.2.1
 
 ### Patch Changes

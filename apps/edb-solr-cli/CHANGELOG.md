@@ -1,5 +1,15 @@
 # @graviola/edb-solr-cli
 
+## 1.1.8
+
+### Patch Changes
+
+- @graviola/edb-graph-traversal@1.3.1
+- @graviola/sparql-db-impl@1.3.1
+- @graviola/sparql-schema@1.3.1
+- @slub/exhibition-schema@1.3.5
+- @slub/exhibition-sparql-config@1.2.6
+
 ## 1.1.7
 
 ### Patch Changes

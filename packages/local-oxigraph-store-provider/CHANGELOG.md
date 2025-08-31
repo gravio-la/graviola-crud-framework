@@ -1,5 +1,13 @@
 # @graviola/local-oxigraph-store-provider
 
+## 3.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.4.0
+  - @graviola/sparql-db-impl@1.3.1
+
 ## 2.0.0
 
 ### Patch Changes

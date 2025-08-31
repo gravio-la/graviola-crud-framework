@@ -1,5 +1,18 @@
 # @graviola/edb-advanced-components
 
+## 1.4.0
+
+### Minor Changes
+
+- fix a lot of issues concerning linked data renderer (arrays and objects)
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.4.0
+  - @graviola/edb-basic-components@1.2.3
+  - @graviola/jsonld-utils@1.2.1
+
 ## 1.3.1
 
 ### Patch Changes

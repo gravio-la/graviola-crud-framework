@@ -1,5 +1,12 @@
 # @graviola/color-picker-renderer
 
+## 2.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.4.0
+
 ## 1.0.0
 
 ### Minor Changes

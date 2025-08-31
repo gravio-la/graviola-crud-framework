@@ -1,5 +1,12 @@
 # @slub/json-schema-prisma-utils
 
+## 1.2.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/json-schema-utils@1.3.1
+
 ## 1.2.6
 
 ### Patch Changes

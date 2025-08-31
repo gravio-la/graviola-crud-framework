@@ -1,5 +1,16 @@
 # @slub/edb-prisma-cli
 
+## 1.2.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/json-schema-utils@1.3.1
+  - @graviola/edb-graph-traversal@1.3.1
+  - @graviola/json-schema-prisma-utils@1.2.7
+  - @graviola/sparql-schema@1.3.1
+  - @slub/exhibition-schema@1.3.5
+
 ## 1.2.6
 
 ### Patch Changes

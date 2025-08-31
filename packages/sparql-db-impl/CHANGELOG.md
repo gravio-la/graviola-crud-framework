@@ -1,5 +1,14 @@
 # @slub/sparql-db-impl
 
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/json-schema-utils@1.3.1
+  - @graviola/sparql-schema@1.3.1
+  - @graviola/jsonld-utils@1.2.1
+
 ## 1.3.0
 
 ### Minor Changes

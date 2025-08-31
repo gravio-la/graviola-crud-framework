@@ -1,5 +1,11 @@
 # @graviola/edb-wikidata-utils
 
+## 1.0.6
+
+### Patch Changes
+
+- @graviola/sparql-schema@1.3.1
+
 ## 1.0.5
 
 ### Patch Changes

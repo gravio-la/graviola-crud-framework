@@ -1,5 +1,11 @@
 # @slub/json-schema-utils
 
+## 1.3.1
+
+### Patch Changes
+
+- fix a lot of issues concerning linked data renderer (arrays and objects)
+
 ## 1.3.0
 
 ### Minor Changes

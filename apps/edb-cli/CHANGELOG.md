@@ -1,5 +1,17 @@
 # @slub/edb-cli
 
+## 1.1.10
+
+### Patch Changes
+
+- @graviola/edb-graph-traversal@1.3.1
+- @graviola/prisma-db-impl@1.5.3
+- @graviola/sparql-db-impl@1.3.1
+- @graviola/sparql-schema@1.3.1
+- @slub/exhibition-schema@1.3.5
+- @graviola/edb-file-import@1.0.7
+- @slub/exhibition-sparql-config@1.2.6
+
 ## 1.1.9
 
 ### Patch Changes

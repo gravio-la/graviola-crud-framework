@@ -1,5 +1,15 @@
 # @graviola/entity-finder
 
+## 1.2.2
+
+### Patch Changes
+
+- fix a lot of issues concerning linked data renderer (arrays and objects)
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.4.0
+  - @graviola/edb-basic-components@1.2.3
+  - @graviola/data-mapping-hooks@1.1.7
+
 ## 1.2.1
 
 ### Patch Changes

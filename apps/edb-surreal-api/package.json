@@ -1,7 +1,7 @@
 {
   "name": "@graviola/edb-surreal-api",
   "description": "Simple API to interact with EDB on SurrealDB",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "type": "module",
   "main": "index.js",
   "scripts": {

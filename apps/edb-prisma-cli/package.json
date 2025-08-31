@@ -1,7 +1,7 @@
 {
   "name": "@graviola/edb-prisma-cli",
   "description": "Client tools to interact with EDB and prisma orm schemata from the command line",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "type": "module",
   "main": "index.js",
   "scripts": {

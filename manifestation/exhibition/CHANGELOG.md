@@ -1,5 +1,11 @@
 # @slub/exhibition-schema
 
+## 1.3.5
+
+### Patch Changes
+
+- @graviola/edb-wikidata-utils@1.0.6
+
 ## 1.3.4
 
 ### Patch Changes

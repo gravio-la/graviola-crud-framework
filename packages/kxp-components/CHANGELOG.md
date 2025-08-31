@@ -1,5 +1,15 @@
 # @graviola/edb-kxp-components
 
+## 1.0.9
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.4.0
+  - @graviola/edb-basic-components@1.2.3
+  - @graviola/edb-graph-traversal@1.3.1
+  - @graviola/edb-kxp-utils@1.1.7
+
 ## 1.0.8
 
 ### Patch Changes

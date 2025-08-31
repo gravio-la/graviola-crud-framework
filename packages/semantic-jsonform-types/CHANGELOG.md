@@ -1,5 +1,11 @@
 # @graviola/semantic-jsonform-types
 
+## 1.2.1
+
+### Patch Changes
+
+- fix a lot of issues concerning linked data renderer (arrays and objects)
+
 ## 1.2.0
 
 ### Minor Changes

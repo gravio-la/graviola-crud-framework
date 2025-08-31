@@ -1,6 +1,6 @@
 {
   "name": "@graviola/edb-state-hooks",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "use hooks that implement global state management logic for the EDB project",
   "type": "module",
   "main": "./dist/index.cjs",
