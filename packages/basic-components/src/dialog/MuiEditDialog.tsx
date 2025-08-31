@@ -4,7 +4,6 @@ import {
   Fullscreen as FullscreenIcon,
   Refresh as ReloadIcon,
   Save as SaveIcon,
-  Search as SearchIcon,
   Edit as EditIcon,
   EditOff as EditOffIcon,
 } from "@mui/icons-material";
@@ -69,6 +68,7 @@ export const MuiEditDialog = ({
       disableScrollLock={false}
       onClick={(e) => e.stopPropagation()}
       closeAfterTransition
+      disableEnforceFocus={true}
       slots={{ backdrop: Backdrop }}
       slotProps={{
         backdrop: {
