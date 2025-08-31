@@ -10,7 +10,6 @@ import {
 import {
   useAdbContext,
   useCRUDWithQueryClient,
-  useDataStore,
   useQueryKeyResolver,
 } from "@graviola/edb-state-hooks";
 import { SemanticJsonFormToolbar } from "./SemanticJsonFormToolbar";
@@ -122,7 +121,7 @@ export const SemanticJsonForm: FunctionComponent<SemanticJsonFormProps> = ({
     setIsSaving(true);
     saveMutation
       .mutateAsync(data)
-      .then(async (result) => {
+      .then(async ({ mainDocument }) => {
         //TODO should we clear and refetch? or just refetch?
         if (entityIRI) {
           loadEntity(entityIRI, typeIRI)
@@ -136,7 +135,7 @@ export const SemanticJsonForm: FunctionComponent<SemanticJsonFormProps> = ({
               setIsSaving(false);
             });
         } else {
-          onChange(result);
+          onChange(mainDocument);
           enqueueSnackbar("Created", { variant: "success" });
           setIsSaving(false);
         }
