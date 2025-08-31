@@ -6,10 +6,80 @@ import type { UseCRUDHook } from "./useCrudHook";
 import { useCallback } from "react";
 import type { NamedAndTypedEntity } from "@graviola/edb-core-types";
 import { jsonld2DataSet, cleanJSONLD } from "@graviola/jsonld-utils";
+import { AbstractDatastore } from "@graviola/edb-global-types";
+import { JSONSchema7 } from "json-schema";
+import { bringDefinitionToTop } from "@graviola/json-schema-utils";
 
 type LoadResult = {
   subjects: string[];
   document: any;
+};
+
+const isDraftDocument = (data: any) => {
+  return (
+    typeof data["@id"] === "string" &&
+    typeof data["@type"] === "string" &&
+    data["__draft"] === true
+  );
+};
+
+/**
+ * recurse through the data and find all  documents that contain __draft: true
+ * @param data
+ * @param depth depth of the recursion
+ */
+const findDraftDocuments = (data: any, depth: number = 0) => {
+  if (data && Array.isArray(data)) {
+    return data.flatMap((item) => findDraftDocuments(item, depth + 1));
+  }
+  if (data && typeof data === "object") {
+    return [
+      ...(isDraftDocument(data) ? [data] : []),
+      ...Object.values(data).flatMap((value) =>
+        findDraftDocuments(value, depth + 1),
+      ),
+    ];
+  }
+  return [];
+};
+
+const storeDraftDocuments: (
+  data: any,
+  rootSchema: JSONSchema7,
+  dataStore: AbstractDatastore,
+  jsonldContext: any,
+  defaultPrefix: string,
+) => Promise<any[]> = async (
+  data: any,
+  rootSchema,
+  dataStore,
+  jsonldContext,
+  defaultPrefix,
+) => {
+  const draftDocuments = findDraftDocuments(data);
+  const documentsProcessed = [];
+  const results = [];
+  for (const draftDocument of draftDocuments) {
+    if (documentsProcessed.includes(draftDocument["@id"])) {
+      continue;
+    }
+    documentsProcessed.push(draftDocument["@id"]);
+    const typeName = dataStore.typeIRItoTypeName(draftDocument["@type"]);
+    const schema = bringDefinitionToTop(rootSchema, typeName);
+    //delete draftDocument.__draft;
+    const cleanData = await cleanJSONLD(draftDocument, schema, {
+      jsonldContext,
+      defaultPrefix,
+      keepContext: true,
+    });
+    const result = await dataStore.upsertDocument(
+      typeName,
+      draftDocument["@id"],
+      cleanData,
+    );
+    results.push(result);
+  }
+  return Promise.all(results);
 };
 
 const getAllSubjectsFromResult = (result: any) => {
@@ -22,6 +92,63 @@ const getAllSubjectsFromResult = (result: any) => {
     }
   }
   return Array.from(subjects);
+};
+
+// clean empty objects and arrays recursively
+const pruneTree = (data: any, depth: number = 0): any => {
+  // Handle null, undefined, or primitive values
+  if (data === null || data === undefined || typeof data !== "object") {
+    return data;
+  }
+
+  // Handle arrays
+  if (Array.isArray(data)) {
+    const prunedArray = data
+      .map((item) => pruneTree(item, depth + 1))
+      .filter((item) => {
+        // Remove null, undefined, empty arrays, and empty objects
+        if (item === null || item === undefined) return false;
+        if (Array.isArray(item) && item.length === 0) return false;
+        if (
+          typeof item === "object" &&
+          !Array.isArray(item) &&
+          Object.keys(item).length === 0
+        )
+          return false;
+        return true;
+      });
+
+    return prunedArray.length === 0 ? [] : prunedArray;
+  }
+
+  // Handle objects
+  if (typeof data === "object") {
+    const prunedObject: any = {};
+
+    for (const [key, value] of Object.entries(data)) {
+      const prunedValue = pruneTree(value, depth + 1);
+
+      // Only keep non-empty values
+      if (prunedValue !== null && prunedValue !== undefined) {
+        if (Array.isArray(prunedValue)) {
+          if (prunedValue.length > 0) {
+            prunedObject[key] = prunedValue;
+          }
+        } else if (typeof prunedValue === "object") {
+          if (Object.keys(prunedValue).length > 0) {
+            prunedObject[key] = prunedValue;
+          }
+        } else {
+          // Keep primitive values (strings, numbers, booleans)
+          prunedObject[key] = prunedValue;
+        }
+      }
+    }
+
+    return prunedObject;
+  }
+
+  return data;
 };
 
 const resultWithSubjects = (result: any) => {
@@ -61,7 +188,7 @@ export const useCRUDWithQueryClient: UseCRUDHook<
       if (!entityIRI || !ready) return null;
       const typeName = dataStore.typeIRItoTypeName(typeIRI);
       const result = await dataStore.loadDocument(typeName, entityIRI);
-      return resultWithSubjects(result);
+      return resultWithSubjects(pruneTree(result));
     },
     enabled: Boolean(entityIRI && typeIRI && ready) && enabled,
     refetchOnWindowFocus: false,
@@ -90,6 +217,14 @@ export const useCRUDWithQueryClient: UseCRUDHook<
       }
       const typeName = dataStore.typeIRItoTypeName(typeIRI);
       const _entityIRI = entityIRI || createEntityIRI(typeName);
+      const draftDocumentsStored = await storeDraftDocuments(
+        data,
+        schema,
+        dataStore,
+        jsonldContext,
+        defaultPrefix,
+      );
+
       const dataWithType: NamedAndTypedEntity = {
         ...data,
         "@id": _entityIRI,
@@ -106,10 +241,19 @@ export const useCRUDWithQueryClient: UseCRUDHook<
         cleanData,
       );
       const { "@context": context, ...cleanDataWithoutContext } = result;
-      return cleanDataWithoutContext;
+      return {
+        mainDocument: cleanDataWithoutContext,
+        draftDocuments: draftDocumentsStored,
+      };
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["entity", entityIRI] });
+      for (const draftDocument of result.draftDocuments) {
+        console.log("Will invalidate draft document", draftDocument["@id"]);
+        await queryClient.invalidateQueries({
+          queryKey: ["entity", draftDocument["@id"]],
+        });
+      }
     },
   });
 
