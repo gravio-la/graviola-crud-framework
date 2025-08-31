@@ -1,4 +1,3 @@
-
 import { OverflowContainer } from "@graviola/edb-basic-components";
 import { camelCaseToTitleCase, isValidUrl } from "@graviola/edb-core-utils";
 import { specialDate2LocalDate } from "@graviola/edb-ui-utils";
@@ -22,7 +21,7 @@ import {
 import { useTranslation } from "next-i18next";
 import React, { Fragment, FunctionComponent, useMemo, useState } from "react";
 import { EntityChip } from "./EntityChip";
-
+import dayjs from "dayjs";
 
 export interface AllPropTableProps {
   allProps?: any;
@@ -262,6 +261,15 @@ const PropertyItem = ({
         ) : typeof value === "string" || typeof value === "number" ? (
           property.toLowerCase().includes("date") ? (
             (() => {
+              //test if ISO Date or ISO Time String String then use dayjs
+              if (dayjs(value as string).isValid()) {
+                //contains time?
+                if (typeof value === "string" && value.includes("T")) {
+                  return dayjs(value as string).format("DD.MM.YYYY HH:mm:ss");
+                } else {
+                  return dayjs(value as string).format("DD.MM.YYYY");
+                }
+              }
               try {
                 return specialDate2LocalDate(value as number, locale);
               } catch (e) {
@@ -299,7 +307,6 @@ export const AllPropTable: FunctionComponent<Props> = ({
   disableContextMenu,
   disabledProperties,
 }) => {
-
   const grouped = React.useMemo(
     () => (allProps ? obj2Groups(allProps) : emtyObjectGroups),
     [allProps],

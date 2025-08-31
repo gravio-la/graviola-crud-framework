@@ -35,14 +35,15 @@
     "react": "^18"
   },
   "dependencies": {
+    "@graviola/edb-basic-components": "workspace:*",
+    "@graviola/edb-core-utils": "workspace:*",
+    "@graviola/edb-data-mapping": "workspace:*",
     "@graviola/edb-state-hooks": "workspace:*",
     "@graviola/edb-ui-utils": "workspace:*",
-    "@graviola/edb-basic-components": "workspace:*",
-    "@graviola/edb-data-mapping": "workspace:*",
-    "@graviola/edb-core-utils": "workspace:*",
     "@graviola/jsonld-utils": "workspace:*",
-    "next-i18next": "^15",
-    "lodash-es": "^4.17.21"
+    "dayjs": "^1.11.18",
+    "lodash-es": "^4.17.21",
+    "next-i18next": "^15"
   },
   "devDependencies": {
     "@types/react": "~18.3",
