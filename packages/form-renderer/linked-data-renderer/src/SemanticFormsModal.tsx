@@ -82,11 +82,9 @@ export const SemanticFormsModal = (props: SemanticFormsModalProps) => {
   const handleSave = useCallback(async () => {
     saveMutation
       .mutateAsync(formData)
-      .then(async (skipLoading?: boolean) => {
+      .then(async () => {
         enqueueSnackbar("Saved", { variant: "success" });
-        if (!skipLoading) {
-          await loadQuery.refetch();
-        }
+        await loadQuery.refetch();
         askClose();
       })
       .catch((e) => {

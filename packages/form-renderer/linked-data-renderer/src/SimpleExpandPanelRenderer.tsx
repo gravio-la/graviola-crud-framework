@@ -68,9 +68,12 @@ export const SimpleExpandPanelRenderer = (
     primaryFields,
     mapData,
   } = props;
-  const onData = useCallback((_data) => {
-    dispatch(update(props.path, () => mapData ? mapData(_data) : _data));
-  }, [mapData]);
+  const onData = useCallback(
+    (_data) => {
+      dispatch(update(props.path, () => (mapData ? mapData(_data) : _data)));
+    },
+    [mapData],
+  );
   const {
     components: { EntityDetailModal },
   } = useAdbContext();
@@ -90,35 +93,28 @@ export const SimpleExpandPanelRenderer = (
     [elementDetailItemPath, data],
   );
 
-  const { loadQuery, saveMutation } = useCRUDWithQueryClient({
+  const { saveMutation } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI,
     schema: subSchema,
     queryOptions: {
-      enabled: !data?.__draft && !data?.__label,
+      enabled: false, //!data?.__draft && !data?.__label,
       refetchOnWindowFocus: true,
     },
   });
   const draft = data?.__draft && !saveMutation.isSuccess;
-  const { data: loadedData } = loadQuery;
-  useEffect(() => {
-    if (loadedData?.document) {
-      onData(loadedData.document);
-    }
-  }, [loadedData, onData]);
 
   // @ts-ignore
   const { label, description, image } = useMemo(() => {
-    const _data = loadedData?.document || data
     let imageUrl = null;
     if (imagePath) {
-      imageUrl = get(_data, imagePath);
+      imageUrl = get(data, imagePath);
     }
     if (!typeName) return {};
     const fieldDecl = primaryFields[typeName];
     if (data && fieldDecl) {
       const extratedInfo = applyToEachField(
-        _data,
+        data,
         fieldDecl,
         extractFieldIfString,
       );
@@ -128,7 +124,7 @@ export const SimpleExpandPanelRenderer = (
       };
     }
     return { image: imageUrl };
-  }, [data, loadedData?.document, typeName, entityIRI]);
+  }, [data, typeName, entityIRI]);
 
   const realLabel = useMemo(() => {
     if (childLabelTemplate) {
