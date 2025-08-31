@@ -34,6 +34,7 @@ import {
   ModRouter,
 } from "@graviola/semantic-jsonform-types";
 import {
+  JsonFormsCellRendererRegistryEntry,
   JsonFormsRendererRegistryEntry,
   UISchemaElement,
 } from "@jsonforms/core";
@@ -47,6 +48,7 @@ type GraviolaProviderProps = {
   children: React.ReactNode;
   schema: JSONSchema7;
   renderers?: JsonFormsRendererRegistryEntry[];
+  cellRendererRegistry?: JsonFormsCellRendererRegistryEntry[];
   authBearerToken?: string;
   typeNameLabelMap: Record<string, string>;
   typeNameUiSchemaOptionsMap: Record<string, any>;
@@ -100,6 +102,7 @@ export const GraviolaProvider: React.FC<GraviolaProviderProps> = ({
   uischemata,
   primaryFields,
   renderers,
+  cellRendererRegistry,
   apiBaseUrl,
   authBearerToken,
   typeNameLabelMap,
@@ -147,8 +150,6 @@ export const GraviolaProvider: React.FC<GraviolaProviderProps> = ({
         definitionToTypeIRI,
       });
 
-      console.log({ stubSchema });
-
       return stubSchema;
     },
     [definitionToTypeIRI, entityBaseIRI],
@@ -179,6 +180,7 @@ export const GraviolaProvider: React.FC<GraviolaProviderProps> = ({
         makeStubSchema={makeStubSchema}
         uiSchemaDefaultRegistry={registry}
         rendererRegistry={rendererRegistry}
+        cellRendererRegistry={cellRendererRegistry}
         uischemata={uischemata}
       >
         <SparqlStoreProvider endpoint={endpoint} defaultLimit={20}>

@@ -100,7 +100,7 @@ export const schema = {
         date: { type: "string", format: "date", title: "Datum" },
       },
     },
-    WeldedComponent: {
+    WeldingTemplate: {
       type: "object",
       properties: {
         name: { type: "string", title: "Bauteilbezeichnung" },
@@ -110,6 +110,41 @@ export const schema = {
         weldingProcess: {
           type: "string",
           title: "Schweißverfahren",
+          enum: ["MIG/MAG", "WIG", "E-Hand", "Unterpulver", "Laser"],
+        },
+        // List of derived WeldedComponents (instances)
+        weldedComponents: {
+          type: "array",
+          title: "Abgeleitete Bauteile",
+          items: { $ref: "#/definitions/WeldedComponent" },
+        },
+      },
+      required: [
+        "name",
+        "drawingNumber",
+        "material",
+        "thickness",
+        "weldingProcess",
+      ],
+    },
+    WeldedComponent: {
+      type: "object",
+      properties: {
+        // Reference to the template this component is based on
+        weldingTemplate: {
+          $ref: "#/definitions/WeldingTemplate",
+          title: "Schweißvorlage",
+        },
+        uniqueNumber: { type: "string", title: "Seriennummer / Bauteilnummer" },
+        partId: { type: "string", title: "Part-ID" },
+        // Allow overriding material and weldingProcess
+        material: {
+          type: "string",
+          title: "Werkstoff (Überschreiben möglich)",
+        },
+        weldingProcess: {
+          type: "string",
+          title: "Schweißverfahren (Überschreiben möglich)",
           enum: ["MIG/MAG", "WIG", "E-Hand", "Unterpulver", "Laser"],
         },
         welder: { $ref: "#/definitions/Person", title: "Schweißer" },
@@ -130,14 +165,7 @@ export const schema = {
           items: { $ref: "#/definitions/Documentation" },
         },
       },
-      required: [
-        "name",
-        "drawingNumber",
-        "material",
-        "weldingProcess",
-        "welder",
-        "weldingDate",
-      ],
+      required: ["uniqueNumber", "partId", "weldingDate"],
     },
   },
 };

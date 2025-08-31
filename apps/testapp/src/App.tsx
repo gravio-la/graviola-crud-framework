@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   ButtonGroup,
-  Container,
   FormGroup,
   Paper,
   TextField,
@@ -84,7 +83,7 @@ function App() {
       {!hideForm ? (
         <GenericForm
           entityIRI={itemUrl}
-          typeName="WeldedComponent"
+          typeName="WeldingTemplate"
           onFormDataChange={setFormData}
           wrapWithinCard={false}
         />

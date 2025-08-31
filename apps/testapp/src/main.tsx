@@ -10,6 +10,8 @@ import { schema as itemSchema } from "./schema.ts";
 import { schema as metalSchema } from "./metal-schema.ts";
 import { allRenderers } from "./provider/config.ts";
 import { generateDefaultUISchema } from "@graviola/edb-ui-utils";
+import dayjs from "dayjs";
+import { materialCells } from "@jsonforms/material-renderers";
 
 // Create a theme instance
 const theme = createTheme({
@@ -87,9 +89,13 @@ const configurations = {
   metal: {
     schema: metalSchema,
     primaryFields: {
-      WeldedComponent: {
+      WeldingTemplate: {
         label: "name",
         description: "drawingNumber",
+      },
+      WeldedComponent: {
+        label: "uniqueNumber",
+        description: "partId",
       },
       Person: {
         label: "lastName",
@@ -109,6 +115,7 @@ const configurations = {
       },
     },
     typeNameLabelMap: {
+      WeldingTemplate: "Schweißvorlage",
       WeldedComponent: "Geschweißtes Bauteil",
       Person: "Mitarbeiter",
       QualityCheck: "Qualitätsprüfung",
@@ -124,6 +131,35 @@ const configurations = {
       },
     },
     uischemata: {
+      WeldingTemplate: generateDefaultUISchema(
+        bringDefinitionToTop(metalSchema as any, "WeldingTemplate") as any,
+        {
+          scopeOverride: {
+            "#/properties/weldedComponents": {
+              type: "Control",
+              scope: "#/properties/weldedComponents",
+              options: {
+                dropdown: true,
+                showCreateButton: true,
+                prepareNewEntityData: (parentData: any) => {
+                  const newData = {
+                    material: parentData.material,
+                    weldingTemplate: parentData,
+                    weldingDate: dayjs().format("YYYY-MM-DD"),
+                    uniqueNumber: String(
+                      Math.floor(10000000 + Math.random() * 90000000),
+                    ),
+                    partId: Array.from({ length: 8 }, () =>
+                      String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+                    ).join(""),
+                  };
+                  return newData;
+                },
+              },
+            },
+          },
+        },
+      ),
       WeldedComponent: generateDefaultUISchema(
         bringDefinitionToTop(metalSchema as any, "WeldedComponent") as any,
         {
@@ -138,13 +174,14 @@ const configurations = {
             "#/properties/defects": {
               type: "Control",
               scope: "#/properties/defects",
+              label: "Mängelliste",
               options: {
                 chips: true,
               },
             },
-            "#/properties/inspector": {
+            "#/properties/welder": {
               type: "Control",
-              scope: "#/properties/inspector",
+              scope: "#/properties/welder",
               options: {
                 dropdown: true,
               },
@@ -169,6 +206,7 @@ createRoot(document.getElementById("root")!).render(
           apiBaseUrl="https://graph.walther.sebastian-tilsch.de/query"
           schema={config.schema as any}
           renderers={allRenderers}
+          cellRendererRegistry={materialCells}
           baseIRI={"http://www.example.org/"}
           entityBaseIRI={"http://www.example.org/Item/"}
           primaryFields={config.primaryFields}
