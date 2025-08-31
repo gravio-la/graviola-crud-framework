@@ -41,6 +41,7 @@ export const PrimaryColumnContent = ({
 }: PrimaryColumnContentProps) => {
   const {
     queryBuildOptions: { primaryFields },
+    typeNameToTypeIRI,
     components: { EntityDetailModal },
   } = useAdbContext();
   const primaryContent = useMemo(() => {
@@ -58,11 +59,12 @@ export const PrimaryColumnContent = ({
       e.preventDefault();
       NiceModal.show(EntityDetailModal, {
         entityIRI,
+        typeIRI: typeNameToTypeIRI(typeName),
         data: {},
         disableInlineEditing: true,
       });
     },
-    [entityIRI, EntityDetailModal],
+    [entityIRI, EntityDetailModal, typeNameToTypeIRI, typeName],
   );
 
   return (
