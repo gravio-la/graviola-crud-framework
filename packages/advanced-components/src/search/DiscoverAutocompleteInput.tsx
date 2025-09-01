@@ -144,8 +144,7 @@ export const DiscoverAutocompleteInput: FunctionComponent<
           limit,
         )
       ).map((doc) => {
-        const { label, image, description } = doc;
-        applyToEachField(
+        const { label, image, description } = applyToEachField(
           doc,
           primaryFieldExtracts[typeName] ||
             (primaryFields[typeName] as PrimaryField),
