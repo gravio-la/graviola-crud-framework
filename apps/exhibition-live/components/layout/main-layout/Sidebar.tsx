@@ -4,6 +4,7 @@ import {
   NavItem,
 } from "@graviola/edb-advanced-components";
 import { useAdbContext, useModifiedRouter } from "@graviola/edb-state-hooks";
+import { encodeIRI } from "@graviola/edb-core-utils";
 import { ImportExport, Settings } from "@mui/icons-material";
 import { Divider, List, Toolbar, useMediaQuery, useTheme } from "@mui/material";
 import { useTranslation } from "next-i18next";
@@ -69,7 +70,7 @@ const Options = ({ open }) => {
   );
 };
 
-const Navigation = ({ open }) => {
+const Navigation = ({ open, onCreateClicked, onListClicked }) => {
   const { t } = useTranslation();
   const { getPermission } = useGlobalAuth();
   const { schema } = useAdbContext();
@@ -79,7 +80,12 @@ const Navigation = ({ open }) => {
   return (
     menuGroup && (
       <>
-        <NavGroup key={menuGroup.id} item={menuGroup} />
+        <NavGroup
+          key={menuGroup.id}
+          item={menuGroup}
+          onCreateClicked={onCreateClicked}
+          onListClicked={onListClicked}
+        />
       </>
     )
   );
@@ -88,6 +94,23 @@ const Navigation = ({ open }) => {
 export const Sidebar = ({ open, onClose }: SidebarProps) => {
   const theme = useTheme();
   const matchUpMd = useMediaQuery(theme.breakpoints.up("md"));
+  const { push } = useModifiedRouter();
+  const { createEntityIRI } = useAdbContext();
+
+  const handleCreateClicked = useCallback(
+    (typeName: string) => {
+      const newEncodedURI = encodeIRI(createEntityIRI(typeName));
+      push(`/create/${typeName}?encID=${newEncodedURI}`);
+    },
+    [push, createEntityIRI],
+  );
+
+  const handleListClicked = useCallback(
+    (typeName: string) => {
+      push(`/list/${typeName}`);
+    },
+    [push],
+  );
 
   return (
     <Drawer
@@ -99,7 +122,11 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
       color="inherit"
     >
       <Toolbar />
-      <Navigation open={open} />
+      <Navigation
+        open={open}
+        onCreateClicked={handleCreateClicked}
+        onListClicked={handleListClicked}
+      />
       <Options open={open} />
       <Divider />
     </Drawer>
