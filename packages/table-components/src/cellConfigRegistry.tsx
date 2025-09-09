@@ -45,6 +45,7 @@ export const cellConfigRegistry: MuiTableColumnDefinitionRegistryEntry[] = [
             typeName={typeName}
             data={row.original}
             density={table.getState().density}
+            onShowEntry={(table as any).onShowEntry}
           >
             {renderedCellValue}
           </PrimaryColumnContent>

@@ -31,6 +31,7 @@ type PrimaryColumnContentProps = {
   children: React.ReactNode;
   data: any;
   density?: "comfortable" | "compact" | "spacious";
+  onShowEntry?: (id: string, typeIRI: string) => void;
 };
 export const PrimaryColumnContent = ({
   entityIRI,
@@ -38,6 +39,7 @@ export const PrimaryColumnContent = ({
   children,
   data,
   density,
+  onShowEntry,
 }: PrimaryColumnContentProps) => {
   const {
     queryBuildOptions: { primaryFields },
@@ -57,14 +59,17 @@ export const PrimaryColumnContent = ({
   const showDetailModal = useCallback(
     (e: MouseEvent) => {
       e.preventDefault();
-      NiceModal.show(EntityDetailModal, {
-        entityIRI,
-        typeIRI: typeNameToTypeIRI(typeName),
-        data: {},
-        disableInlineEditing: true,
-      });
+      if (onShowEntry) {
+        onShowEntry(entityIRI, typeNameToTypeIRI(typeName));
+      } else {
+        NiceModal.show(EntityDetailModal, {
+          entityIRI,
+          typeIRI: typeNameToTypeIRI(typeName),
+          disableInlineEditing: true,
+        });
+      }
     },
-    [entityIRI, EntityDetailModal, typeNameToTypeIRI, typeName],
+    [entityIRI, EntityDetailModal, typeNameToTypeIRI, typeName, onShowEntry],
   );
 
   return (

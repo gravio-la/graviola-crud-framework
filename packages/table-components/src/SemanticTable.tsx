@@ -66,6 +66,8 @@ export type SemanticTableProps = {
   typeName: string;
   csvOptions?: ConfigOptions;
   tableConfigRegistry?: TableConfigRegistry;
+  onShowEntry?: (id: string, typeIRI: string) => void;
+  onEditEntry?: (id: string, typeIRI: string) => void;
 };
 
 const defaultCsvOptions: ConfigOptions = {
@@ -78,6 +80,8 @@ export const SemanticTable = ({
   typeName,
   csvOptions,
   tableConfigRegistry: tableConfig,
+  onShowEntry,
+  onEditEntry,
 }: SemanticTableProps) => {
   const {
     queryBuildOptions,
@@ -222,19 +226,27 @@ export const SemanticTable = ({
   );
   const editEntry = useCallback(
     (id: string) => {
-      push(`/create/${typeName}?encID=${encodeIRI(id)}`);
+      if (onEditEntry) {
+        onEditEntry(id, typeIRI);
+      } else {
+        push(`/create/${typeName}?encID=${encodeIRI(id)}`);
+      }
     },
-    [push, typeName],
+    [push, typeName, typeIRI, onEditEntry],
   );
   const showEntry = useCallback(
     (id: string) => {
-      NiceModal.show(EntityDetailModal, {
-        typeIRI: typeIRI,
-        entityIRI: id,
-        disableInlineEditing: true,
-      });
+      if (onShowEntry) {
+        onShowEntry(id, typeIRI);
+      } else {
+        NiceModal.show(EntityDetailModal, {
+          typeIRI: typeIRI,
+          entityIRI: id,
+          disableInlineEditing: true,
+        });
+      }
     },
-    [typeIRI, EntityDetailModal],
+    [typeIRI, EntityDetailModal, onShowEntry],
   );
   const queryClient = useQueryClient();
   const { mutateAsync: moveToTrashAsync, isPending: aboutToMoveToTrash } =
@@ -596,6 +608,10 @@ export const SemanticTable = ({
       columnVisibility,
     },
   });
+
+  useEffect(() => {
+    (table as any).onShowEntry = onShowEntry;
+  }, [onShowEntry, table]);
 
   const [typeLoaded, setTypeLoaded] = useState(null);
 
