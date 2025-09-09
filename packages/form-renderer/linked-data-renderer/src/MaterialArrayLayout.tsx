@@ -118,7 +118,7 @@ export const MaterialArrayLayout = (props: ArrayLayoutProps) => {
   const typeIRI = useMemo(() => {
     const lastScopeSegement = path.split("/").pop();
     if (context?.typeIRI) return context.typeIRI;
-    let iri = schema.properties?.["@type"]?.const;
+    let iri = schema?.properties?.["@type"]?.const;
     try {
       if (!iri) {
         const type =
