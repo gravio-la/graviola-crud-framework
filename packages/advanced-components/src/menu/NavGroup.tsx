@@ -6,9 +6,15 @@ import { MenuGroup } from "./types";
 
 type NavGroupProps = {
   item: MenuGroup;
+  onCreateClicked?: (typeName: string) => void;
+  onListClicked?: (typeName: string) => void;
 };
 
-export const NavGroup = ({ item }: NavGroupProps) => {
+export const NavGroup = ({
+  item,
+  onCreateClicked,
+  onListClicked,
+}: NavGroupProps) => {
   const theme = useTheme();
 
   // menu list collapse & items
@@ -17,7 +23,15 @@ export const NavGroup = ({ item }: NavGroupProps) => {
       case "collapse":
         return <NavCollapse key={menu.id} menu={menu} level={1} />;
       case "item":
-        return <NavItem key={menu.id} item={menu} level={1} />;
+        return (
+          <NavItem
+            key={menu.id}
+            item={menu}
+            level={1}
+            onCreateClicked={onCreateClicked}
+            onListClicked={onListClicked}
+          />
+        );
       default:
         return (
           <Typography key={menu.id} variant="h6" color="error" align="center">

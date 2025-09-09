@@ -1,5 +1,3 @@
-import { encodeIRI } from "@graviola/edb-core-utils";
-import { useAdbContext, useModifiedRouter } from "@graviola/edb-state-hooks";
 import { Add as AddIcon } from "@mui/icons-material";
 import {
   Avatar,
@@ -12,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material";
-import { useCallback, useEffect } from "react";
 
 import { MenuItem } from "./types";
 
@@ -21,30 +18,18 @@ type NavItemProps = {
   level: number;
   onClick?: () => void;
   open?: boolean;
+  onCreateClicked?: (typeName: string) => void;
+  onListClicked?: (typeName: string) => void;
 };
 export const NavItem = ({
   item,
   level,
   onClick,
   open = true,
+  onCreateClicked,
+  onListClicked,
 }: NavItemProps) => {
   const theme = useTheme();
-  const { push } = useModifiedRouter();
-  const { createEntityIRI } = useAdbContext();
-
-  const create = useCallback(
-    (typeName: string) => {
-      const newEncodedURI = encodeIRI(createEntityIRI(typeName));
-      push(`/create/${typeName}?encID=${newEncodedURI}`);
-    },
-    [push, createEntityIRI],
-  );
-  const list = useCallback(
-    (typeName: any) => {
-      push(`/list/${typeName}`);
-    },
-    [push],
-  );
 
   const Icon = item.icon as React.FC<{ stroke: number; size: string }>;
   const itemIcon = item?.icon ? <Icon stroke={1.5} size="1.3rem" /> : null;
@@ -67,7 +52,7 @@ export const NavItem = ({
               py: level > 1 ? 1 : 1.25,
               justifyContent: open ? "initial" : "center",
             }}
-            onClick={() => list(item.typeName)}
+            onClick={() => onListClicked?.(item.typeName!)}
           >
             {itemIcon && (
               <ListItemIcon
@@ -103,21 +88,25 @@ export const NavItem = ({
               }}
             />
           </ListItemButton>
-          <Divider orientation="vertical" variant="middle" flexItem />
-          <ListItemButton
-            aria-label="create"
-            sx={{
-              mb: 0.5,
-              marginRight: 0,
-              py: level > 1 ? 1 : 1.25,
-              width: "fit-content",
-              flexGrow: 0,
-            }}
-            onClick={() => create(item.typeName)}
-            disabled={item?.readOnly}
-          >
-            <AddIcon />
-          </ListItemButton>
+          {onCreateClicked && (
+            <>
+              <Divider orientation="vertical" variant="middle" flexItem />
+              <ListItemButton
+                aria-label="create"
+                sx={{
+                  mb: 0.5,
+                  marginRight: 0,
+                  py: level > 1 ? 1 : 1.25,
+                  width: "fit-content",
+                  flexGrow: 0,
+                }}
+                onClick={() => onCreateClicked(item.typeName!)}
+                disabled={item?.readOnly}
+              >
+                <AddIcon />
+              </ListItemButton>
+            </>
+          )}
         </ListItem>
       ) : (
         <ListItemButton
