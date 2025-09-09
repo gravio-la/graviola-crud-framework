@@ -5,3 +5,4 @@ export * from "./search";
 export * from "./menu";
 export * from "./list";
 export * from "./finder";
+export * from "./sidebar";
