@@ -23,7 +23,7 @@ export const OverflowChip = ({
     (e: MouseEvent) => {
       if (!entityIRI) return;
       e.preventDefault();
-      NiceModal.show(EntityDetailModal, { entityIRI, data: {} });
+      NiceModal.show(EntityDetailModal, { entityIRI });
     },
     [entityIRI, EntityDetailModal],
   );
