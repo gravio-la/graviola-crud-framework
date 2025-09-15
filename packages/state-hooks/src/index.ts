@@ -14,7 +14,6 @@ export * from "./useFormEditor";
 export * from "./useGlobalSearch";
 export * from "./useGlobalSearchWithHelper";
 export * from "./useLocalHistory";
-export * from "./useQueryKeyResolver";
 export * from "./useRightDrawerState";
 export * from "./useTypeIRIFromEntity";
 export * from "./useSimilarityFinderState";

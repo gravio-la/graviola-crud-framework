@@ -365,7 +365,6 @@ const {
 } = useCRUDWithQueryClient({
   entityIRI: string,
   typeIRI: string,
-  schema: JSONSchema7,
   queryOptions?: QueryOptions,
   loadQueryKey?: string,
   allowUnsafeSourceIRIs?: boolean

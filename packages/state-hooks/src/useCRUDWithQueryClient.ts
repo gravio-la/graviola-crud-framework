@@ -1,17 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDataStore } from "./useDataStore";
-import { filterUndefOrNull } from "@graviola/edb-core-utils";
 import { useAdbContext } from "./provider";
 import type { UseCRUDHook } from "./useCrudHook";
 import { useCallback } from "react";
 import type { NamedAndTypedEntity } from "@graviola/edb-core-types";
-import { jsonld2DataSet, cleanJSONLD } from "@graviola/jsonld-utils";
 import { AbstractDatastore } from "@graviola/edb-global-types";
-import { JSONSchema7 } from "json-schema";
-import { bringDefinitionToTop } from "@graviola/json-schema-utils";
 
 type LoadResult = {
-  subjects: string[];
   document: any;
 };
 
@@ -45,17 +40,8 @@ const findDraftDocuments = (data: any, depth: number = 0) => {
 
 const storeDraftDocuments: (
   data: any,
-  rootSchema: JSONSchema7,
   dataStore: AbstractDatastore,
-  jsonldContext: any,
-  defaultPrefix: string,
-) => Promise<any[]> = async (
-  data: any,
-  rootSchema,
-  dataStore,
-  jsonldContext,
-  defaultPrefix,
-) => {
+) => Promise<any[]> = async (data: any, dataStore) => {
   const draftDocuments = findDraftDocuments(data);
   const documentsProcessed = [];
   const results = [];
@@ -65,33 +51,15 @@ const storeDraftDocuments: (
     }
     documentsProcessed.push(draftDocument["@id"]);
     const typeName = dataStore.typeIRItoTypeName(draftDocument["@type"]);
-    const schema = bringDefinitionToTop(rootSchema, typeName);
     //delete draftDocument.__draft;
-    const cleanData = await cleanJSONLD(draftDocument, schema, {
-      jsonldContext,
-      defaultPrefix,
-      keepContext: true,
-    });
     const result = await dataStore.upsertDocument(
       typeName,
       draftDocument["@id"],
-      cleanData,
+      draftDocument,
     );
     results.push(result);
   }
   return Promise.all(results);
-};
-
-const getAllSubjectsFromResult = (result: any) => {
-  const ds = jsonld2DataSet(result);
-  const subjects: Set<string> = new Set();
-  // @ts-ignore
-  for (const quad of ds) {
-    if (quad.subject.termType === "NamedNode") {
-      subjects.add(quad.subject.value);
-    }
-  }
-  return Array.from(subjects);
 };
 
 // clean empty objects and arrays recursively
@@ -151,14 +119,9 @@ const pruneTree = (data: any, depth: number = 0): any => {
   return data;
 };
 
-const resultWithSubjects = (result: any) => {
-  let subjects = [];
-  try {
-    subjects = getAllSubjectsFromResult(result);
-  } catch (e) {}
+const processResult = (result: any) => {
   return {
-    subjects,
-    document: result,
+    document: pruneTree(result),
   };
 };
 export const useCRUDWithQueryClient: UseCRUDHook<
@@ -169,16 +132,13 @@ export const useCRUDWithQueryClient: UseCRUDHook<
 > = ({
   entityIRI,
   typeIRI,
-  schema,
   queryOptions,
   loadQueryKey: presetLoadQueryKey,
   allowUnsafeSourceIRIs,
 }) => {
-  const { jsonLDConfig, createEntityIRI } = useAdbContext();
+  const { createEntityIRI } = useAdbContext();
   const { dataStore, ready } = useDataStore();
   const loadQueryKey = presetLoadQueryKey || "load";
-  const { defaultPrefix, jsonldContext } = jsonLDConfig;
-  //const { resolveSourceIRIs } = useQueryKeyResolver();
   const { enabled, ...queryOptionsRest } = queryOptions || {};
   const queryClient = useQueryClient();
 
@@ -188,7 +148,7 @@ export const useCRUDWithQueryClient: UseCRUDHook<
       if (!entityIRI || !ready) return null;
       const typeName = dataStore.typeIRItoTypeName(typeIRI);
       const result = await dataStore.loadDocument(typeName, entityIRI);
-      return resultWithSubjects(pruneTree(result));
+      return processResult(result);
     },
     enabled: Boolean(entityIRI && typeIRI && ready) && enabled,
     refetchOnWindowFocus: false,
@@ -217,28 +177,17 @@ export const useCRUDWithQueryClient: UseCRUDHook<
       }
       const typeName = dataStore.typeIRItoTypeName(typeIRI);
       const _entityIRI = entityIRI || createEntityIRI(typeName);
-      const draftDocumentsStored = await storeDraftDocuments(
-        data,
-        schema,
-        dataStore,
-        jsonldContext,
-        defaultPrefix,
-      );
+      const draftDocumentsStored = await storeDraftDocuments(data, dataStore);
 
       const dataWithType: NamedAndTypedEntity = {
         ...data,
         "@id": _entityIRI,
-        ...(typeIRI ? { "@type": typeIRI } : {}),
+        "@type": typeIRI,
       } as NamedAndTypedEntity;
-      const cleanData = await cleanJSONLD(dataWithType, schema, {
-        jsonldContext,
-        defaultPrefix,
-        keepContext: true,
-      });
       const result = await dataStore.upsertDocument(
         typeName,
         _entityIRI,
-        cleanData,
+        dataWithType,
       );
       const { "@context": context, ...cleanDataWithoutContext } = result;
       return {
@@ -249,7 +198,6 @@ export const useCRUDWithQueryClient: UseCRUDHook<
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["entity", entityIRI] });
       for (const draftDocument of result.draftDocuments) {
-        console.log("Will invalidate draft document", draftDocument["@id"]);
         await queryClient.invalidateQueries({
           queryKey: ["entity", draftDocument["@id"]],
         });
@@ -276,7 +224,7 @@ export const useCRUDWithQueryClient: UseCRUDHook<
         queryFn: async () => {
           const typeName = dataStore.typeIRItoTypeName(typeIRI);
           const result = await dataStore.loadDocument(typeName, entityIRI);
-          return resultWithSubjects(result);
+          return processResult(result);
         },
       });
     },
