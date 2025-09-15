@@ -42,7 +42,6 @@ export type SemanticJsonFormProps = {
 };
 
 export type LoadResult = {
-  subjects: string[];
   document: any;
 };
 

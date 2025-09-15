@@ -10,7 +10,6 @@ import {
 import {
   useAdbContext,
   useCRUDWithQueryClient,
-  useQueryKeyResolver,
 } from "@graviola/edb-state-hooks";
 import { SemanticJsonFormToolbar } from "./SemanticJsonFormToolbar";
 import { Backdrop, Box, CircularProgress } from "@mui/material";
@@ -55,12 +54,10 @@ export const SemanticJsonForm: FunctionComponent<SemanticJsonFormProps> = ({
   const { saveMutation, removeMutation, loadEntity } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI,
-    schema,
     queryOptions: { enabled: true },
     loadQueryKey: "rootLoad",
   });
 
-  const { updateSourceToTargets, removeSource } = useQueryKeyResolver();
   const [isSaving, setIsSaving] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
   const isLoading = useMemo(
@@ -73,18 +70,11 @@ export const SemanticJsonForm: FunctionComponent<SemanticJsonFormProps> = ({
       (loadResult: LoadResult | null) => {
         if (loadResult !== null && loadResult?.document) {
           const data = loadResult.document;
-          updateSourceToTargets(entityIRI, loadResult.subjects);
           onChange(data);
         }
       },
     );
-  }, [loadEntity, entityIRI, typeIRI, schema, onChange, updateSourceToTargets]);
-
-  useEffect(() => {
-    return () => {
-      removeSource(entityIRI);
-    };
-  }, [entityIRI, removeSource]);
+  }, [loadEntity, entityIRI, typeIRI, schema, onChange]);
 
   const [initialFetchKey, setInitialFetchKey] = useState<string | null>(null);
   const fetchKey = useMemo(
