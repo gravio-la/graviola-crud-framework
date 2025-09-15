@@ -12,7 +12,6 @@ type LoadOptions = SPARQLCRUDOptions & {
 };
 
 export type LoadResult = {
-  subjects: string[];
   document: any;
 };
 export const load = async (
@@ -30,13 +29,6 @@ export const load = async (
     crudOptions,
   );
   const ds = await constructFetch(constructQuery);
-  const subjects: Set<string> = new Set();
-  // @ts-ignore
-  for (const quad of ds) {
-    if (quad.subject.termType === "NamedNode") {
-      subjects.add(quad.subject.value);
-    }
-  }
   const document = traverseGraphExtractBySchema(
     options.defaultPrefix,
     entityIRI,
@@ -45,7 +37,6 @@ export const load = async (
     walkerOptions,
   );
   return {
-    subjects: Array.from(subjects),
     document,
   };
 };
