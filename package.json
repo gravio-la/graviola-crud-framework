@@ -36,6 +36,7 @@
     "dev:exhibition": "turbo run dev --parallel --filter='./apps/exhibition-live'",
     "dev:vite": "turbo run dev:vite --parallel --filter='./apps/exhibition-live'",
     "dev:packages": "turbo run dev --parallel --filter='./packages/*'",
+    "dev:form-renderer": "turbo run dev --parallel --filter='./packages/form-renderer/*'",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
