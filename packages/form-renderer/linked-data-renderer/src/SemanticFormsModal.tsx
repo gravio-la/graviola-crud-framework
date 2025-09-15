@@ -64,7 +64,6 @@ export const SemanticFormsModal = (props: SemanticFormsModalProps) => {
   const { loadQuery, saveMutation, removeMutation } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI,
-    schema: schema as JSONSchema7,
     queryOptions: { enabled: true },
   });
   const { data: remoteData } = loadQuery;

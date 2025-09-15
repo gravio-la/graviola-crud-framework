@@ -78,7 +78,6 @@ const MaterialArrayChipsLayoutComponent = (props: ArrayLayoutProps & {}) => {
   const { saveMutation } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI,
-    schema: subSchema as JSONSchema7,
     queryOptions: { enabled: false },
   });
 

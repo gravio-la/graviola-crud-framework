@@ -55,8 +55,6 @@ export const SimpleExpandPanelRenderer = (
   const {
     data,
     entityIRI,
-    schema,
-    rootSchema,
     onRemove,
     count,
     childLabelTemplate,
@@ -82,12 +80,6 @@ export const SimpleExpandPanelRenderer = (
     i18n: { language: locale },
   } = useTranslation();
 
-  const subSchema = useMemo(
-    () =>
-      bringDefinitionToTop(rootSchema as JSONSchema7, typeName) as JSONSchema7,
-    [rootSchema, typeName],
-  );
-
   const elementDetailItem = useMemo(
     () => (elementDetailItemPath ? get(data, elementDetailItemPath) : null),
     [elementDetailItemPath, data],
@@ -96,7 +88,6 @@ export const SimpleExpandPanelRenderer = (
   const { saveMutation } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI,
-    schema: subSchema,
     queryOptions: {
       enabled: false, //!data?.__draft && !data?.__label,
       refetchOnWindowFocus: true,

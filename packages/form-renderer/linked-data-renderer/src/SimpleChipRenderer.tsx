@@ -106,7 +106,6 @@ export const SimpleChipRenderer = (
   } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI,
-    schema: subSchema,
     queryOptions: {
       enabled: queryEnabled,
       initialData: data ? { document: data } : undefined,
