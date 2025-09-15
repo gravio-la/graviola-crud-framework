@@ -23,6 +23,7 @@ type CleanJSONLDOptions = {
   jsonldContext?: JsonLdContext;
   defaultPrefix: string;
   keepContext?: boolean;
+  removeInverseProperties?: boolean;
 };
 
 export const defaultWalkerOptions: Partial<WalkerOptions> = {
@@ -64,41 +65,37 @@ export const cleanProperty = (data: any) => {
       : data;
 };
 
-const collect = (schema: JSONSchema7, container: "@list" | "@set" = "@set") => {
-  if (schema.type === "array" && !Array.isArray(schema.items)) {
-    if ((schema.items as JSONSchema7)?.type) {
-      const itemsType = (schema.items as JSONSchema7)?.type;
-      if (!Array.isArray(itemsType)) {
-        switch (itemsType) {
-          case "object":
-            return undefined;
-          case "array":
-            return undefined;
-          case "integer":
-            return {
-              "@container": container,
-              "@type": "xs:integer",
-            };
-          case "number":
-            return {
-              "@container": container,
-              "@type": "xs:double",
-            };
-          case "boolean":
-            return {
-              "@container": container,
-              "@type": "xs:boolean",
-            };
-          case "string":
-          default:
-            return {
-              "@container": container,
-              "@type": "xs:string",
-            };
-        }
-      }
-    }
+export const removeInversePropertiesFromSchema = (schema: JSONSchema7) => {
+  if (schema.type === "object" && schema.properties) {
+    return {
+      ...schema,
+      properties: Object.fromEntries(
+        Object.entries(schema.properties)
+          .filter(([key, value]) => !value["x-inverseOf"])
+          .map(([key, value]) => [
+            key,
+            removeInversePropertiesFromSchema(value as JSONSchema7),
+          ]),
+      ),
+    };
   }
+  if (schema.type === "array" && typeof schema.items === "object") {
+    return {
+      ...schema,
+      items: removeInversePropertiesFromSchema(schema.items as JSONSchema7),
+    };
+  }
+  return schema;
+};
+
+const prepareSchema = (
+  schema: JSONSchema7,
+  removeInverseProperties?: boolean,
+) => {
+  if (removeInverseProperties) {
+    return removeInversePropertiesFromSchema(schema);
+  }
+  return schema;
 };
 
 export const cleanJSONLD = async (
@@ -109,6 +106,7 @@ export const cleanJSONLD = async (
     defaultPrefix,
     walkerOptions: walkerOptionsPassed = {},
     keepContext,
+    removeInverseProperties,
   }: CleanJSONLDOptions,
 ) => {
   const entityIRI = data["@id"];
@@ -140,7 +138,7 @@ export const cleanJSONLD = async (
       defaultPrefix,
       entityIRI,
       ds as Dataset,
-      schema,
+      prepareSchema(schema, removeInverseProperties),
       walkerOptions,
     );
     return keepContext && finalJsonldContext
