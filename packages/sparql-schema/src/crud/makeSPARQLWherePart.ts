@@ -25,5 +25,23 @@ export const makeSPARQLWherePart = (
   }
 };
 
-export const withDefaultPrefix = (prefix: string, query: string) =>
-  ` PREFIX : <${prefix}> ${query} `;
+export const withDefaultPrefix = (
+  prefix: string | null | undefined,
+  query: string,
+) => {
+  if (!prefix) {
+    return query;
+  }
+  // Find if there's a BASE declaration at the start of the query
+  const baseRegex = /^\s*BASE\s+<[^>]+>\s*/i;
+  const match = query.match(baseRegex);
+  if (match) {
+    // Insert PREFIX after BASE
+    const baseDecl = match[0];
+    const rest = query.slice(baseDecl.length);
+    return `${baseDecl}\nPREFIX : <${prefix}>\n\n${rest}`;
+  } else {
+    // No BASE, PREFIX goes at the top
+    return `PREFIX : <${prefix}>\n\n${query}`;
+  }
+};

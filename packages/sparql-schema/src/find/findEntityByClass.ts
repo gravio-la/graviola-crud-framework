@@ -1,3 +1,4 @@
+import { withDefaultPrefix } from "@/crud";
 import { Entity, PrimaryField, QueryOptions } from "@graviola/edb-core-types";
 import df from "@rdfjs/data-model";
 import { SELECT } from "@tpluscode/sparql-builder";
@@ -105,9 +106,7 @@ export const findEntityByClass: FindEntityByClassFn = async (
   if (typeof limit === "number") query = query.LIMIT(limit);
   query = query.GROUP().BY(subjectV).ORDER().BY(firstOneOfTitleV);
   const fixedQuery = fixSparqlOrder(query.build(queryBuildOptions));
-  const queryString = defaultPrefix
-    ? `PREFIX : <${defaultPrefix}> \n\n ${fixedQuery}`
-    : fixedQuery;
+  const queryString = withDefaultPrefix(defaultPrefix, fixedQuery);
   try {
     const bindings = await doQuery(queryString);
     if (!bindings) return [];
