@@ -16,4 +16,5 @@ export type SPARQLDataStoreConfig = {
   sparqlQueryFunctions: CRUDFunctions;
   defaultLimit?: number;
   makeStubSchema?: (schema: JSONSchema7) => JSONSchema7;
+  enableInversePropertiesFeature?: boolean;
 } & DatastoreBaseConfig;

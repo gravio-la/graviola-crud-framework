@@ -3,7 +3,10 @@ import type {
   CountAndIterable,
   InitDatastoreFunction,
 } from "@graviola/edb-global-types";
-import { bringDefinitionToTop } from "@graviola/json-schema-utils";
+import {
+  bringDefinitionToTop,
+  getInverseProperties,
+} from "@graviola/json-schema-utils";
 import { cleanJSONLD } from "@graviola/jsonld-utils";
 import {
   exists,
@@ -12,6 +15,7 @@ import {
   getClasses,
   jsonSchema2Select,
   load,
+  makeSPARQLInverseSyncQuery,
   remove,
   save,
   searchEntityByLabel,
@@ -21,7 +25,9 @@ import type { JSONSchema7 } from "json-schema";
 
 import type { SPARQLDataStoreConfig } from "./SPARQLDataStoreConfig";
 
-export const initSPARQLStore = (dataStoreConfig): AbstractDatastore => {
+export const initSPARQLStore = (
+  dataStoreConfig: SPARQLDataStoreConfig,
+): AbstractDatastore => {
   const {
     defaultPrefix,
     jsonldContext,
@@ -37,6 +43,7 @@ export const initSPARQLStore = (dataStoreConfig): AbstractDatastore => {
     defaultLimit,
     makeStubSchema,
     schema: rootSchema,
+    enableInversePropertiesFeature,
   } = dataStoreConfig;
 
   const typeIRItoTypeName = queryBuildOptions.typeIRItoTypeName;
@@ -152,11 +159,34 @@ export const initSPARQLStore = (dataStoreConfig): AbstractDatastore => {
         jsonldContext,
         defaultPrefix,
         keepContext: true,
+        removeInverseProperties: enableInversePropertiesFeature,
       });
       await save(cleanData, schema, updateFetch, {
         defaultPrefix,
         queryBuildOptions,
       });
+
+      if (enableInversePropertiesFeature) {
+        const inverseProperties = getInverseProperties(rootSchema, schema, doc);
+        const inversePropertiesWithTypeIRI = inverseProperties.map(
+          (inverseProperty) => ({
+            ...inverseProperty,
+            typeIRI: typeNameToTypeIRI(inverseProperty.typeName),
+          }),
+        );
+
+        const inversePropertiesSyncQuery = makeSPARQLInverseSyncQuery(
+          entityIRI,
+          inversePropertiesWithTypeIRI,
+          {
+            defaultPrefix,
+            queryBuildOptions,
+          },
+        );
+        if (inversePropertiesSyncQuery) {
+          await updateFetch(inversePropertiesSyncQuery);
+        }
+      }
       return doc;
     },
     listDocuments: (typeName, limit, cb) =>

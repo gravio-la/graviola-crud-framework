@@ -1,4 +1,8 @@
-import type { CRUDFunctions, SparqlEndpoint } from "@graviola/edb-core-types";
+import type {
+  CRUDFunctions,
+  SparqlEndpoint,
+  WalkerOptions,
+} from "@graviola/edb-core-types";
 import { CrudProviderContext, useAdbContext } from "@graviola/edb-state-hooks";
 import { initSPARQLStore } from "@graviola/sparql-db-impl";
 import { type FunctionComponent, type ReactNode, useMemo } from "react";
@@ -9,10 +13,18 @@ export type SparqlStoreProviderProps = {
   children: ReactNode;
   endpoint: SparqlEndpoint;
   defaultLimit: number;
+  walkerOptions?: Partial<WalkerOptions>;
+  enableInversePropertiesFeature?: boolean;
 };
 export const SparqlStoreProvider: FunctionComponent<
   SparqlStoreProviderProps
-> = ({ children, endpoint, defaultLimit }) => {
+> = ({
+  children,
+  endpoint,
+  defaultLimit,
+  walkerOptions,
+  enableInversePropertiesFeature,
+}) => {
   const crudOptions = useMemo<CRUDFunctions | null>(() => {
     return tripleStoreImplementations[endpoint.provider](endpoint);
   }, [endpoint]);
@@ -31,11 +43,12 @@ export const SparqlStoreProvider: FunctionComponent<
       jsonldContext,
       typeNameToTypeIRI,
       queryBuildOptions,
-      walkerOptions: {},
+      walkerOptions: walkerOptions || {},
       sparqlQueryFunctions: crudOptions,
       schema,
       defaultLimit,
       makeStubSchema,
+      enableInversePropertiesFeature,
     });
   }, [
     crudOptions,
@@ -45,6 +58,7 @@ export const SparqlStoreProvider: FunctionComponent<
     defaultPrefix,
     jsonldContext,
     defaultLimit,
+    walkerOptions,
   ]);
 
   return (
