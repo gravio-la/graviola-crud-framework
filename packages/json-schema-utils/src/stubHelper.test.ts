@@ -41,6 +41,7 @@ describe("JSON Schema Utility Functions", () => {
               type: "string",
             },
           },
+          required: [],
         },
         OrganizationStub: {
           properties: {
@@ -48,6 +49,7 @@ describe("JSON Schema Utility Functions", () => {
               type: "string",
             },
           },
+          required: [],
         },
         Person: {
           type: "object",

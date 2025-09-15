@@ -42,7 +42,8 @@
   },
   "dependencies": {
     "json-schema": "^0.4.0",
-    "lodash-es": "^4.17.21"
+    "lodash-es": "^4.17.21",
+    "@graviola/edb-core-utils": "workspace:*"
   },
   "clean-package": {
     "extends": "../../../clean-package.config.cjs"

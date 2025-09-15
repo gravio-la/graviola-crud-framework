@@ -8,4 +8,7 @@ export default {
       },
     ],
   },
+  moduleNameMapper: {
+    "^lodash-es/(.*)$": "lodash/$1",
+  },
 };
