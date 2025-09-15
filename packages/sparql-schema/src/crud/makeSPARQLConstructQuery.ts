@@ -1,18 +1,18 @@
 import { SPARQLCRUDOptions } from "@graviola/edb-core-types";
 import df from "@rdfjs/data-model";
 import { CONSTRUCT } from "@tpluscode/sparql-builder";
-import { JSONSchema7 } from "json-schema";
 
 import {
   makeSPARQLWherePart,
   withDefaultPrefix,
 } from "@/crud/makeSPARQLWherePart";
 import { jsonSchema2construct } from "@/schema2sparql/jsonSchema2construct";
+import { JSONSchemaWithInverseProperties } from "@graviola/json-schema-utils";
 
 export const makeSPARQLConstructQuery = (
   entityIRI: string,
   typeIRI: string | undefined,
-  schema: JSONSchema7,
+  schema: JSONSchemaWithInverseProperties,
   options: SPARQLCRUDOptions,
 ) => {
   const { defaultPrefix, queryBuildOptions, maxRecursion } = options;

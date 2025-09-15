@@ -2,7 +2,11 @@ import {
   NamedAndTypedEntity,
   SPARQLCRUDOptions,
 } from "@graviola/edb-core-types";
-import { dataset2NTriples, jsonld2DataSet } from "@graviola/jsonld-utils";
+import {
+  dataset2NTriples,
+  jsonld2DataSet,
+  removeInversePropertiesFromSchema,
+} from "@graviola/jsonld-utils";
 import { DELETE, INSERT } from "@tpluscode/sparql-builder";
 import { JSONSchema7 } from "json-schema";
 
@@ -23,6 +27,7 @@ export const save = async (
   const typeIRI = dataToBeSaved["@type"];
   const ds = await jsonld2DataSet(dataToBeSaved);
   const ntriples = await dataset2NTriples(ds);
+  const cleanSchema = removeInversePropertiesFromSchema(schema);
 
   if (skipRemove) {
     const insertQuery = withDefaultPrefix(
@@ -35,7 +40,7 @@ export const save = async (
   // Get the construct and where parts needed for the DELETE operation
   const { construct, whereRequired, whereOptionals } = jsonSchema2construct(
     entityIRI,
-    schema,
+    cleanSchema,
     ["@id"],
     ["@id", "@type"],
   );

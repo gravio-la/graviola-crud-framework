@@ -1,6 +1,8 @@
 import {
   isJSONSchema,
   isJSONSchemaDefinition,
+  JSONSchemaWithInverseProperties,
+  resolveInverseProperties,
   resolveSchema,
 } from "@graviola/json-schema-utils";
 import { Variable } from "@rdfjs/types";
@@ -19,11 +21,13 @@ const propertiesContainStopSymbol = (
 
 const MAX_RECURSION = 4;
 const makePrefixed = (key: string) => (key.includes(":") ? key : `:${key}`);
+const makePrefixedProperyPath = (path: string[]) =>
+  path.map((key) => makePrefixed(key)).join("/");
 const mkSubject = (subjectURI: string) =>
   subjectURI.startsWith("?") ? subjectURI : `<${subjectURI}>`;
 export const jsonSchema2construct: (
   subjectURI: string | Variable,
-  rootSchema: JSONSchema7,
+  rootSchema: JSONSchemaWithInverseProperties,
   stopSymbols?: string[],
   excludedProperties?: string[],
   maxRecursion?: number,
@@ -43,7 +47,7 @@ export const jsonSchema2construct: (
   );
   const propertiesToSPARQLPatterns = (
     sP: string,
-    subSchema: JSONSchema7,
+    subSchema: JSONSchemaWithInverseProperties,
     level: number,
   ) => {
     if (level > maxRecursion) {
@@ -63,12 +67,28 @@ export const jsonSchema2construct: (
         const required = subSchema.required?.includes(property),
           p = makePrefixed(property),
           o = `?${property}_${varIndex++}`;
-        if (!required) {
-          whereOptionals += `OPTIONAL {\n${sP} ${p} ${o} .\n`;
+
+        if (schema["x-inverseOf"]) {
+          const resolvedInverse = resolveInverseProperties(schema, rootSchema);
+          if (resolvedInverse) {
+            resolvedInverse.forEach((inverse) => {
+              const ipp = makePrefixedProperyPath(inverse.path);
+              if (!required) {
+                whereOptionals += `OPTIONAL {\n ${o} ${ipp} ${sP} .\n`;
+              } else {
+                whereOptionals += `${o} ${ipp} ${sP} .\n`;
+              }
+              construct += `${sP} ${p} ${o} .\n`;
+            });
+          }
         } else {
-          whereOptionals += `${sP} ${p} ${o} .\n`;
+          if (!required) {
+            whereOptionals += `OPTIONAL {\n${sP} ${p} ${o} .\n`;
+          } else {
+            whereOptionals += `${sP} ${p} ${o} .\n`;
+          }
+          construct += `${sP} ${p} ${o} .\n`;
         }
-        construct += `${sP} ${p} ${o} .\n`;
         if (schema.$ref) {
           const subSchema = resolveSchema(
             schema as JSONSchema7,

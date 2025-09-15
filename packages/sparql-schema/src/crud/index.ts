@@ -3,6 +3,7 @@ export * from "./makeSPARQLDeleteQuery";
 export * from "./makeSPARQLRestoreFromTrashQuery";
 export * from "./makeSPARQLToTrashQuery";
 export * from "./makeSPARQLConstructQuery";
+export * from "./makeSPARQLInverseSyncQuery";
 export * from "./exists";
 export * from "./load";
 export * from "./remove";

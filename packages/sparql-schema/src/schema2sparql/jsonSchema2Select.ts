@@ -7,6 +7,7 @@ import {
   isJSONSchema,
   isJSONSchemaDefinition,
   isPrimitive,
+  resolveInverseProperties,
   resolveSchema,
 } from "@graviola/json-schema-utils";
 import { JSONSchema7, JSONSchema7Definition } from "json-schema";
@@ -15,6 +16,9 @@ const makeWherePart = (queryClause: string, required: boolean) =>
   required ? queryClause : ` OPTIONAL { ${queryClause} } `;
 const makePrefixedProperty = (property: string, prefix: string = "") =>
   `${prefix}:${property}`;
+const makePrefixed = (key: string) => (key.includes(":") ? key : `:${key}`);
+const makePrefixedPropertyPath = (path: string[]) =>
+  path.map((key) => makePrefixed(key)).join("/");
 
 const makeVariable = (path: string[]) => `?${path.join("_")}`;
 const defaultSeparator = "; ";
@@ -95,12 +99,29 @@ const propertiesToSPARQLSelectPatterns = (
           select += ` (COUNT(DISTINCT ${variable}) AS ${variable}_count) `;
         }
         //select += ` (COUNT(DISTINCT ${variable}) AS ${variable}_count) `;
-        where += makeWherePart(
-          ` ${currentVariable} ${prefixedProperty} ${variable} .
-          ${innerWherePart}
-          `,
-          isRequired,
-        );
+        if (subSchema["x-inverseOf"]) {
+          const resolvedInverse = resolveInverseProperties(
+            subSchema,
+            rootSchema,
+          );
+          if (resolvedInverse) {
+            resolvedInverse.forEach((inverse) => {
+              where += makeWherePart(
+                ` ${variable} ${makePrefixedPropertyPath(inverse.path)} ${currentVariable} . 
+                ${innerWherePart}
+                `,
+                isRequired,
+              );
+            });
+          }
+        } else {
+          where += makeWherePart(
+            ` ${currentVariable} ${prefixedProperty} ${variable} .
+            ${innerWherePart}
+            `,
+            isRequired,
+          );
+        }
       } else if (
         typeof subSchema.type === "string" &&
         isPrimitive(subSchema.type)
@@ -171,10 +192,25 @@ const propertiesToSPARQLSelectPatterns = (
               select += ` (SAMPLE(${primaryMultiVariable}) AS ${primarySingleVariable}) `;
             });
           }
-          where += makeWherePart(
-            ` ${currentVariable} ${prefixedProperty} ${variable} . \n ${variable} a ${typeVariable} . \n ${subWhere} \n ${primaryInfoWhere} `,
-            isRequired,
-          );
+          if (subSchema["x-inverseOf"]) {
+            const resolvedInverse = resolveInverseProperties(
+              subSchema,
+              rootSchema,
+            );
+            if (resolvedInverse) {
+              resolvedInverse.forEach((inverse) => {
+                where += makeWherePart(
+                  ` ${variable} ${makePrefixedPropertyPath(inverse.path)} ${currentVariable} . \n ${subWhere} \n ${primaryInfoWhere} `,
+                  isRequired,
+                );
+              });
+            }
+          } else {
+            where += makeWherePart(
+              ` ${currentVariable} ${prefixedProperty} ${variable} . \n ${variable} a ${typeVariable} . \n ${subWhere} \n ${primaryInfoWhere} `,
+              isRequired,
+            );
+          }
           select += ` (SAMPLE(${variable}) AS ${variable}_IRI) (SAMPLE(${typeVariable}) AS ${typeVariable}) `;
           select += subSelect;
         }
