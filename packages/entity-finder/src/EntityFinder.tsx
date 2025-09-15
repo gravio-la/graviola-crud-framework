@@ -314,7 +314,7 @@ export const EntityFinder = <
       setMargin(ref.clientHeight);
     }
   }, [ref]);
-  const { registerModal, modalRegistry } = useModalRegistry(NiceModal);
+  const { registerModal } = useModalRegistry(NiceModal);
 
   const getDefaultLabelKey = useCallback(() => {
     const fieldDefinitions = primaryFields[typeName] as
@@ -482,9 +482,6 @@ export const EntityFinder = <
                   </ClassicResultListWrapper>
                 );
               })}
-              {Array.from(modalRegistry)
-                .map((modal) => modal)
-                .join(",")}
             </Grid>
           </Grid>
           <Grid
