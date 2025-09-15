@@ -11,7 +11,6 @@ import {
   useAdbContext,
   useCRUDWithQueryClient,
   useDataStore,
-  useExtendedSchema,
   useGlobalCRUDOptions,
   useModifiedRouter,
 } from "@graviola/edb-state-hooks";
@@ -21,8 +20,6 @@ import {
   Checkbox,
   FormControl,
   Grid,
-  MenuItem,
-  Select,
   Skeleton,
   TextField,
   Typography,
@@ -239,9 +236,7 @@ export const SpreadSheetWorkSheetView = <
     () => typeNameToTypeIRI(typeName),
     [typeName, typeNameToTypeIRI],
   );
-  const loadedSchema = useExtendedSchema({ typeName });
   const { saveMutation } = useCRUDWithQueryClient({
-    schema: loadedSchema,
     queryOptions: { enabled: false },
     loadQueryKey: "importsave",
     allowUnsafeSourceIRIs: true,
