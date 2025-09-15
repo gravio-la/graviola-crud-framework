@@ -6,10 +6,7 @@ import {
   extractFieldIfString,
 } from "@graviola/edb-data-mapping";
 import { useAdbContext, useTypeIRIFromEntity } from "@graviola/edb-state-hooks";
-import {
-  useCRUDWithQueryClient,
-  useExtendedSchema,
-} from "@graviola/edb-state-hooks";
+import { useCRUDWithQueryClient } from "@graviola/edb-state-hooks";
 import { Clear, HideImage } from "@mui/icons-material";
 import {
   Avatar,
@@ -44,13 +41,11 @@ export const EntityDetailListItem = ({
     () => typeIRIToTypeName(classIRI),
     [classIRI, typeIRIToTypeName],
   );
-  const loadedSchema = useExtendedSchema({ typeName });
   const {
     loadQuery: { data: rawData },
   } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI: classIRI,
-    schema: loadedSchema,
     queryOptions: { enabled: true, refetchOnWindowFocus: true },
     loadQueryKey: "show",
   });

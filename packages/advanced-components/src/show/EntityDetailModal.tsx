@@ -11,10 +11,7 @@ import {
   useModalRegistry,
   useModifiedRouter,
 } from "@graviola/edb-state-hooks";
-import {
-  useExtendedSchema,
-  useTypeIRIFromEntity,
-} from "@graviola/edb-state-hooks";
+import { useTypeIRIFromEntity } from "@graviola/edb-state-hooks";
 import { EntityDetailModalProps } from "@graviola/semantic-jsonform-types";
 import { Close as CloseIcon, Edit } from "@mui/icons-material";
 import {
@@ -273,13 +270,11 @@ const EntityDetailDataWrapper: FC<{
   const { t } = useTranslation();
 
   // Load schema and data
-  const loadedSchema = useExtendedSchema({ typeName });
   const {
     loadQuery: { data: rawData },
   } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI: classIRI,
-    schema: loadedSchema,
     queryOptions: {
       enabled: !disableLoad,
       refetchOnWindowFocus: true,

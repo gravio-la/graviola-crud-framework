@@ -61,7 +61,6 @@ const EditEntityModalContent = ({
   const { loadQuery, saveMutation } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI: classIRI,
-    schema: loadedSchema,
     queryOptions: {
       enabled: !disableLoad,
       refetchOnWindowFocus: true,
@@ -127,6 +126,7 @@ const EditEntityModalContent = ({
         jsonldContext: jsonLDConfig.jsonldContext,
         defaultPrefix: jsonLDConfig.defaultPrefix,
         keepContext: false,
+        removeInverseProperties: true,
       });
       modal.resolve({
         entityIRI: formData["@id"],

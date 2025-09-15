@@ -8,10 +8,7 @@ import {
   useAdbContext,
   useCRUDWithQueryClient,
 } from "@graviola/edb-state-hooks";
-import {
-  useExtendedSchema,
-  useTypeIRIFromEntity,
-} from "@graviola/edb-state-hooks";
+import { useTypeIRIFromEntity } from "@graviola/edb-state-hooks";
 import { Box, BoxProps } from "@mui/material";
 import { useMemo } from "react";
 
@@ -46,13 +43,11 @@ export const EntityDetailElement = ({
     () => typeIRIToTypeName(classIRI),
     [classIRI, typeIRIToTypeName],
   );
-  const loadedSchema = useExtendedSchema({ typeName });
   const {
     loadQuery: { data: rawData },
   } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI: classIRI,
-    schema: loadedSchema,
     queryOptions: {
       enabled: true,
       refetchOnWindowFocus: true,

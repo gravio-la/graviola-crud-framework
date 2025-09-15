@@ -6,10 +6,7 @@ import {
   extractFieldIfString,
 } from "@graviola/edb-data-mapping";
 import { useAdbContext, useTypeIRIFromEntity } from "@graviola/edb-state-hooks";
-import {
-  useCRUDWithQueryClient,
-  useExtendedSchema,
-} from "@graviola/edb-state-hooks";
+import { useCRUDWithQueryClient } from "@graviola/edb-state-hooks";
 import { Avatar, Chip, ChipProps, Tooltip } from "@mui/material";
 import { MouseEvent, useCallback, useMemo, useState } from "react";
 
@@ -38,13 +35,11 @@ export const EntityChip = ({
     () => typeIRIToTypeName(classIRI),
     [classIRI, typeIRIToTypeName],
   );
-  const loadedSchema = useExtendedSchema({ typeName });
   const {
     loadQuery: { data: rawData },
   } = useCRUDWithQueryClient({
     entityIRI,
     typeIRI: classIRI,
-    schema: loadedSchema,
     queryOptions: {
       enabled: !disableLoad && !defaultData,
       refetchOnWindowFocus: true,

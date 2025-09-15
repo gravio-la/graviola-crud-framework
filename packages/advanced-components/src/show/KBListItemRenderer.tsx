@@ -2,7 +2,6 @@ import { ClassicResultListItem } from "@graviola/edb-basic-components";
 import {
   useAdbContext,
   useCRUDWithQueryClient,
-  useExtendedSchema,
   useSimilarityFinderState,
 } from "@graviola/edb-state-hooks";
 import { ListItemRendererProps } from "@graviola/semantic-jsonform-types";
@@ -21,19 +20,9 @@ export const KBListItemRenderer = ({
   onAccept,
 }: ListItemRendererProps) => {
   const { id, label, avatar, secondary } = data;
-  const {
-    typeIRIToTypeName,
-  } = useAdbContext();
-
-  const typeName = useMemo(
-    () => typeIRIToTypeName(typeIRI),
-    [typeIRI, typeIRIToTypeName],
-  );
-  const loadedSchema = useExtendedSchema({ typeName });
   const { loadEntity } = useCRUDWithQueryClient({
     entityIRI: id,
     typeIRI,
-    schema: loadedSchema,
     queryOptions: { enabled: false },
     loadQueryKey: "load",
   });
