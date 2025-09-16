@@ -11,6 +11,7 @@ export type {
 } from "@tanstack/react-query";
 export * from "./useFormData";
 export * from "./useFormEditor";
+export * from "./useFullscreenState";
 export * from "./useGlobalSearch";
 export * from "./useGlobalSearchWithHelper";
 export * from "./useLocalHistory";

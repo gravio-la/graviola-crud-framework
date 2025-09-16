@@ -4,6 +4,7 @@ import { encodeIRI, filterUndefOrNull } from "@graviola/edb-core-utils";
 import {
   useAdbContext,
   useDataStore,
+  useFullscreenState,
   useGlobalCRUDOptions,
   useModifiedRouter,
   useMutation,
@@ -25,6 +26,7 @@ import {
 import {
   Backdrop,
   Box,
+  Chip,
   CircularProgress,
   IconButton,
   ListItemIcon,
@@ -127,6 +129,7 @@ export const SemanticTable = ({
 
   const { crudOptions } = useGlobalCRUDOptions();
   const { dataStore, ready } = useDataStore();
+  const { isFullscreen, setFullscreen, exitFullscreen } = useFullscreenState();
 
   const { data: countData, isLoading: countLoading } = useQuery({
     queryKey: ["type", typeIRI, "count"],
@@ -431,7 +434,6 @@ export const SemanticTable = ({
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
       sx: {
-        maxHeight: `calc(100vh - 180px)`,
         "&::-webkit-scrollbar": {
           height: 8,
         },
@@ -450,12 +452,32 @@ export const SemanticTable = ({
     enableColumnOrdering: true,
     enableRowSelection: true,
     enableFacetedValues: true,
+    enableBottomToolbar: true,
+    enableTopToolbar: true,
+    enableFullScreenToggle: true,
+    enableColumnActions: true,
+    enableDensityToggle: true,
+    enableHiding: true,
+    positionToolbarAlertBanner: "none", // Disable only the selection alert banner
+    layoutMode: "semantic",
+    muiTablePaperProps: {
+      sx: {
+        height: "100%",
+        maxHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      },
+    },
     onRowSelectionChange: handleRowSelectionChange,
     manualPagination,
     manualSorting: true,
     onPaginationChange: handlePaginationChange,
     onSortingChange: handleColumnOrderChange,
     onColumnVisibilityChange: handleChangeColumnVisibility,
+    onIsFullScreenChange: (isFullScreen: boolean) => {
+      setFullscreen(isFullScreen);
+    },
     columnFilterDisplayMode: "popover",
     initialState: {
       columnVisibility: conf.columnVisibility,
@@ -464,85 +486,105 @@ export const SemanticTable = ({
     localization,
     rowCount: !loadAllAtOnce && countData ? countData : resultList.length,
     enableRowActions: true,
-    renderTopToolbarCustomActions: ({ table }) => (
-      <Box sx={{ display: "flex", gap: "1rem" }}>
-        <Button
-          variant="contained"
-          color={"primary"}
-          startIcon={<NoteAdd />}
-          onClick={() => {
-            editEntry(createEntityIRI(typeName));
+    renderTopToolbarCustomActions: ({ table }) => {
+      const selectedRows = table.getSelectedRowModel().rows;
+      const selectedCount = selectedRows.length;
+      const hasSelection = selectedCount > 0;
+
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            gap: "1rem",
+            alignItems: "center",
+            flexWrap: "wrap",
           }}
         >
-          {t("create new", { item: t(typeName) })}
-        </Button>
-        <ExportMenuButton>
-          <MenuItem onClick={handleExportData}>
-            <ListItemIcon>
-              <FileDownload />
-            </ListItemIcon>
-            {t("export all data")}
-          </MenuItem>
-          <MenuItem
-            disabled={table.getRowModel().rows.length === 0}
-            onClick={() => handleExportRows(table.getRowModel().rows)}
+          <Button
+            variant="outlined"
+            color={"primary"}
+            startIcon={<NoteAdd />}
+            onClick={() => {
+              editEntry(createEntityIRI(typeName));
+            }}
           >
-            <ListItemIcon>
-              <FileDownload />
-            </ListItemIcon>
-            {t("export page only")}
-          </MenuItem>
-          <MenuItem
-            disabled={
-              !table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
+            {t("create new", { item: t(typeName) })}
+          </Button>
+
+          {hasSelection && (
+            <>
+              <Chip
+                label={t("selected entries", { count: selectedCount })}
+                color="primary"
+                variant="outlined"
+                sx={{ fontWeight: "bold" }}
+              />
+
+              <Tooltip title={t("move to trash")}>
+                <IconButton
+                  onClick={() => handleMoveToTrashSelected(table)}
+                  color="warning"
+                  size="small"
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title={t("delete permanently")}>
+                <IconButton
+                  onClick={() => handleRemoveSelected(table)}
+                  color="error"
+                  size="small"
+                >
+                  <DeleteForever />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
+
+          <ExportMenuButton>
+            <MenuItem onClick={handleExportData}>
+              <ListItemIcon>
+                <FileDownload />
+              </ListItemIcon>
+              {t("export all data")}
+            </MenuItem>
+            <MenuItem
+              disabled={table.getRowModel().rows.length === 0}
+              onClick={() => handleExportRows(table.getRowModel().rows)}
+            >
+              <ListItemIcon>
+                <FileDownload />
+              </ListItemIcon>
+              {t("export page only")}
+            </MenuItem>
+            <MenuItem
+              disabled={!hasSelection}
+              onClick={() => handleExportRows(selectedRows)}
+            >
+              <ListItemIcon>
+                <FileDownload />
+              </ListItemIcon>
+              {t("export selected rows only")}
+            </MenuItem>
+          </ExportMenuButton>
+
+          <Tooltip
+            title={
+              t("load all data into client") + ` (max ${upperLimit} entries)`
             }
-            onClick={() => handleExportRows(table.getSelectedRowModel().rows)}
           >
-            <ListItemIcon>
-              <FileDownload />
-            </ListItemIcon>
-            {t("export selected rows only")}
-          </MenuItem>
-        </ExportMenuButton>
-        {
-          <>
             <IconButton
-              onClick={() => handleMoveToTrashSelected(table)}
-              disabled={
-                !table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
-              }
-              color="error"
-              aria-label={t("move to trash")}
+              onClick={() => handleToggleLoadAll()}
+              color={loadAllAtOnce ? "success" : "default"}
+              aria-label={t("load all data into client")}
             >
-              <Delete />
+              {loadAllAtOnce ? <CloudDone /> : <CloudSync />}
             </IconButton>
-            <IconButton
-              onClick={() => handleRemoveSelected(table)}
-              disabled={
-                !table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
-              }
-              color="error"
-              aria-label={t("delete permanently")}
-            >
-              <DeleteForever />
-            </IconButton>
-            <Tooltip
-              title={
-                t("load all data into client") + ` (max ${upperLimit} entries)`
-              }
-            >
-              <IconButton
-                onClick={() => handleToggleLoadAll()}
-                color={loadAllAtOnce ? "success" : "default"}
-                aria-label={t("load all data into client")}
-              >
-                {loadAllAtOnce ? <CloudDone /> : <CloudSync />}
-              </IconButton>
-            </Tooltip>
-          </>
-        }
-      </Box>
-    ),
+          </Tooltip>
+        </Box>
+      );
+    },
     getRowId: (row) =>
       (row as any)?.entity?.value ||
       (row as any)?.originalValue?.entity?.value ||
@@ -606,12 +648,29 @@ export const SemanticTable = ({
       rowSelection,
       columnFilters,
       columnVisibility,
+      isFullScreen: isFullscreen,
     },
   });
 
   useEffect(() => {
     (table as any).onShowEntry = onShowEntry;
   }, [onShowEntry, table]);
+
+  // Add escape key handler to exit fullscreen
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isFullscreen) {
+        exitFullscreen();
+      }
+    };
+
+    if (isFullscreen) {
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => {
+        document.removeEventListener("keydown", handleEscapeKey);
+      };
+    }
+  }, [isFullscreen, exitFullscreen]);
 
   const [typeLoaded, setTypeLoaded] = useState(null);
 
@@ -626,7 +685,16 @@ export const SemanticTable = ({
   }, [typeName, typeLoaded, enqueueSnackbar, t, table]);
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        maxHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       {isLoading && displayColumns.length <= 0 ? (
         <Skeleton variant="rectangular" height={"50%"} />
       ) : (
