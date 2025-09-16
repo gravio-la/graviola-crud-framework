@@ -5,7 +5,8 @@ export function rdfLiteralToNative(
   literal: Literal,
 ): string | number | boolean | Date {
   if (!literal.datatype) return literal.value;
-  switch (literal.datatype.value) {
+  const datatype = literal.datatype?.value || literal.datatype;
+  switch (datatype) {
     case rdf.langString.value:
     case xsd.string.value:
       return literal.value;
@@ -22,6 +23,6 @@ export function rdfLiteralToNative(
     case xsd.dateTime.value:
       return new Date(literal.value);
     default:
-      throw new Error(`Unsupported literal type ${literal.datatype.value}`);
+      throw new Error(`Unsupported literal type ${datatype}`);
   }
 }

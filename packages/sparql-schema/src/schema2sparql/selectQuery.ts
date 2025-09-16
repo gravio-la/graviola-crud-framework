@@ -1,5 +1,5 @@
-import { BindingsStream } from "@comunica/types";
-import { Prefixes } from "@graviola/edb-core-types";
+import type { BindingsStream } from "@comunica/types";
+import type { Prefixes, RDFSelectResult } from "@graviola/edb-core-types";
 import { Literal, NamedNode } from "@rdfjs/types";
 
 import { prefixes2sparqlPrefixDeclaration } from "./prefixes2sparqlPrefixDeclaration";
@@ -52,7 +52,7 @@ type SparqlSelectViaFieldMappingOptions = {
   wrapAround?: [string, string];
   prefixes?: Prefixes;
   permissive: boolean;
-  query: (queryString: string) => Promise<BindingsStream>;
+  query: (queryString: string) => Promise<BindingsStream | RDFSelectResult>;
   includeLabel?: boolean;
   includeDescription?: boolean;
 };
@@ -107,6 +107,19 @@ export const sparqlSelectFieldsQuery = (
     `;
 };
 
+const isRDFSelectResult = (
+  result: BindingsStream | RDFSelectResult,
+): result is RDFSelectResult => {
+  return "results" in result;
+};
+
+const getFromBinding = (key: string, binding: any) => {
+  if (typeof binding.get === "function") {
+    return binding.get(key);
+  }
+  return binding[key];
+};
+
 export const sparqlSelectViaFieldMappings = async (
   subjectIRI: string,
   {
@@ -121,12 +134,18 @@ export const sparqlSelectViaFieldMappings = async (
     ${sparqlSelectFieldsQuery(subjectIRI, params)}
     `;
 
-  const bindingsStream: BindingsStream = await query(sparqlQuery);
+  const bindingsStream: BindingsStream | RDFSelectResult =
+    await query(sparqlQuery);
+  const bindings =
+    isRDFSelectResult(bindingsStream) &&
+    Array.isArray(bindingsStream.results.bindings)
+      ? bindingsStream.results.bindings
+      : (await (bindingsStream as BindingsStream).toArray()) || [];
 
   type TypesSupported = string | number | boolean | Date;
   const result: { [k: string]: TypesSupported | TypesSupported[] } = {};
 
-  for (const binding of await bindingsStream.toArray()) {
+  for (const binding of bindings) {
     Object.entries({
       ...params.fieldMapping,
       ...(params.includeLabel
@@ -152,7 +171,7 @@ export const sparqlSelectViaFieldMappings = async (
     }).forEach(([k, v]) => {
       const kLabel = `${k}Label`,
         kDescription = `${k}Description`,
-        o = binding.get(k);
+        o = getFromBinding(k, binding);
       if (!o) return;
       // @ts-ignore
       if (isLiteralMappingTarget(v)) {
@@ -186,10 +205,11 @@ export const sparqlSelectViaFieldMappings = async (
           const native = object.value;
           let label, description;
           if (v.includeLabel) {
-            label = (binding.get(kLabel) as Literal).value;
+            label = (getFromBinding(kLabel, binding) as Literal).value;
           }
           if (v.includeDescription) {
-            description = (binding.get(kDescription) as Literal).value;
+            description = (getFromBinding(kDescription, binding) as Literal)
+              .value;
           }
           if (v.single) {
             if (!permissive) {
