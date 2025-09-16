@@ -44,6 +44,7 @@ export const initSPARQLStore = (
     makeStubSchema,
     schema: rootSchema,
     enableInversePropertiesFeature,
+    defaultUpdateGraph,
   } = dataStoreConfig;
 
   const typeIRItoTypeName = queryBuildOptions.typeIRItoTypeName;
@@ -142,6 +143,7 @@ export const initSPARQLStore = (
         {
           defaultPrefix,
           queryBuildOptions,
+          defaultUpdateGraph,
         },
       );
     },
@@ -164,6 +166,7 @@ export const initSPARQLStore = (
       await save(cleanData, schema, updateFetch, {
         defaultPrefix,
         queryBuildOptions,
+        defaultUpdateGraph,
       });
 
       if (enableInversePropertiesFeature) {
@@ -181,6 +184,7 @@ export const initSPARQLStore = (
           {
             defaultPrefix,
             queryBuildOptions,
+            defaultUpdateGraph,
           },
         );
         if (inversePropertiesSyncQuery) {

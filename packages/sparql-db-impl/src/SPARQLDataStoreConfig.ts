@@ -17,4 +17,5 @@ export type SPARQLDataStoreConfig = {
   defaultLimit?: number;
   makeStubSchema?: (schema: JSONSchema7) => JSONSchema7;
   enableInversePropertiesFeature?: boolean;
+  defaultUpdateGraph?: string;
 } & DatastoreBaseConfig;
