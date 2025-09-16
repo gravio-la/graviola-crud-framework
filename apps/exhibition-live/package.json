@@ -30,8 +30,6 @@
     "docker:run": "docker run -p 3000:3000 adb-next"
   },
   "dependencies": {
-    "@comunica/query-sparql": "^2.5.2",
-    "@comunica/types": "^2.8.2",
     "@ebay/nice-modal-react": "^1.2.13",
     "@egjs/hammerjs": "^2.0.17",
     "@emotion/react": "^11.5.0",

@@ -1,10 +1,10 @@
 import { DebouncedAutocomplete } from "@graviola/edb-advanced-components";
 import { AutocompleteSuggestion } from "@graviola/edb-core-types";
 import {
+  createDefaultWikidataSparqlFetcher,
   findWithinWikidataUsingREST,
   wikidataPrefixes,
 } from "@graviola/edb-wikidata-utils";
-import { remoteSparqlQuery } from "@graviola/remote-query-implementations";
 import { sparqlSelectViaFieldMappings } from "@graviola/sparql-schema";
 import parse from "html-react-parser";
 import React, {
@@ -69,6 +69,7 @@ const WikidataAutocompleteInput: FunctionComponent<Props> = ({
 
   const [classInfo, setClassInfo] = useState<WikidataEntityInfo | null>(null);
   useEffect(() => {
+    const fetcher = createDefaultWikidataSparqlFetcher();
     if (!classType) return;
     sparqlSelectViaFieldMappings(`wd:${classType}`, {
       fieldMapping: {},
@@ -81,8 +82,7 @@ const WikidataAutocompleteInput: FunctionComponent<Props> = ({
       ],
       prefixes: wikidataPrefixes,
       permissive: true,
-      query: (sparqlSelect: string) =>
-        remoteSparqlQuery(sparqlSelect, ["https://query.wikidata.org/sparql"]),
+      query: (sparqlSelect: string) => fetcher.selectFetch(sparqlSelect),
     }).then((_classInfo) => {
       setClassInfo({
         "@id": `wd:${classType}`,

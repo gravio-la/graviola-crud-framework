@@ -26,11 +26,7 @@ export const WikidataAllPropTable: FunctionComponent<
   const [allProps, setAllProps] = useState<CommonPropertyValues>({});
   useEffect(() => {
     if (!thingIRI) return;
-    getCommonPropsFromWikidata(
-      thingIRI,
-      ["https://query.wikidata.org/sparql"],
-      true,
-    ).then((_allProps) => {
+    getCommonPropsFromWikidata(thingIRI, undefined, true).then((_allProps) => {
       setAllProps(_allProps as CommonPropertyValues);
     });
   }, [thingIRI, setAllProps]);

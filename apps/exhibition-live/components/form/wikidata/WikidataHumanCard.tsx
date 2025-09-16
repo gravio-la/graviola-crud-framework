@@ -1,5 +1,7 @@
-import { wikidataPrefixes } from "@graviola/edb-wikidata-utils";
-import { remoteSparqlQuery } from "@graviola/remote-query-implementations";
+import {
+  createDefaultWikidataSparqlFetcher,
+  wikidataPrefixes,
+} from "@graviola/edb-wikidata-utils";
 import { sparqlSelectViaFieldMappings } from "@graviola/sparql-schema";
 import {
   Button,
@@ -54,6 +56,7 @@ const WikidataHumanCard: FunctionComponent<Props> = ({ personIRI }) => {
   useEffect(() => {
     setPersonData(null);
     if (!personIRI) return;
+    const fetcher = createDefaultWikidataSparqlFetcher();
     sparqlSelectViaFieldMappings(
       personIRI.startsWith("Q") ? `wd:${personIRI}` : `<${personIRI}>`,
       {
@@ -95,10 +98,7 @@ const WikidataHumanCard: FunctionComponent<Props> = ({ personIRI }) => {
         ],
         prefixes: wikidataPrefixes,
         permissive: true,
-        query: (sparqlSelect: string) =>
-          remoteSparqlQuery(sparqlSelect, [
-            "https://query.wikidata.org/sparql",
-          ]),
+        query: (sparqlSelect: string) => fetcher.selectFetch(sparqlSelect),
       },
     ).then((_personInfo) => {
       setPersonData(_personInfo as PersonInfo);
