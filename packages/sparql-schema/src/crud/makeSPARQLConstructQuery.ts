@@ -17,7 +17,9 @@ export const makeSPARQLConstructQuery = (
 ) => {
   const { defaultPrefix, queryBuildOptions, maxRecursion } = options;
   const subjectV = df.variable("subject");
-  const wherePart = makeSPARQLWherePart(entityIRI, typeIRI, subjectV);
+  const wherePart = makeSPARQLWherePart(entityIRI, typeIRI, subjectV, {
+    flavour: options.queryBuildOptions?.sparqlFlavour,
+  });
   const { construct, whereRequired, whereOptionals } = jsonSchema2construct(
     subjectV,
     schema,

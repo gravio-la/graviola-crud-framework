@@ -1,6 +1,8 @@
 import { SPARQLCRUDOptions } from "@graviola/edb-core-types";
-import { withDefaultPrefix } from "./index";
+import { buildQueryWithPrefixAndGraph } from "./makeSPARQLWherePart";
+import { DELETE } from "@tpluscode/sparql-builder";
 import { InversePropertyData } from "@graviola/json-schema-utils";
+import { sparql } from "@tpluscode/rdf-string";
 
 const makePrefixed = (key: string) => (key.includes(":") ? key : `:${key}`);
 const makePrefixedProperyPath = (path: string[]) =>
@@ -33,15 +35,17 @@ export const makeSPARQLInverseSyncQuery: (
   // Reset global counter for each query generation
   globalVarCounter = 0;
 
+  // Build DELETE and INSERT patterns using sparql template literals
   const deletePatterns: string[] = [];
   const insertPatterns: string[] = [];
-  const whereClauses: string[] = [];
+  const whereParts: string[] = [];
 
   for (const inverseProp of inverseProperties) {
     const targetPropertyPath = makePrefixedProperyPath(inverseProp.path);
     const oldTargetVar = getUniqueVar("oldTarget");
     const newTargetVar = getUniqueVar("newTarget");
     const targetTypeIRI = inverseProp.typeIRI;
+
     // DELETE pattern: Remove entity from all current targets
     deletePatterns.push(
       `${oldTargetVar} ${targetPropertyPath} <${entityIRI}> .`,
@@ -54,11 +58,10 @@ export const makeSPARQLInverseSyncQuery: (
       );
     }
 
-    // WHERE clauses
-    // Find all current targets to delete - use UNION to handle both existing and non-existing cases
-    whereClauses.push(`{
+    // WHERE part for finding existing targets to delete
+    whereParts.push(`{
       # Find existing targets to delete
-      ${oldTargetVar} a <${targetTypeIRI}>; 
+      ${oldTargetVar} a <${targetTypeIRI}> ;
         ${targetPropertyPath} <${entityIRI}> .
     } UNION {
       # If no existing targets, bind to a dummy value to ensure variable is bound
@@ -70,29 +73,31 @@ export const makeSPARQLInverseSyncQuery: (
       const valuesClause = inverseProp.entityIRIs
         .map((iri) => `<${iri}>`)
         .join("\n    ");
-      whereClauses.push(`VALUES ${newTargetVar} {\n    ${valuesClause}\n  }`);
+      whereParts.push(`VALUES ${newTargetVar} {\n    ${valuesClause}\n  }`);
     }
   }
 
-  // Build the complete query
-  const deleteClause =
-    deletePatterns.length > 0
-      ? `DELETE {\n  ${deletePatterns.join("\n  ")}\n}`
-      : "";
-  const insertClause =
-    insertPatterns.length > 0
-      ? `INSERT {\n  ${insertPatterns.join("\n  ")}\n}`
-      : "";
-  const whereClause =
-    whereClauses.length > 0 ? `WHERE {\n  ${whereClauses.join("\n  ")}\n}` : "";
+  // Build the complete DELETE/INSERT query using sparql-builder
+  const deleteClause = deletePatterns.join("\n  ");
+  const insertClause = insertPatterns.join("\n  ");
+  const whereClause = whereParts.join("\n  ");
 
-  // If no INSERT patterns, we only need DELETE
+  // Create the query based on whether we have INSERT patterns
+  let query;
   if (insertPatterns.length === 0) {
-    const query = `${deleteClause}\n${whereClause}`;
-    return withDefaultPrefix(defaultPrefix, query);
+    // Only DELETE
+    query = DELETE`${sparql`${deleteClause}`}`.WHERE`${sparql`${whereClause}`}`;
+  } else {
+    // DELETE and INSERT
+    query = DELETE`${sparql`${deleteClause}`}`
+      .INSERT`${sparql`${insertClause}`}`.WHERE`${sparql`${whereClause}`}`;
   }
 
-  // Full DELETE/INSERT query
-  const query = `${deleteClause}\n${insertClause}\n${whereClause}`;
-  return withDefaultPrefix(defaultPrefix, query);
+  return buildQueryWithPrefixAndGraph(
+    defaultPrefix,
+    options.defaultUpdateGraph,
+    query,
+    queryBuildOptions,
+    options.queryBuildOptions?.sparqlFlavour,
+  );
 };

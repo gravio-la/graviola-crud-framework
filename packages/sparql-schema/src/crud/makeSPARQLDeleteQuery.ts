@@ -4,7 +4,7 @@ import { JSONSchema7 } from "json-schema";
 
 import {
   makeSPARQLWherePart,
-  withDefaultPrefix,
+  buildQueryWithPrefixAndGraph,
 } from "@/crud/makeSPARQLWherePart";
 import { jsonSchema2construct } from "@/schema2sparql/jsonSchema2construct";
 
@@ -15,18 +15,25 @@ export const makeSPARQLDeleteQuery = (
   options: SPARQLCRUDOptions,
 ) => {
   const { defaultPrefix, queryBuildOptions } = options;
-  const wherePart = typeIRI ? makeSPARQLWherePart(entityIRI, typeIRI) : "";
+  const wherePart = typeIRI
+    ? makeSPARQLWherePart(entityIRI, typeIRI, "?subject", {
+        flavour: options.queryBuildOptions?.sparqlFlavour,
+      })
+    : "";
   const { construct, whereRequired, whereOptionals } = jsonSchema2construct(
     entityIRI,
     schema,
     ["@id"],
     ["@id", "@type"],
   );
-  return withDefaultPrefix(
+  const deleteQuery = DELETE` ${construct} `
+    .WHERE`${wherePart} ${whereRequired}\n${whereOptionals}`;
+
+  return buildQueryWithPrefixAndGraph(
     defaultPrefix,
-    DELETE` ${construct} `
-      .WHERE`${wherePart} ${whereRequired}\n${whereOptionals}`.build(
-      queryBuildOptions,
-    ),
+    options.defaultUpdateGraph,
+    deleteQuery,
+    queryBuildOptions,
+    options.queryBuildOptions?.sparqlFlavour,
   );
 };

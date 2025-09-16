@@ -4,7 +4,7 @@ import { JSONSchema7 } from "json-schema";
 
 import {
   makeSPARQLWherePart,
-  withDefaultPrefix,
+  buildQueryWithPrefixAndGraph,
 } from "@/crud/makeSPARQLWherePart";
 
 export const makeSPARQLRestoreFromTrashQuery = (
@@ -15,11 +15,19 @@ export const makeSPARQLRestoreFromTrashQuery = (
 ) => {
   const s = "?subject";
   const typeIRIWithTrash = typeIRI + "_trash";
-  const wherePart = makeSPARQLWherePart(entityIRI, typeIRIWithTrash, s);
-  return withDefaultPrefix(
+  const wherePart = makeSPARQLWherePart(entityIRI, typeIRIWithTrash, s, {
+    flavour: options.queryBuildOptions?.sparqlFlavour,
+  });
+  const deleteInsertQuery = DELETE` ${s} a ?class_trash `
+    .INSERT` ${s} a <${typeIRI}> `.WHERE`
+    ${wherePart}
+    `;
+
+  return buildQueryWithPrefixAndGraph(
     options.defaultPrefix,
-    DELETE` ${s} a ?class_trash `.INSERT` ${s} a <${typeIRI}> `.WHERE`
-      ${wherePart}
-      `.build(options.queryBuildOptions),
+    options.defaultUpdateGraph,
+    deleteInsertQuery,
+    options.queryBuildOptions,
+    options.queryBuildOptions?.sparqlFlavour,
   );
 };
