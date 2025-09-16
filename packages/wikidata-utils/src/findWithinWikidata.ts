@@ -2,6 +2,7 @@ import {
   CommonPropertyValues,
   getCommonPropsFromWikidata,
 } from "./getCommonPropsFromWikidata";
+import { WikidataSparqlFetcher } from "./wikidataQueryFetcher";
 import type { WikidataRestFetcher } from "./wikidataRestFetcher";
 import { createDefaultWikidataRestFetcher } from "./wikidataRestFetcher";
 
@@ -47,11 +48,6 @@ export const wikidataSearchOptionsToParams: (
   ...(prop ? { prop: prop.join("|") } : {}),
   ...(srlimit ? { srlimit: Math.floor(srlimit).toString() } : {}),
 });
-
-// Default endpoints - can be overridden by callers
-const DEFAULT_WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php";
-const DEFAULT_WIKIDATA_REST_URL =
-  "https://www.wikidata.org/w/rest.php/v1/search/page";
 
 export const buildWikidataFulltextSearchRestParams: (
   searchString: string,
@@ -209,7 +205,7 @@ export const getEntityFromWikidataByIRI: (
 
 export const findEntitiesCommonPropsWithinWikidataByIRI = async (
   iri: string,
-  wikidataSparqlFetcher?: import("./wikidataQueryFetcher").WikidataSparqlFetcher,
+  wikidataSparqlFetcher?: WikidataSparqlFetcher,
 ) => {
   return getCommonPropsFromWikidata(iri, wikidataSparqlFetcher, true).then(
     (allProps_) => {
