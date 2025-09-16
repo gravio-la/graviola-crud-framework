@@ -49,6 +49,7 @@ export const SparqlStoreProvider: FunctionComponent<
       defaultLimit,
       makeStubSchema,
       enableInversePropertiesFeature,
+      defaultUpdateGraph: endpoint.defaultUpdateGraph,
     });
   }, [
     crudOptions,
@@ -59,6 +60,9 @@ export const SparqlStoreProvider: FunctionComponent<
     jsonldContext,
     defaultLimit,
     walkerOptions,
+    endpoint.defaultUpdateGraph,
+    makeStubSchema,
+    enableInversePropertiesFeature,
   ]);
 
   return (
