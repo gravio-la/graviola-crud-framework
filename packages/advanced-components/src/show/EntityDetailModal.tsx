@@ -13,6 +13,7 @@ import {
 } from "@graviola/edb-state-hooks";
 import { useTypeIRIFromEntity } from "@graviola/edb-state-hooks";
 import { EntityDetailModalProps } from "@graviola/semantic-jsonform-types";
+import { useSafeMediaQuery } from "@graviola/edb-basic-components";
 import { Close as CloseIcon, Edit } from "@mui/icons-material";
 import {
   AppBar,
@@ -31,10 +32,8 @@ import {
   TableCell,
   TableContainer,
   TableRow,
-  Theme,
   Toolbar,
   Typography,
-  useMediaQuery,
 } from "@mui/material";
 import { useTranslation } from "next-i18next";
 import { FC, useCallback, useMemo } from "react";
@@ -137,7 +136,7 @@ const EntityDetailContent: FC<{
   disableInlineEditing,
 }) => {
   const { t } = useTranslation();
-  const xsDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const isMobile = useSafeMediaQuery((theme) => theme.breakpoints.down("sm"));
 
   return (
     <Dialog
@@ -146,7 +145,7 @@ const EntityDetailContent: FC<{
       scroll={"paper"}
       disableScrollLock={false}
       maxWidth={false}
-      fullScreen={xsDown}
+      fullScreen={isMobile}
       disableEnforceFocus={true}
       sx={{
         display: "flex",

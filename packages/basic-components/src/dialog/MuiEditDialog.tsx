@@ -20,10 +20,9 @@ import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTranslation } from "next-i18next";
 import { type ReactNode, useState } from "react";
+import { useSafeMediaQuery } from "../hooks/useSafeMediaQuery";
 
 export type MuiEditDialogProps = {
   onCancel?: () => void;
@@ -51,10 +50,8 @@ export const MuiEditDialog = ({
   editMode,
   actions,
 }: MuiEditDialogProps) => {
-  const theme = useTheme();
   const [forceFullscreen, setForceFullscreen] = useState(false);
-  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
-
+  const fullScreen = useSafeMediaQuery((theme) => theme.breakpoints.down("md"));
   const { t } = useTranslation();
 
   return (
