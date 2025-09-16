@@ -7,27 +7,44 @@ import {
 } from "@graviola/edb-core-types";
 import datasetFactory from "@rdfjs/dataset";
 import N3 from "n3";
+import { createAuthHeaders } from "./authHelpers";
 
-const fetchNTriples = (query: string, endpoint: string, token?: string) =>
+const fetchNTriples = (
+  query: string,
+  endpoint: string,
+  auth?: { username?: string; password?: string; token?: string },
+  additionalHeaders?: Record<string, string>,
+) =>
   fetch(endpoint, {
-    headers: {
-      accept: "application/qlever-results+json",
-      "content-type": "application/x-www-form-urlencoded",
-      ...(token ? { authorization: `${token}` } : {}),
-    },
+    headers: createAuthHeaders(
+      {
+        accept: "application/qlever-results+json",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      auth,
+      additionalHeaders,
+    ),
     body: `query=${encodeURIComponent(query)}`,
     method: "POST",
     mode: "cors",
     credentials: "omit",
     cache: "no-cache",
   });
-const fetchSPARQLResults = (query: string, endpoint: string, token?: string) =>
+const fetchSPARQLResults = (
+  query: string,
+  endpoint: string,
+  auth?: { username?: string; password?: string; token?: string },
+  additionalHeaders?: Record<string, string>,
+) =>
   fetch(endpoint, {
-    headers: {
-      accept: "application/sparql-results+json,*/*;q=0.9",
-      "content-type": "application/x-www-form-urlencoded",
-      ...(token ? { authorization: `${token}` } : {}),
-    },
+    headers: createAuthHeaders(
+      {
+        accept: "application/sparql-results+json,*/*;q=0.9",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      auth,
+      additionalHeaders,
+    ),
     body: `query=${encodeURIComponent(query)}`,
     method: "POST",
     mode: "cors",
@@ -40,12 +57,12 @@ export const qleverCrudOptions: (endpoint: SparqlEndpoint) => CRUDFunctions = ({
   auth,
 }: SparqlEndpoint) => ({
   askFetch: async (query: string) => {
-    const res = await fetchSPARQLResults(query, url, auth?.token);
+    const res = await fetchSPARQLResults(query, url, auth);
     const { boolean } = await res.json();
     return boolean === true;
   },
   constructFetch: async (query: string) => {
-    const res = await fetchNTriples(query, url, auth?.token);
+    const res = await fetchNTriples(query, url, auth);
     const jsonRes = await res.json();
     const reader = new N3.Parser(),
       ntriples =
@@ -62,7 +79,7 @@ export const qleverCrudOptions: (endpoint: SparqlEndpoint) => CRUDFunctions = ({
     throw new Error("qleverCrudOptions:updateFetch not implemented");
   },
   selectFetch: (async (query: string, options?: SelectFetchOptions) => {
-    const res = await fetchSPARQLResults(query, url, auth?.token);
+    const res = await fetchSPARQLResults(query, url, auth);
     const resultJson = (await res.json()) as RDFSelectResult;
     return options?.withHeaders ? resultJson : resultJson?.results?.bindings;
   }) as SelectFetchOverload,

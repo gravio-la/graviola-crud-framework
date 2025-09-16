@@ -6,6 +6,12 @@ export type Prefixes = {
   [k: string]: string;
 };
 
+export type AuthConfig = {
+  username?: string;
+  password?: string;
+  token?: string;
+};
+
 export type NamespaceBuilderPrefixes = {
   prefixes: Record<string, NamespaceBuilder>;
 };
@@ -108,11 +114,7 @@ export type SparqlEndpoint = {
   label?: string;
   endpoint: string;
   active: boolean;
-  auth?: {
-    username?: string;
-    password?: string;
-    token?: string;
-  };
+  auth?: AuthConfig;
   additionalHeaders?: Record<string, string>;
   provider?:
     | "allegro"
