@@ -24,7 +24,6 @@
     "publish-clean": "bun run clean-package && npm publish --access public && bun run clean-package restore"
   },
   "devDependencies": {
-    "@comunica/types": "^2.10.0",
     "@rdfjs/types": "^2.0.1",
     "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-tsconfig": "workspace:*",
@@ -33,7 +32,8 @@
   },
   "dependencies": {
     "@graviola/sparql-schema": "workspace:*",
-    "@comunica/query-sparql": "^2.10.2",
+    "@rdfjs/dataset": "^2.0.1",
+    "n3": "^1.16.3",
     "lodash-es": "^4.17.21"
   },
   "clean-package": {

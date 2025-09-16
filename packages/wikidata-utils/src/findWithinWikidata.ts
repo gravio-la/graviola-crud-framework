@@ -2,6 +2,8 @@ import {
   CommonPropertyValues,
   getCommonPropsFromWikidata,
 } from "./getCommonPropsFromWikidata";
+import type { WikidataRestFetcher } from "./wikidataRestFetcher";
+import { createDefaultWikidataRestFetcher } from "./wikidataRestFetcher";
 
 export type WikidataSearchOptions = {
   srsearch: {
@@ -46,8 +48,10 @@ export const wikidataSearchOptionsToParams: (
   ...(srlimit ? { srlimit: Math.floor(srlimit).toString() } : {}),
 });
 
-const wikidataApiURL = "https://www.wikidata.org/w/api.php";
-const wikidataRestAPIURL = "https://www.wikidata.org/w/rest.php/v1/search/page";
+// Default endpoints - can be overridden by callers
+const DEFAULT_WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php";
+const DEFAULT_WIKIDATA_REST_URL =
+  "https://www.wikidata.org/w/rest.php/v1/search/page";
 
 export const buildWikidataFulltextSearchRestParams: (
   searchString: string,
@@ -96,18 +100,17 @@ export type WikidataSearchResult = {
   searchinfo: { totalhits: number };
 };
 
-const findWithinWikidata = async (
+export const findWithinWikidata = async (
   searchString: string,
   typeOf: string,
   limit?: number,
+  wikidataRestFetcher?: WikidataRestFetcher,
 ) => {
-  const result = await fetch(
-    `${wikidataApiURL}?${buildWikidataFulltextSearchParams(
-      searchString,
-      [[`P31=${typeOf}`]],
-      limit,
-    )}`,
-  ).then((res) => res.json());
+  const fetcher = wikidataRestFetcher || createDefaultWikidataRestFetcher();
+
+  const result = await fetcher.searchFetch(
+    buildWikidataFulltextSearchParams(searchString, [[`P31=${typeOf}`]], limit),
+  );
 
   return result.query as WikidataSearchResult;
 };
@@ -135,18 +138,22 @@ export const findWithinWikidataUsingREST: (
   searchString: string,
   typeOf?: string,
   limit?: number,
+  wikidataRestFetcher?: WikidataRestFetcher,
 ) => Promise<WikidataRESTResult["pages"]> = async (
   searchString: string,
   typeOf: string = "Q5",
   limit?: number,
+  wikidataRestFetcher?: WikidataRestFetcher,
 ) => {
-  const result = await fetch(
-    `${wikidataRestAPIURL}?${buildWikidataFulltextSearchRestParams(
+  const fetcher = wikidataRestFetcher || createDefaultWikidataRestFetcher();
+
+  const result = await fetcher.restSearchFetch(
+    buildWikidataFulltextSearchRestParams(
       searchString,
       [[`P31=${typeOf}`]],
       limit,
-    )}`,
-  ).then((res) => res.json());
+    ),
+  );
 
   return (result as WikidataRESTResult).pages;
 };
@@ -181,35 +188,35 @@ export const filterRank = (entity: any, rank: "preferred" | "normal") => {
 export const getEntityFromWikidataByIRI: (
   iri: string,
   options: { rank?: "preferred" | "normal" },
-) => Promise<any> = (iri: string, options) => {
-  const url = new URL(wikidataApiURL);
+  wikidataRestFetcher?: WikidataRestFetcher,
+) => Promise<any> = async (iri: string, options, wikidataRestFetcher) => {
+  const fetcher = wikidataRestFetcher || createDefaultWikidataRestFetcher();
   const id = getWDIDFromIRI(iri);
-  url.search = new URLSearchParams({
+
+  const entityParams = new URLSearchParams({
     action: "wbgetentities",
     format: "json",
     ids: id,
     origin: "*",
-  }).toString();
-  return fetch(url.toString())
-    .then((res) => res.json())
-    .then((res) =>
-      options?.rank
-        ? filterRank(res.entities[id], options.rank)
-        : res.entities[id],
-    );
+  });
+
+  const result = await fetcher.entityFetch(entityParams);
+
+  return options?.rank
+    ? filterRank(result.entities[id], options.rank)
+    : result.entities[id];
 };
 
 export const findEntitiesCommonPropsWithinWikidataByIRI = async (
   iri: string,
+  wikidataSparqlFetcher?: import("./wikidataQueryFetcher").WikidataSparqlFetcher,
 ) => {
-  return getCommonPropsFromWikidata(
-    iri,
-    ["https://query.wikidata.org/sparql"],
-    true,
-  ).then((allProps_) => {
-    const allProps = stripWikidataPrefixFromProps(allProps_);
-    return allProps;
-  });
+  return getCommonPropsFromWikidata(iri, wikidataSparqlFetcher, true).then(
+    (allProps_) => {
+      const allProps = stripWikidataPrefixFromProps(allProps_);
+      return allProps;
+    },
+  );
 };
 
 export default findWithinWikidata;

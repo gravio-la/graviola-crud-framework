@@ -1,10 +1,10 @@
-import { QueryEngine } from "@comunica/query-sparql";
-import type { BindingsStream, SourceType } from "@comunica/types";
 import { prefixes2sparqlPrefixDeclaration } from "@graviola/sparql-schema";
 import type { Literal } from "@rdfjs/types";
 import isNil from "lodash-es/isNil";
 
 import { wikidataPrefixes } from "./prefixes";
+import type { WikidataSparqlFetcher } from "./wikidataQueryFetcher";
+import { createDefaultWikidataSparqlFetcher } from "./wikidataQueryFetcher";
 
 const buildPropsQuery = (entity: string, withSubclassRelations?: boolean) => `
 SELECT ?property ?propLabel ?object ?objectLabel
@@ -52,14 +52,16 @@ const dedup = function (arr: any[]) {
 
 export const getCommonPropsFromWikidata: (
   thingIRI: string,
-  sources: [SourceType, ...SourceType[]],
+  wikidataSparqlFetcher?: WikidataSparqlFetcher,
   withSubClassRelations?: boolean,
 ) => Promise<undefined | CommonPropertyValues> = async (
   thingIRI,
-  sources,
+  wikidataSparqlFetcher,
   withSubClassRelations,
 ) => {
-  const myEngine = new QueryEngine();
+  const fetcher = wikidataSparqlFetcher?.selectFetch
+    ? wikidataSparqlFetcher
+    : createDefaultWikidataSparqlFetcher();
 
   const sparqlQuery = `
     ${prefixes2sparqlPrefixDeclaration(wikidataPrefixes)}
@@ -68,20 +70,20 @@ export const getCommonPropsFromWikidata: (
       withSubClassRelations,
     )}
     `;
-  const bindingsStream: BindingsStream = await myEngine.queryBindings(
-    sparqlQuery,
-    { sources },
-  );
+
+  const result = await fetcher.selectFetch(sparqlQuery);
+  const bindings = result.results?.bindings || [];
+
   const properties = new Map<string, CommonPropertyValues>();
-  for (const binding of await bindingsStream.toArray()) {
-    const property = binding.get("property")?.value;
+  for (const binding of bindings) {
+    const property = binding.property?.value;
     if (!property) continue;
-    const propLabel = binding.get("propLabel")?.value;
-    const object = binding.get("object");
+    const propLabel = binding.propLabel?.value;
+    const object = binding.object;
     if (!object) continue;
-    const objectLabel = binding.get("objectLabel")?.value;
+    const objectLabel = binding.objectLabel?.value;
     const objects = properties.get(property)?.objects || ([] as any);
-    if (object.termType === "NamedNode") {
+    if (object.type === "uri") {
       properties.set(property, {
         label: propLabel || "",
         objects: [
@@ -92,7 +94,14 @@ export const getCommonPropsFromWikidata: (
     } else {
       properties.set(property, {
         label: propLabel || "",
-        objects: [...objects, object],
+        objects: [
+          ...objects,
+          {
+            termType: "Literal",
+            value: object.value,
+            datatype: object.datatype,
+          },
+        ],
       } as any);
     }
   }
