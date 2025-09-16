@@ -51,6 +51,7 @@ export const LocalOxigraphStoreProvider: FunctionComponent<
       sparqlQueryFunctions: crudOptions,
       schema,
       defaultLimit,
+      defaultUpdateGraph: endpoint.defaultUpdateGraph,
     });
 
     if (initialData && !dataLoaded) {
@@ -80,6 +81,7 @@ export const LocalOxigraphStoreProvider: FunctionComponent<
     defaultLimit,
     initialData,
     setDataLoaded,
+    endpoint.defaultUpdateGraph,
   ]);
 
   return (
