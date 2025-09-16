@@ -1,5 +1,13 @@
 # @graviola/data-mapping-hooks
 
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.5.0
+  - @graviola/edb-data-mapping@0.2.7
+
 ## 1.1.7
 
 ### Patch Changes

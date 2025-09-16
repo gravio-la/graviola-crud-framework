@@ -1,5 +1,16 @@
 # @graviola/jsonld-utils
 
+## 1.3.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
+### Patch Changes
+
+- @graviola/edb-graph-traversal@1.3.2
+- @graviola/edb-core-utils@1.4.0
+
 ## 1.2.1
 
 ### Patch Changes

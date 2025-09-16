@@ -1,6 +1,6 @@
 {
   "name": "@graviola/json-schema2prisma-schema",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "CLI tool to convert JSON Schema to Prisma Schema",
   "type": "module",
   "bin": {

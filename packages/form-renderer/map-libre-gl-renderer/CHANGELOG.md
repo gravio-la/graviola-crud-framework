@@ -1,5 +1,13 @@
 # @graviola/map-libre-gl-renderer
 
+## 3.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.5.0
+  - @graviola/edb-core-utils@1.4.0
+
 ## 2.0.0
 
 ### Patch Changes

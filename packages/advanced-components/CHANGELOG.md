@@ -1,5 +1,20 @@
 # @graviola/edb-advanced-components
 
+## 1.5.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-basic-components@1.3.0
+  - @graviola/jsonld-utils@1.3.0
+  - @graviola/edb-state-hooks@1.5.0
+  - @graviola/edb-core-utils@1.4.0
+  - @graviola/edb-data-mapping@0.2.7
+
 ## 1.4.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @slub/json-schema-utils
 
+## 1.4.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
+### Patch Changes
+
+- @graviola/edb-core-utils@1.4.0
+
 ## 1.3.1
 
 ### Patch Changes

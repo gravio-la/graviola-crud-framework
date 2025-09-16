@@ -1,5 +1,16 @@
 # @graviola/edb-wikidata-utils
 
+## 1.1.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/sparql-schema@1.4.0
+
 ## 1.0.6
 
 ### Patch Changes

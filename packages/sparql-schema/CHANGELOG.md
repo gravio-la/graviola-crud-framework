@@ -1,5 +1,19 @@
 # @slub/sparql-schema
 
+## 1.4.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/json-schema-utils@1.4.0
+  - @graviola/jsonld-utils@1.3.0
+  - @graviola/edb-graph-traversal@1.3.2
+  - @graviola/edb-core-utils@1.4.0
+
 ## 1.3.1
 
 ### Patch Changes

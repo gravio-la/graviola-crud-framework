@@ -1,5 +1,13 @@
 # @graviola/rest-store-provider
 
+## 1.2.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-state-hooks@1.5.0
+  - @graviola/restfull-fetch-db-impl@1.4.0
+
 ## 1.2.1
 
 ### Patch Changes

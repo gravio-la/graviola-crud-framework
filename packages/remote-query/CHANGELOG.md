@@ -1,5 +1,11 @@
 # @slub/remote-query-implementations
 
+## 1.3.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
 ## 1.2.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @slub/edb-core-types
 
+## 1.3.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
 ## 1.2.0
 
 ### Minor Changes

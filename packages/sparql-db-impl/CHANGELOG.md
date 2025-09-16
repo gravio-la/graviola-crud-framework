@@ -1,5 +1,18 @@
 # @slub/sparql-db-impl
 
+## 1.4.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/json-schema-utils@1.4.0
+  - @graviola/sparql-schema@1.4.0
+  - @graviola/jsonld-utils@1.3.0
+
 ## 1.3.1
 
 ### Patch Changes
