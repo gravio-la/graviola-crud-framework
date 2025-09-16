@@ -69,6 +69,7 @@ export type SPARQLCRUDOptions = {
   queryBuildOptions?: SparqlBuildOptions;
   defaultPrefix: string;
   maxRecursion?: number;
+  defaultUpdateGraph?: string;
 };
 
 export type ResultBindings = any[];
@@ -112,6 +113,7 @@ export type SparqlEndpoint = {
     password?: string;
     token?: string;
   };
+  additionalHeaders?: Record<string, string>;
   provider?:
     | "allegro"
     | "oxigraph"
@@ -120,6 +122,7 @@ export type SparqlEndpoint = {
     | "virtuoso"
     | "qlever"
     | "rest";
+  defaultUpdateGraph?: string;
 };
 
 export type SPARQLFlavour = "default" | "oxigraph" | "blazegraph" | "allegro";
