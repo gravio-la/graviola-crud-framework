@@ -37,7 +37,7 @@ flowchart TD
 
 - **Peer Dependencies**:
   - `@graviola/edb-state-hooks`: For state management
-  - `@mui/material`, `@mui/icons-material`, `@mui/lab`: Material UI components
+  - `@mui/material`, `@mui/icons-material`, `@mui/x-date-pickers`: Material UI components
   - `@jsonforms/material-renderers`, `@jsonforms/core`, `@jsonforms/react`: JSON Forms library
   - `react`: React library
 

@@ -23,7 +23,7 @@ bun get-dependencies.js path/to/directory
 Do not blindly use the output of this script as the package.json
 Especially frontend packages require a `peerDependencies` field
 where the version of the dependency is specified. Packages like `react`,
-`@mui/material`, `@mui/icons-material` and `@mui/lab` are examples of
+`@mui/material`, `@mui/icons-material` are examples of
 those dependencies, that shouldn't be included in the `dependencies`
 of frontend packages.
 

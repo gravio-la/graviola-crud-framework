@@ -1,4 +1,4 @@
-# @slub/json-schema-utils
+# @graviola/json-schema-utils
 
 ## 1.4.0
 
