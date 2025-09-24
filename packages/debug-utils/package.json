@@ -42,9 +42,8 @@
   },
   "peerDependencies": {
     "next": ">=14",
-    "react": "^16.9.0 || ^17.0.0 || ^18",
-    "@mui/material": "^5",
-    "@mui/lab": "^5"
+    "react": "^18",
+    "@mui/material": "^5"
   },
   "dependencies": {
     "@graviola/edb-state-hooks": "workspace:*",

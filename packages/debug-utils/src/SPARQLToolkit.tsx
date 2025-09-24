@@ -1,5 +1,4 @@
-import { ToggleButton } from "@mui/lab";
-import { Button } from "@mui/material";
+import { Button, Switch, FormControlLabel } from "@mui/material";
 import React, { FunctionComponent, useState } from "react";
 
 import { YasguiSPARQLEditorNoSSR } from "./YasguiSPARQLEditorNoSSR";
@@ -31,12 +30,15 @@ export const SPARQLToolkit: FunctionComponent<Props> = ({
           </Button>
         </>
       ) : null}
-      <ToggleButton
-        value={editorEnabled}
-        onClick={() => setEditorEnabled((e) => !e)}
-      >
-        sparql
-      </ToggleButton>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={editorEnabled}
+            onChange={() => setEditorEnabled((e) => !e)}
+          />
+        }
+        label="sparql"
+      />
     </>
   );
 };
