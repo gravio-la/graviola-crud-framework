@@ -40,7 +40,6 @@
     "tsup": "^8.0.0",
     "dayjs": "^1.11.11",
     "react": "^18",
-    "react-dom": "^18"
   },
   "peerDependencies": {
     "@jsonforms/core": "^3",
@@ -48,11 +47,10 @@
     "@jsonforms/react": "^3",
     "@mui/icons-material": "^5",
     "@mui/material": "^5",
-    "@mui/x-date-pickers": "^6.10.0",
+    "@mui/x-date-pickers": "^6 | ^7",
     "dayjs": "^1",
     "ajv": "^8.12",
-    "react": "^16.9.0 || ^17.0.0 || ^18",
-    "react-dom": "^16.9.0 || ^17.0.0 || ^18"
+    "react": "^18"
   },
   "dependencies": {
     "@graviola/edb-core-utils": "workspace:*",
