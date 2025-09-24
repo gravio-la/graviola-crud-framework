@@ -31,14 +31,15 @@
     "@graviola/edb-state-hooks": "workspace:*",
     "@mui/material": "^5",
     "@mui/icons-material": "^5",
+    "@mui/x-date-pickers": "^6 | ^7",
     "@jsonforms/material-renderers": "^3",
     "@jsonforms/core": "^3",
     "@jsonforms/react": "^3",
-    "react": "^18 | ^19",
-    "@mui/lab": "^5"
+    "react": "^18 | ^19"
   },
   "dependencies": {
     "@graviola/edb-core-utils": "workspace:*",
+    "json-schema-to-ts": "^3.0.1",
     "next-i18next": "^15",
     "lodash-es": "^4.17.21"
   },

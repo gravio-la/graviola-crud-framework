@@ -35,11 +35,12 @@
     "@graviola/edb-tsup-config": "workspace:*",
     "@types/lodash-es": "^4.17.12",
     "ajv": "^8.12",
+    "ajv-formats": "^3.0.1",
     "eslint-config-edb": "workspace:*",
     "typescript": "^5.8.2",
     "tsup": "^8.0.0",
     "dayjs": "^1.11.11",
-    "react": "^18",
+    "react": "^18"
   },
   "peerDependencies": {
     "@jsonforms/core": "^3",
@@ -47,9 +48,9 @@
     "@jsonforms/react": "^3",
     "@mui/icons-material": "^5",
     "@mui/material": "^5",
-    "@mui/x-date-pickers": "^6 | ^7",
     "dayjs": "^1",
     "ajv": "^8.12",
+    "ajv-formats": "^3",
     "react": "^18"
   },
   "dependencies": {

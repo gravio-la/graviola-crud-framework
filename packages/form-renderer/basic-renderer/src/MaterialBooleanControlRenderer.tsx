@@ -1,6 +1,6 @@
 import { CellProps, ControlProps, WithClassname } from "@jsonforms/core";
 import { withJsonFormsControlProps } from "@jsonforms/react";
-import { Checkbox, FormControlLabel, Hidden } from "@mui/material";
+import { Checkbox, FormControlLabel } from "@mui/material";
 import isEmpty from "lodash-es/isEmpty";
 import isNil from "lodash-es/isNil";
 import merge from "lodash-es/merge";
@@ -45,29 +45,31 @@ const MaterialBooleanControl = ({
   path,
   config,
 }: ControlProps) => {
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <Hidden xsUp={!visible}>
-      <FormControlLabel
-        label={label}
-        id={id}
-        control={
-          <MuiCheckbox
-            id={`${id}-input`}
-            isValid={isEmpty(errors)}
-            data={data}
-            enabled={enabled}
-            visible={visible}
-            path={path}
-            uischema={uischema}
-            schema={schema}
-            rootSchema={rootSchema}
-            handleChange={handleChange}
-            errors={errors}
-            config={config}
-          />
-        }
-      />
-    </Hidden>
+    <FormControlLabel
+      label={label}
+      id={id}
+      control={
+        <MuiCheckbox
+          id={`${id}-input`}
+          isValid={isEmpty(errors)}
+          data={data}
+          enabled={enabled}
+          visible={visible}
+          path={path}
+          uischema={uischema}
+          schema={schema}
+          rootSchema={rootSchema}
+          handleChange={handleChange}
+          errors={errors}
+          config={config}
+        />
+      }
+    />
   );
 };
 

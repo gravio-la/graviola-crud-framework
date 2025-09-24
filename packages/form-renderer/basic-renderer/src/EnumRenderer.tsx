@@ -3,11 +3,9 @@ import { withJsonFormsControlProps } from "@jsonforms/react";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
-import Hidden from "@mui/material/Hidden";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import { useTranslation } from "next-i18next";
-import React from "react";
 
 type EnumRendererProps = {
   data: any;

@@ -1,13 +1,7 @@
 import { ControlProps, isDescriptionHidden } from "@jsonforms/core";
 import { useFocus } from "@jsonforms/material-renderers";
 import { withJsonFormsControlProps } from "@jsonforms/react";
-import {
-  Box,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  Hidden,
-} from "@mui/material";
+import { Box, FormControl, FormHelperText, FormLabel } from "@mui/material";
 import merge from "lodash-es/merge";
 import React, { useMemo } from "react";
 

@@ -5,11 +5,15 @@ import {
   useFocus,
 } from "@jsonforms/material-renderers";
 import { withJsonFormsControlProps } from "@jsonforms/react";
-import { DatePicker } from "@mui/lab";
-import { FormHelperText, Hidden, TextField } from "@mui/material";
+import { FormHelperText } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers";
+import { validate, validateWithAjv } from "@graviola/edb-ui-utils";
+import dayjs from "dayjs";
 import merge from "lodash-es/merge";
 import { useTranslation } from "next-i18next";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
+
+import { materialDateControlUiSchemaOptionsSchema } from "./materialDateControlUiSchemaOptionsSchema";
 
 const MaterialDateControl = (props: ControlProps) => {
   const [focused, onFocus, onBlur] = useFocus();
@@ -28,17 +32,74 @@ const MaterialDateControl = (props: ControlProps) => {
     config,
   } = props;
   const isValid = errors.length === 0;
-  const appliedUiSchemaOptions = merge({}, config, uischema.options);
+  const appliedUiSchemaOptions = useMemo(() => {
+    const merged = merge({}, config, uischema.options);
+    try {
+      if (validate(materialDateControlUiSchemaOptionsSchema, merged)) {
+        return merged;
+      } else {
+        // Use AJV directly to get detailed validation errors
+        const { isValid, errors } = validateWithAjv(
+          materialDateControlUiSchemaOptionsSchema,
+          merged,
+        );
+        if (!isValid) {
+          console.warn(
+            "Invalid uiSchemaOptions for MaterialDateRenderer",
+            merged,
+          );
+          console.warn("Validation errors:", errors);
+        }
+        return {};
+      }
+    } catch (e) {
+      console.error(
+        "Error validating uiSchemaOptions for MaterialDateRenderer:",
+        e,
+      );
+      return {};
+    }
+  }, [config, uischema.options]);
+
+  // Destructure appliedUiSchemaOptions for better readability
+  const {
+    showUnfocusedDescription,
+    dateFormat,
+    dateSaveFormat,
+    views,
+    focus,
+    disableFuture,
+    disablePast,
+    minDate,
+    maxDate,
+    displayWeekNumber,
+    showDaysOutsideCurrentMonth,
+    reduceAnimations,
+    openTo,
+    orientation,
+    yearsPerRow,
+    monthsPerRow,
+    hideRequiredAsterisk,
+    trim,
+    actions,
+    hideToolbar,
+    cancelLabel,
+    clearLabel,
+    okLabel,
+  } = appliedUiSchemaOptions;
+
   const showDescription = !isDescriptionHidden(
     visible,
     description,
     focused,
-    appliedUiSchemaOptions.showUnfocusedDescription,
+    showUnfocusedDescription,
   );
 
   const { t } = useTranslation();
-  const format = appliedUiSchemaOptions.dateFormat ?? t("date_format");
-  const saveFormat = appliedUiSchemaOptions.dateSaveFormat ?? "YYYY-MM-DD";
+  const format =
+    dateFormat ??
+    (t("date_format") !== "date_format" ? t("date_format") : undefined);
+  const saveFormat = dateSaveFormat ?? "YYYY-MM-DD";
 
   const firstFormHelperText = showDescription
     ? description
@@ -51,42 +112,67 @@ const MaterialDateControl = (props: ControlProps) => {
     [path, handleChange, saveFormat],
   );
 
+  if (!visible) {
+    return null;
+  }
+
+  const finalActions = useMemo(() => {
+    return (actions || ["clear", "cancel", "accept"]).map((action) =>
+      t(action),
+    );
+  }, [actions, t]);
+
   return (
-    <Hidden xsUp={!visible}>
+    <>
       <DatePicker
         label={label}
         value={getData(data, saveFormat)}
-        clearable
-        // @ts-ignore
         onChange={(d) => d && onChange(d)}
-        inputFormat={format}
-        disableMaskedInput
-        views={appliedUiSchemaOptions.views}
+        format={format}
+        views={views}
         disabled={!enabled}
-        cancelText={appliedUiSchemaOptions.cancelLabel}
-        clearText={appliedUiSchemaOptions.clearLabel}
-        okText={appliedUiSchemaOptions.okLabel}
-        // @ts-ignore
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            id={id + "-input"}
-            required={required && !appliedUiSchemaOptions.hideRequiredAsterisk}
-            autoFocus={appliedUiSchemaOptions.focus}
-            error={!isValid}
-            fullWidth={!appliedUiSchemaOptions.trim}
-            inputProps={{ ...params.inputProps, type: "text" }}
-            InputLabelProps={data ? { shrink: true } : undefined}
-            onFocus={onFocus}
-            onBlur={onBlur}
-          />
-        )}
+        autoFocus={focus}
+        closeOnSelect={true} // Internal control - always close on select for better UX
+        disableFuture={disableFuture}
+        disablePast={disablePast}
+        minDate={minDate ? dayjs(minDate) : undefined}
+        maxDate={maxDate ? dayjs(maxDate) : undefined}
+        displayWeekNumber={displayWeekNumber}
+        showDaysOutsideCurrentMonth={showDaysOutsideCurrentMonth}
+        reduceAnimations={reduceAnimations}
+        openTo={openTo}
+        orientation={orientation}
+        yearsPerRow={yearsPerRow}
+        monthsPerRow={monthsPerRow}
+        slotProps={{
+          textField: {
+            id: id + "-input",
+            required: required && !hideRequiredAsterisk,
+            error: !isValid,
+            fullWidth: !trim,
+            onFocus: onFocus,
+            onBlur: onBlur,
+            inputProps: { type: "text" },
+            InputLabelProps: data ? { shrink: true } : undefined,
+          },
+          actionBar: {
+            actions: finalActions,
+          },
+          toolbar: {
+            hidden: hideToolbar,
+          },
+        }}
+        localeText={{
+          cancelButtonLabel: cancelLabel,
+          clearButtonLabel: clearLabel,
+          okButtonLabel: okLabel,
+        }}
       />
       <FormHelperText error={!isValid && !showDescription}>
         {firstFormHelperText}
       </FormHelperText>
       <FormHelperText error={!isValid}>{secondFormHelperText}</FormHelperText>
-    </Hidden>
+    </>
   );
 };
 
