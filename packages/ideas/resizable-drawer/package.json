@@ -32,12 +32,12 @@
     "@types/jest": "^29.5.12",
     "eslint-config-edb": "workspace:*",
     "typescript": "^5.8.2",
-    "react": ">=18"
+    "react": "^18"
   },
   "peerDependencies": {
     "@mui/material": "^5",
     "@mui/styles": "^5",
-    "react": "^16.9.0 || ^17.0.0 || ^18"
+    "react": "^18"
   },
   "dependencies": {
     "zustand": "^4.5.2"

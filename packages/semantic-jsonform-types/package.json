@@ -33,7 +33,7 @@
     "eslint-config-edb": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^16.9.0 || ^17.0.0 || ^18"
+    "react": "^18"
   },
   "clean-package": {
     "extends": "../../../clean-package.config.cjs"

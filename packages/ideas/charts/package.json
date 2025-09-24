@@ -33,10 +33,10 @@
     "eslint-config-edb": "workspace:*",
     "typescript": "^5.8.2",
     "recharts": "^2.12.6",
-    "react": ">=18"
+    "react": "^18"
   },
   "peerDependencies": {
     "recharts": "^2",
-    "react": "^16.9.0 || ^17.0.0 || ^18"
+    "react": "^18"
   }
 }
