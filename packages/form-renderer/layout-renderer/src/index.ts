@@ -1,4 +1,4 @@
 export * from "./CombinatorProperties";
 export * from "./MaterialCustomAnyOfRenderer";
-export * from "./MaterialCategorizationStepperLayoutWithPortal";
+export * from "./MaterialCategorizationStepperLayout";
 export * from "./materialCustomAnyOfControlTester";

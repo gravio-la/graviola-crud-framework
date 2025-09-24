@@ -36,7 +36,6 @@
     "react": "^18"
   },
   "dependencies": {
-    "@graviola/edb-ui-utils": "workspace:*",
     "next-i18next": "^15",
     "lodash-es": "^4.17.21"
   },

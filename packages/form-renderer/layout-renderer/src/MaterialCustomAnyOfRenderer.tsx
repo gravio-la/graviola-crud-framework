@@ -7,7 +7,7 @@ import {
   StatePropsOfCombinator,
 } from "@jsonforms/core";
 import { JsonFormsDispatch, withJsonFormsAnyOfProps } from "@jsonforms/react";
-import { Hidden, Tab, Tabs } from "@mui/material";
+import { Tab, Tabs } from "@mui/material";
 import React, { useCallback, useMemo, useState } from "react";
 
 import { CombinatorProperties } from "./CombinatorProperties";
@@ -65,8 +65,12 @@ const MaterialCustomAnyOfRendererComponent = ({
     );
   }, [_schema, rootSchema, uischema, path, uischemas]);
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <Hidden xsUp={!visible}>
+    <>
       <CombinatorProperties
         schema={_schema}
         combinatorKeyword={"anyOf"}
@@ -90,7 +94,7 @@ const MaterialCustomAnyOfRendererComponent = ({
             />
           ),
       )}
-    </Hidden>
+    </>
   );
 };
 

@@ -18,7 +18,7 @@ The layout-renderer package is a core UI component in the Graviola framework's f
 
 ```mermaid
 flowchart TD
-    A[graviola/edb-layout-renderer] --> B[graviola/edb-ui-utils]
+    A[graviola/edb-layout-renderer]
     A --> C[next-i18next]
     A --> D[lodash-es]
     E[apps/exhibition-live] --> A
@@ -30,7 +30,6 @@ flowchart TD
 
 - **Dependencies**:
 
-  - `@graviola/edb-ui-utils`: Provides UI utility functions, including the portal creation utility
   - `next-i18next`: Used for internationalization of labels and messages
   - `lodash-es`: Provides utility functions for object manipulation
 
@@ -56,9 +55,8 @@ yarn add @graviola/edb-layout-renderer
 ## Features
 
 - **MaterialCustomAnyOfRenderer**: Renders anyOf schemas as tabs, allowing users to switch between different schema options
-- **MaterialCategorizationStepperLayoutWithPortal**: Renders categorization layouts as a step-by-step form with navigation buttons
+- **MaterialCategorizationStepperLayout**: Renders categorization layouts as a step-by-step form with navigation buttons
 - **CombinatorProperties**: Utility component for rendering properties of combinator schemas
-- **Portal Support**: The stepper layout supports rendering action buttons in a portal, allowing them to be placed outside the form container
 
 ## Usage
 
@@ -102,14 +100,14 @@ The MaterialCategorizationStepperLayout renders categorization layouts as a step
 
 ```typescript
 import {
-  materialCategorizationStepperLayoutWithPortal
+  MaterialCategorizationStepperLayoutRegistryEntry
 } from '@graviola/edb-layout-renderer';
 import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 
 // Create a renderer registry with the categorization stepper layout
 const renderers: JsonFormsRendererRegistryEntry[] = [
   // Register the categorization stepper layout
-  materialCategorizationStepperLayoutWithPortal()
+  MaterialCategorizationStepperLayoutRegistryEntry
 ];
 
 // Use the renderers with JsonForms
@@ -176,13 +174,13 @@ This package is used in the Graviola framework to render complex form layouts in
 
 ```typescript
 // From apps/exhibition-live/components/content/main/TypedForm.tsx
-import { materialCategorizationStepperLayoutWithPortal } from "@graviola/edb-layout-renderer";
+import { MaterialCategorizationStepperLayoutRegistryEntry } from "@graviola/edb-layout-renderer";
 
 // ...
 
 const mainFormRenderers = useMemo(() => {
   return [
-    materialCategorizationStepperLayoutWithPortal(),
+    MaterialCategorizationStepperLayoutRegistryEntry,
   ];
 }, []);
 
@@ -235,10 +233,6 @@ A tester function that determines if the MaterialCustomAnyOfRenderer should be u
 ### MaterialCategorizationStepperLayout
 
 A renderer for categorization layouts with a stepper UI, providing step-by-step navigation through form categories.
-
-### materialCategorizationStepperLayoutWithPortal
-
-A factory function that creates a renderer for categorization layouts with a stepper UI, optionally rendering action buttons in a portal.
 
 ### CombinatorProperties
 
