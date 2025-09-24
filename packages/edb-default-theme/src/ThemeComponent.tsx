@@ -3,18 +3,13 @@
 import { CssBaseline, GlobalStyles, ThemeProvider } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 
-// ** Type Imports
-// ** Theme Config
-import theme from "./berry-theme";
-// ** Global Styles
 import GlobalStyling from "./globalStyles";
+import { getTheme } from "./berry-theme";
 import { ThemeExtended } from "./berry-theme/themeType";
-// ** Theme Override Imports
-// ** Theme
 
-interface Props {
+type Props = Partial<ThemeExtended["customization"]> & {
   children: ReactNode;
-}
+};
 
 const themeSettings = {
   isOpen: [], // for active default menu
@@ -25,10 +20,15 @@ const themeSettings = {
   navType: "light",
 } as const;
 
-const themeFinal = theme(themeSettings);
-export const ThemeComponent = (props: Props) => {
-  // ** Props
-  const { children } = props;
+export const ThemeComponent = ({ children, ...customization }: Props) => {
+  const themeFinal = useMemo(
+    () =>
+      getTheme({
+        ...themeSettings,
+        ...customization,
+      }),
+    [customization],
+  );
 
   return (
     <ThemeProvider theme={themeFinal}>

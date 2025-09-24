@@ -1,4 +1,4 @@
-import type { Theme } from "@mui/material/styles";
+import type { Theme } from "@mui/material";
 
 export interface ThemeExtended extends Theme {
   colors?: Partial<{

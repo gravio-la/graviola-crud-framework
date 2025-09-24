@@ -1,9 +1,8 @@
-import { ThemeOptions } from "@mui/material";
-import { createTheme, Theme } from "@mui/material/styles";
+import { ThemeOptions, createTheme } from "@mui/material";
+export type { ThemeExtended } from "./themeType";
 
 // assets
-// @ts-ignore
-import colors from "./themes-vars.module.scss";
+import { colors } from "./themes-vars";
 // project imports
 import componentStyleOverrides from "./compStyleOverride";
 import themePalette from "./palette";
@@ -11,8 +10,8 @@ import { ThemeExtended } from "./themeType";
 import themeTypography from "./typography";
 
 let variant: "outlined" | "standard" | "filled" = "outlined";
-export const theme = (customization: ThemeExtended["customization"]) => {
-  const color = colors as any;
+export const getTheme = (customization: ThemeExtended["customization"]) => {
+  const color = colors;
 
   const theme = {
     colors: color,
@@ -28,7 +27,7 @@ export const theme = (customization: ThemeExtended["customization"]) => {
     divider: color.grey200,
     variant,
     customization,
-  } as ThemeExtended;
+  } as any;
 
   // @ts-ignore
   const themeOptions: ThemeOptions = {
@@ -50,5 +49,3 @@ export const theme = (customization: ThemeExtended["customization"]) => {
 
   return themes;
 };
-
-export default theme;
