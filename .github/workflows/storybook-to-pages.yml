@@ -45,7 +45,7 @@ jobs:
       - name: Static HTML export of storybook
         env:
           STORYBOOK_BASE_PATH: "/${{ github.event.repository.name }}"
-        run: bun run build:pages
+        run: STORYBOOK_BASE_PATH="/${{ github.event.repository.name }}" bun run build:pages
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

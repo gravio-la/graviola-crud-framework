@@ -1,5 +1,8 @@
 /*import { StorybookConfig } from "@storybook/nextjs";*/
 
+const basePath = process.env.STORYBOOK_BASE_PATH || "";
+console.log("basePath", basePath);
+
 const config = {
   stories: [
     "../stories/**/*.mdx",
@@ -47,6 +50,10 @@ const config = {
         os: false,
       },
     };
+    return config;
+  },
+  managerWebpack: async (config) => {
+    config.output.publicPath = basePath;
     return config;
   },
   /*
