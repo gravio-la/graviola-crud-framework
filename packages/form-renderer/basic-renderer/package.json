@@ -28,7 +28,6 @@
     "publish-clean": "bun run clean-package && npm publish --access public && bun run clean-package restore"
   },
   "peerDependencies": {
-    "@graviola/edb-state-hooks": "workspace:*",
     "@mui/material": "^5",
     "@mui/icons-material": "^5",
     "@mui/x-date-pickers": "^6 | ^7",
@@ -39,6 +38,7 @@
   },
   "dependencies": {
     "@graviola/edb-core-utils": "workspace:*",
+    "@graviola/edb-ui-utils": "workspace:*",
     "json-schema-to-ts": "^3.0.1",
     "next-i18next": "^15",
     "lodash-es": "^4.17.21"
