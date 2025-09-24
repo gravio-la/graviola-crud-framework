@@ -30,6 +30,7 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-      - run: bun build:packages
+      - name: Build packages
+        run: bun build:packages
       - name: Publish packages
         run: bun run publish
