@@ -83,12 +83,13 @@ export const useRouterMock = () => {
 };
 
 export const withMuiTheme = (Story) => {
+  console.log("PUBLIC_BASE_PATH", PUBLIC_BASE_PATH);
   return (
     <Provider store={store}>
       <AdbProvider
         {...exhibitionConfig}
         env={{
-          publicBasePath: PUBLIC_BASE_PATH || "",
+          publicBasePath: PUBLIC_BASE_PATH,
           baseIRI: BASE_IRI,
         }}
         components={{
