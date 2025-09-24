@@ -61,28 +61,40 @@ export const MarkdownTextFieldRendererDefault = () => {
   );
 };
 
-const uiSchemaWithImageUpload: Layout = {
-  type: "VerticalLayout",
-  elements: [
-    {
-      type: "Control",
-      scope: "#/properties/description",
-      options: {
-        imageUploadOptions: {
-          uploadImage: (file: File) => Promise.resolve(file.name),
-          openImageSelectDialog: () =>
-            Promise.resolve({
-              url: "https://example.com/image.png",
-              alt: "Example image",
-            }),
-        },
-      },
-    },
-  ],
-};
-
 export const MarkdownTextFieldRendererWithImageUpload = () => {
   const [data, setData] = useState<any>({});
+  const uiSchemaWithImageUpload: Layout = {
+    type: "VerticalLayout",
+    elements: [
+      {
+        type: "Control",
+        // @ts-ignore
+        scope: "#/properties/description",
+        options: {
+          imageUploadOptions: {
+            allowDataUrl: true,
+            uploadImage: (file: File) =>
+              new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  resolve({
+                    url: reader.result as string,
+                    alt: file.name.replace(/\.[^/.]+$/, ""),
+                  });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              }),
+            openImageSelectDialog: () =>
+              Promise.resolve({
+                url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
+                alt: "Example Red Dot",
+              }),
+          },
+        },
+      },
+    ],
+  };
 
   const handleFormChange = useCallback(
     ({ data }: Pick<JsonFormsCore, "data" | "errors">) => {

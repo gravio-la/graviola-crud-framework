@@ -5,7 +5,7 @@ import { FormControl, FormLabel, Grid, IconButton } from "@mui/material";
 import merge from "lodash-es/merge";
 import React, { useCallback, useMemo, useState } from "react";
 import rehypeExternalLinks from "rehype-external-links";
-import rehypeSanitize from "rehype-sanitize";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import TurndownService from "turndown";
 
 import MDEditor, { MDEditorMarkdown } from "./MDEditor";
@@ -16,6 +16,7 @@ type UploadedImage = {
 };
 
 type ImageUploadOptions = {
+  allowDataUrl?: boolean;
   openImageSelectDialog?: (
     selectedText: string,
   ) => Promise<UploadedImage | null>;
@@ -38,7 +39,7 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
   } = props;
   const isValid = errors.length === 0;
   const appliedUiSchemaOptions = merge({}, config, uischema.options);
-  const { openImageSelectDialog, uploadImage } =
+  const { openImageSelectDialog, uploadImage, allowDataUrl } =
     (appliedUiSchemaOptions.imageUploadOptions || {}) as ImageUploadOptions;
 
   const [editMode, setEditMode] = useState(false);
@@ -50,8 +51,22 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
     [path, handleChange],
   );
   const rehypePlugins = useMemo(
-    () => [[rehypeSanitize], [rehypeExternalLinks, { target: "_blank" }]],
-    [],
+    () => [
+      allowDataUrl
+        ? [
+            rehypeSanitize,
+            {
+              ...defaultSchema,
+              protocols: {
+                ...defaultSchema.protocols,
+                src: [...defaultSchema.protocols["src"], "data"],
+              },
+            },
+          ]
+        : [rehypeSanitize],
+      [rehypeExternalLinks, { target: "_blank" }],
+    ],
+    [allowDataUrl],
   );
 
   const handlePaste = useCallback(
