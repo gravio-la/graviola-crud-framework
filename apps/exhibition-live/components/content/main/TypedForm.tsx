@@ -1,6 +1,6 @@
 import { EntityDetailElement } from "@graviola/edb-advanced-components";
-import { MaterialCategorizationStepperLayoutRegistryEntry } from "@graviola/edb-layout-renderer";
 import { encodeIRI } from "@graviola/edb-core-utils";
+import { MaterialCategorizationStepperLayoutRegistryEntry } from "@graviola/edb-layout-renderer";
 import {
   useAdbContext,
   useFormEditor,

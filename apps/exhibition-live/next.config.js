@@ -11,6 +11,9 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const nextConfig = removeImports({
   reactStrictMode: true,
   output: "export",
+  typescript: {
+    tsconfigPath: "./tsconfig.build.json",
+  },
   modularizeImports: {
     "@mui/icons-material": { transform: "@mui/icons-material/{{member}}" },
     lodash: { transform: "lodash/{{member}}" },
