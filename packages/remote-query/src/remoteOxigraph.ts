@@ -42,7 +42,6 @@ const createFetchFunction =
     auth?: AuthConfig,
     additionalHeaders?: Record<string, string>,
   ) => {
-    console.log("fetching", endpoint, auth, additionalHeaders);
     return fetch(endpoint, {
       headers: createAuthHeaders(
         {
