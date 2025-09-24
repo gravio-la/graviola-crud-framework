@@ -6,7 +6,7 @@ import {
 } from "@jsonforms/material-renderers";
 import { withJsonFormsControlProps } from "@jsonforms/react";
 import { FormHelperText } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers";
+import { DatePicker, PickersActionBarAction } from "@mui/x-date-pickers";
 import { validate, validateWithAjv } from "@graviola/edb-ui-utils";
 import dayjs from "dayjs";
 import merge from "lodash-es/merge";
@@ -116,12 +116,6 @@ const MaterialDateControl = (props: ControlProps) => {
     return null;
   }
 
-  const finalActions = useMemo(() => {
-    return (actions || ["clear", "cancel", "accept"]).map((action) =>
-      t(action),
-    );
-  }, [actions, t]);
-
   return (
     <>
       <DatePicker
@@ -156,7 +150,7 @@ const MaterialDateControl = (props: ControlProps) => {
             InputLabelProps: data ? { shrink: true } : undefined,
           },
           actionBar: {
-            actions: finalActions,
+            actions: actions,
           },
           toolbar: {
             hidden: hideToolbar,
