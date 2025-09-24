@@ -1,5 +1,13 @@
 # @slub/exhibition-sparql-config
 
+## 1.2.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/sparql-db-impl@1.4.0
+  - @slub/exhibition-schema@1.3.6
+
 ## 1.2.6
 
 ### Patch Changes
