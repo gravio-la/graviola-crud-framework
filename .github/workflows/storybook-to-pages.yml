@@ -43,6 +43,8 @@ jobs:
       - name: Build packages
         run: bun run build:packages
       - name: Static HTML export of storybook
+        env:
+          NEXT_PUBLIC_BASE_PATH: "/${{ github.event.repository.name }}"
         run: bun run build:pages
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
