@@ -4,7 +4,7 @@ import isEmpty from "lodash-es/isEmpty";
 
 import { decode } from "./jsonPointer";
 
-type JsonSchema = JSONSchema7 | JSONSchema4;
+export type JsonSchema = JSONSchema7 | JSONSchema4;
 
 const invalidSegment = (pathSegment: string) =>
   pathSegment === "#" || pathSegment === undefined || pathSegment === "";
@@ -18,10 +18,10 @@ const invalidSegment = (pathSegment: string) =>
  */
 export const resolveSchema = (
   schema: JsonSchema,
-  schemaPath: string,
+  schemaPath: string | undefined,
   rootSchema: JsonSchema,
 ): JsonSchema | undefined => {
-  const segments = schemaPath?.split("/").map(decode);
+  const segments = schemaPath?.split("/").map(decode) ?? [];
   return resolveSchemaWithSegments(schema, segments, rootSchema);
 };
 
