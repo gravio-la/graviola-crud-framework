@@ -17,7 +17,6 @@ import {
   CardHeader,
   FormHelperText,
   Grid,
-  Hidden,
 } from "@mui/material";
 import isEmpty from "lodash-es/isEmpty";
 import { useMemo } from "react";
@@ -68,34 +67,35 @@ const GroupComponent = ({
     () => [[rehypeSanitize], [rehypeExternalLinks, { target: "_blank" }]],
     [],
   );
+
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <Hidden xsUp={!visible}>
-      <Card style={style}>
-        {!isEmpty(i18nLabel) && <CardHeader title={i18nLabel} />}
-        <CardContent>
-          {i18nDescription && i18nDescription.length > 0 && (
-            <Hidden xsUp={!visible}>
-              <Grid item xs>
-                <FormHelperText>
-                  <MDEditorMarkdown
-                    source={i18nDescription}
-                    rehypePlugins={rehypePlugins}
-                  />
-                </FormHelperText>
-              </Grid>
-            </Hidden>
-          )}
-          <MaterialLayoutRenderer
-            {...props}
-            path={path}
-            schema={schema}
-            visible={visible}
-            enabled={enabled}
-            elements={groupLayout.elements}
-          />
-        </CardContent>
-      </Card>
-    </Hidden>
+    <Card style={style}>
+      {!isEmpty(i18nLabel) && <CardHeader title={i18nLabel} />}
+      <CardContent>
+        {i18nDescription && i18nDescription.length > 0 && (
+          <Grid item xs>
+            <FormHelperText>
+              <MDEditorMarkdown
+                source={i18nDescription}
+                rehypePlugins={rehypePlugins}
+              />
+            </FormHelperText>
+          </Grid>
+        )}
+        <MaterialLayoutRenderer
+          {...props}
+          path={path}
+          schema={schema}
+          visible={visible}
+          enabled={enabled}
+          elements={groupLayout.elements}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

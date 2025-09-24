@@ -1,13 +1,7 @@
 import { ControlProps, showAsRequired } from "@jsonforms/core";
 import { withJsonFormsControlProps } from "@jsonforms/react";
 import { Edit, EditOff, Image } from "@mui/icons-material";
-import {
-  FormControl,
-  FormLabel,
-  Grid,
-  Hidden,
-  IconButton,
-} from "@mui/material";
+import { FormControl, FormLabel, Grid, IconButton } from "@mui/material";
 import merge from "lodash-es/merge";
 import React, { useCallback, useMemo, useState } from "react";
 import rehypeExternalLinks from "rehype-external-links";
@@ -197,64 +191,66 @@ const MarkdownTextFieldRendererComponent = (props: ControlProps) => {
     };
   }, [openImageSelectDialog]);
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <Hidden xsUp={!visible}>
-      <FormControl
-        fullWidth={!appliedUiSchemaOptions.trim}
-        id={id}
-        sx={(theme) => ({ marginBottom: theme.spacing(2) })}
-      >
-        <Grid container alignItems="baseline">
-          <Grid item>
-            <FormLabel
-              error={!isValid}
-              required={showAsRequired(
-                !!required,
-                appliedUiSchemaOptions.hideRequiredAsterisk,
-              )}
-            >
-              {label}
-            </FormLabel>
-          </Grid>
-          <Grid item>
-            <IconButton onClick={() => setEditMode((prev) => !prev)}>
-              {editMode ? <EditOff /> : <Edit />}
-            </IconButton>
-          </Grid>
+    <FormControl
+      fullWidth={!appliedUiSchemaOptions.trim}
+      id={id}
+      sx={(theme) => ({ marginBottom: theme.spacing(2) })}
+    >
+      <Grid container alignItems="baseline">
+        <Grid item>
+          <FormLabel
+            error={!isValid}
+            required={showAsRequired(
+              !!required,
+              appliedUiSchemaOptions.hideRequiredAsterisk,
+            )}
+          >
+            {label}
+          </FormLabel>
         </Grid>
-        {editMode ? (
-          <MDEditor
-            textareaProps={{
-              id: id + "-input",
-              onPaste: handlePaste,
-              onDragOver: handleDragOver,
-              onDragEnter: handleDragEnter,
-              onDragLeave: handleDragLeave,
-              onDrop: handleDrop,
-            }}
-            value={(data || "") as string}
-            onChange={handleChange_}
-            previewOptions={{
-              rehypePlugins: rehypePlugins as any,
-            }}
-            commandsFilter={(cmd) =>
-              cmd?.name && /(divider|code|image|checked)/.test(cmd.name)
-                ? false
-                : cmd
-            }
-            extraCommands={imageCommand ? [imageCommand] : []}
-          />
-        ) : (
-          <MDEditorMarkdown
-            wrapperElement={{
-              "data-color-mode": "light",
-            }}
-            source={(data || "") as string}
-            rehypePlugins={rehypePlugins as any}
-          />
-        )}
-      </FormControl>
-    </Hidden>
+        <Grid item>
+          <IconButton onClick={() => setEditMode((prev) => !prev)}>
+            {editMode ? <EditOff /> : <Edit />}
+          </IconButton>
+        </Grid>
+      </Grid>
+      {editMode ? (
+        <MDEditor
+          textareaProps={{
+            id: id + "-input",
+            onPaste: handlePaste,
+            onDragOver: handleDragOver,
+            onDragEnter: handleDragEnter,
+            onDragLeave: handleDragLeave,
+            onDrop: handleDrop,
+          }}
+          value={(data || "") as string}
+          onChange={handleChange_}
+          previewOptions={{
+            rehypePlugins: rehypePlugins as any,
+          }}
+          commandsFilter={(cmd) =>
+            cmd?.name && /(divider|code|image|checked)/.test(cmd.name)
+              ? false
+              : cmd
+          }
+          extraCommands={imageCommand ? [imageCommand] : []}
+        />
+      ) : (
+        <MDEditorMarkdown
+          wrapperElement={{
+            "data-color-mode": "light",
+          }}
+          source={(data || "") as string}
+          rehypePlugins={rehypePlugins as any}
+        />
+      )}
+    </FormControl>
   );
 };
 
