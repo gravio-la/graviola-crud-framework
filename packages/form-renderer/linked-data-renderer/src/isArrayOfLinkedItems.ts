@@ -1,16 +1,15 @@
-import { type JsonSchema, type Tester, schemaMatches } from "@jsonforms/core";
+import { resolveSchema, type JsonSchema } from "@graviola/json-schema-utils";
+import { type Tester, schemaMatches } from "@jsonforms/core";
 
 export const isArrayOfLinkedItems: Tester = (schema, rootSchema, context) =>
-  schemaMatches((_schema) => {
-    if (
-      !(
-        _schema.type === "array" &&
-        typeof _schema.items === "object" &&
-        (_schema.items as JsonSchema).properties
-      )
-    ) {
-      return Boolean((_schema.items as JsonSchema).$ref);
+  schemaMatches((_schema, _rootSchema) => {
+    if (_schema.type === "array" && typeof _schema.items === "object") {
+      const resolvedSchema = resolveSchema(
+        _schema.items as JsonSchema,
+        undefined,
+        _rootSchema as JsonSchema,
+      );
+      return Boolean(resolvedSchema?.properties?.["@id"]);
     }
-    const props = (_schema.items as JsonSchema).properties;
-    return Boolean(props["@id"]);
+    return false;
   })(schema, rootSchema, context);
