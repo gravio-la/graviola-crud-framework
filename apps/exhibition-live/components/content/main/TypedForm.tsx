@@ -1,6 +1,6 @@
 import { EntityDetailElement } from "@graviola/edb-advanced-components";
+import { MaterialCategorizationStepperLayoutRegistryEntry } from "@graviola/edb-layout-renderer";
 import { encodeIRI } from "@graviola/edb-core-utils";
-import { materialCategorizationStepperLayoutWithPortal } from "@graviola/edb-layout-renderer";
 import {
   useAdbContext,
   useFormEditor,
@@ -123,12 +123,6 @@ const TypedForm = ({ typeName, entityIRI, classIRI }: MainFormProps) => {
     },
     [setData, data],
   );
-  const mainFormRenderers = useMemo(() => {
-    return [
-      // @ts-ignore
-      materialCategorizationStepperLayoutWithPortal(),
-    ];
-  }, []);
 
   const uischema = useMemo(() => uischemata?.[typeName], [typeName]);
 
@@ -141,13 +135,13 @@ const TypedForm = ({ typeName, entityIRI, classIRI }: MainFormProps) => {
   const jsonFormsPropsFinal = useMemo(
     () => ({
       uischema,
-      renderers: mainFormRenderers,
+      renderers: [MaterialCategorizationStepperLayoutRegistryEntry],
       config: {
         useCRUDHook: useCRUDWithQueryClient,
         debug: enableDebug,
       },
     }),
-    [uischema, mainFormRenderers, enableDebug],
+    [uischema, enableDebug],
   );
 
   if (!activeEndpoint) {

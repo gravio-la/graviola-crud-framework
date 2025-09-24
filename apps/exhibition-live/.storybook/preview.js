@@ -20,6 +20,8 @@ import { ThemeComponent } from "@graviola/edb-default-theme";
 import { LocalOxigraphStoreProvider } from "@graviola/local-oxigraph-store-provider";
 import NiceModal from "@ebay/nice-modal-react";
 import "react-json-view-lite/dist/index.css";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 export const parameters = {
   nextRouter: {
@@ -97,16 +99,18 @@ export const withMuiTheme = (Story) => {
         }}
         useRouterHook={useRouterMock}
       >
-        <ThemeComponent>
-          <QueryClientProvider client={queryClient}>
-            <LocalStoreWithExampleDataProvider>
-              <NiceModal.Provider>
-                <CssBaseline />
-                <Story />
-              </NiceModal.Provider>
-            </LocalStoreWithExampleDataProvider>
-          </QueryClientProvider>
-        </ThemeComponent>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <ThemeComponent>
+            <QueryClientProvider client={queryClient}>
+              <LocalStoreWithExampleDataProvider>
+                <NiceModal.Provider>
+                  <CssBaseline />
+                  <Story />
+                </NiceModal.Provider>
+              </LocalStoreWithExampleDataProvider>
+            </QueryClientProvider>
+          </ThemeComponent>
+        </LocalizationProvider>
       </AdbProvider>
     </Provider>
   );

@@ -1,7 +1,7 @@
 import { decodeIRI } from "@graviola/edb-core-utils";
 import { useAdbContext, useFormEditor } from "@graviola/edb-state-hooks";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { Button, Hidden } from "@mui/material";
+import { Button } from "@mui/material";
 import { schema } from "@slub/exhibition-schema";
 import Head from "next/head";
 import { useSearchParams } from "next/navigation";
@@ -69,14 +69,14 @@ export default (props: Props) => {
       </Head>
       <MainLayout
         toolbar={
-          <Hidden xsUp={!features?.enablePreview}>
+          features?.enablePreview ? (
             <Button
               onClick={() => togglePreview()}
               startIcon={previewEnabled ? <VisibilityOff /> : <Visibility />}
             >
               Vorschau {previewEnabled ? "ausblenden" : "einblenden"}
             </Button>
-          </Hidden>
+          ) : undefined
         }
       >
         {typeIRI && typeName && (

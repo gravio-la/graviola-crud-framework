@@ -14,6 +14,7 @@ const config = {
     "@storybook/addon-docs",
     "@storybook/addon-links",
     "@storybook/addon-essentials",
+    "@kickstartds/storybook-addon-jsonschema",
   ],
   staticDirs: ["../public"],
 

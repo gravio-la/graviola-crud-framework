@@ -1,5 +1,37 @@
 # adb-next
 
+## 0.3.0
+
+### Minor Changes
+
+- cleanup , stability, virtuoso support, auth support, inverse queries
+
+### Patch Changes
+
+- Updated dependencies
+  - @graviola/edb-linked-data-renderer@4.0.0
+  - @graviola/sparql-store-provider@4.0.0
+  - @graviola/edb-advanced-components@1.5.0
+  - @graviola/semantic-json-form@1.4.0
+  - @graviola/edb-basic-components@1.3.0
+  - @graviola/edb-table-components@1.3.0
+  - @graviola/sparql-db-impl@1.4.0
+  - @graviola/edb-wikidata-utils@1.1.0
+  - @graviola/entity-finder@1.3.0
+  - @graviola/sparql-schema@1.4.0
+  - @graviola/remote-query-implementations@1.3.0
+  - @graviola/edb-state-hooks@1.5.0
+  - @graviola/data-mapping-hooks@1.1.8
+  - @graviola/edb-graph-traversal@1.3.2
+  - @slub/exhibition-schema@1.3.6
+  - @graviola/edb-debug-utils@1.2.2
+  - @graviola/edb-basic-renderer@4.0.0
+  - @slub/kulinarik-schema@1.0.0
+  - @graviola/edb-core-utils@1.4.0
+  - @graviola/edb-data-mapping@0.2.7
+  - @graviola/edb-charts@0.2.2
+  - @graviola/edb-kxp-utils@1.1.8
+
 ## 0.2.9
 
 ### Patch Changes

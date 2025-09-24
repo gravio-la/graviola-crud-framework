@@ -2,7 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import { decodeIRI } from "@graviola/edb-core-utils";
 import { MainLayout } from "../../components/layout/main-layout";
-import { Button, Hidden } from "@mui/material";
+import { Button } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import TypedForm from "../../components/content/main/TypedForm";
 import {
@@ -39,14 +39,14 @@ export const CreatePage = () => {
     <NiceModal.Provider>
       <MainLayout
         toolbar={
-          <Hidden xsUp={!features?.enablePreview}>
+          features?.enablePreview ? (
             <Button
               onClick={() => togglePreview()}
               startIcon={previewEnabled ? <VisibilityOff /> : <Visibility />}
             >
               Vorschau {previewEnabled ? "ausblenden" : "einblenden"}
             </Button>
-          </Hidden>
+          ) : undefined
         }
       >
         {typeIRI && typeName && entityIRI && (
