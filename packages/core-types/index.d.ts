@@ -211,3 +211,53 @@ export type Entity = {
   description?: string;
   image?: string;
 };
+
+// Runtime (non-typed) filter operators for WHERE clauses
+export type WhereOperators = {
+  equals?: any;
+  not?: any;
+  in?: any[];
+  notIn?: any[];
+  // String operators
+  contains?: string;
+  startsWith?: string;
+  endsWith?: string;
+  mode?: 'default' | 'insensitive';
+  // Numeric operators
+  lt?: number;
+  lte?: number;
+  gt?: number;
+  gte?: number;
+};
+
+// Runtime WHERE input (untyped) - used for Prisma-style filtering
+export type WhereInput = {
+  [property: string]: any | WhereOperators | WhereInput;
+  AND?: WhereInput | WhereInput[];
+  OR?: WhereInput | WhereInput[];
+  NOT?: WhereInput | WhereInput[];
+};
+
+// Select, Include, and Omit patterns for graph traversal
+export type SelectPattern = {
+  [property: string]: boolean;
+};
+
+export type IncludePattern = {
+  [property: string]: boolean | IncludePattern;
+};
+
+export type OmitPattern = {
+  [property: string]: boolean;
+};
+
+// Graph traversal filter options with WHERE support
+export type GraphTraversalFilterOptions = {
+  select?: SelectPattern;
+  include?: IncludePattern;
+  omit?: OmitPattern;
+  where?: WhereInput;
+  includeRelationsByDefault?: boolean;
+  defaultPaginationLimit?: number;
+  excludeJsonLdMetadata?: boolean;
+};
