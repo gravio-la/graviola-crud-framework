@@ -7,7 +7,6 @@
       "devDependencies": {
         "@changesets/cli": "^2.27.12",
         "@turbo/gen": "^2.4.0",
-        "clean-package": "^2.2.0",
         "depcheck": "^1.4.7",
         "dependency-cruiser": "^16.10.0",
         "eslint": "^8.57.1",
@@ -239,8 +238,8 @@
         "@storybook/addon-docs": "^10.0.7",
         "@storybook/react-vite": "10.0.7",
         "@types/bun": "latest",
+        "@types/json-schema": "catalog:",
         "eslint-plugin-storybook": "^10.0.7",
-        "json-schema": "^0.4.0",
         "storybook": "10.0.7",
       },
       "peerDependencies": {
@@ -379,7 +378,7 @@
     },
     "packages/advanced-components": {
       "name": "@graviola/edb-advanced-components",
-      "version": "1.5.0",
+      "version": "1.6.7",
       "dependencies": {
         "@graviola/edb-basic-components": "workspace:*",
         "@graviola/edb-core-utils": "workspace:*",
@@ -401,7 +400,7 @@
         "@storybook/react": "10.0.7",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.12",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "ajv": "^8.17.1",
         "eslint-config-edb": "workspace:*",
         "tsup": "^8.0.0",
@@ -418,11 +417,11 @@
     },
     "packages/async-oxigraph": {
       "name": "@graviola/async-oxigraph",
-      "version": "0.2.0",
+      "version": "0.2.5",
     },
     "packages/authorities": {
       "name": "@graviola/edb-authorities",
-      "version": "0.2.4",
+      "version": "0.3.6",
       "dependencies": {
         "cross-fetch": "^4.0.0",
       },
@@ -437,7 +436,7 @@
     },
     "packages/basic-components": {
       "name": "@graviola/edb-basic-components",
-      "version": "1.3.0",
+      "version": "1.4.6",
       "dependencies": {
         "@graviola/edb-state-hooks": "workspace:*",
       },
@@ -447,7 +446,7 @@
         "@graviola/edb-tsup-config": "workspace:*",
         "@storybook/react": "10.0.7",
         "@types/json-schema": "catalog:",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "eslint-config-edb": "workspace:*",
         "next-i18next": "^15.3.0",
         "tsup": "^8.0.0",
@@ -464,7 +463,7 @@
     },
     "packages/build-helper": {
       "name": "@graviola/edb-build-helper",
-      "version": "0.3.0",
+      "version": "0.4.3",
       "bin": {
         "get-dependecies": "./get-dependencies.js",
       },
@@ -476,7 +475,7 @@
     },
     "packages/config-helper": {
       "name": "@graviola/edb-config-helper",
-      "version": "1.1.3",
+      "version": "1.2.6",
       "devDependencies": {
         "@graviola/edb-global-types": "workspace:*",
         "@graviola/edb-tsconfig": "workspace:*",
@@ -489,7 +488,7 @@
     },
     "packages/core-types": {
       "name": "@graviola/edb-core-types",
-      "version": "1.3.0",
+      "version": "1.4.6",
       "devDependencies": {
         "@rdfjs/namespace": "catalog:rdf",
         "@rdfjs/types": "catalog:rdf",
@@ -502,7 +501,7 @@
     },
     "packages/core-utils": {
       "name": "@graviola/edb-core-utils",
-      "version": "1.4.1",
+      "version": "1.5.6",
       "devDependencies": {
         "@graviola/edb-build-helper": "workspace:*",
         "@graviola/edb-core-types": "workspace:*",
@@ -518,7 +517,7 @@
     },
     "packages/data-mapping": {
       "name": "@graviola/edb-data-mapping",
-      "version": "0.2.7",
+      "version": "0.3.6",
       "dependencies": {
         "@graviola/edb-core-types": "workspace:*",
         "@graviola/edb-core-utils": "workspace:*",
@@ -544,7 +543,7 @@
     },
     "packages/data-mapping-hooks": {
       "name": "@graviola/data-mapping-hooks",
-      "version": "1.1.8",
+      "version": "1.2.6",
       "dependencies": {
         "@graviola/edb-data-mapping": "workspace:*",
         "@graviola/edb-state-hooks": "workspace:*",
@@ -566,7 +565,7 @@
     },
     "packages/debug-utils": {
       "name": "@graviola/edb-debug-utils",
-      "version": "1.2.2",
+      "version": "1.3.6",
       "dependencies": {
         "@graviola/edb-state-hooks": "workspace:*",
         "@triply/yasgui": "^4.2.28",
@@ -577,7 +576,7 @@
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/json-schema": "catalog:",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "eslint-config-edb": "workspace:*",
         "tsup": "^8.0.0",
         "typescript": "^5.8.2",
@@ -590,7 +589,7 @@
     },
     "packages/edb-cli-creator": {
       "name": "@graviola/edb-cli-creator",
-      "version": "1.2.5",
+      "version": "1.3.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "cmd-ts": "^0.13.0",
@@ -611,13 +610,13 @@
     },
     "packages/edb-default-theme": {
       "name": "@graviola/edb-default-theme",
-      "version": "1.1.2",
+      "version": "1.2.6",
       "devDependencies": {
         "@graviola/edb-build-helper": "workspace:*",
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/json-schema": "catalog:",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "tsup": "^8.0.0",
         "typescript": "^5.8.2",
       },
@@ -629,7 +628,7 @@
     },
     "packages/edb-sparnatural": {
       "name": "@graviola/edb-sparnatural",
-      "version": "1.0.0",
+      "version": "1.1.3",
       "dependencies": {
         "@fortawesome/fontawesome-free": "^6.6.0",
         "@geoman-io/leaflet-geoman-free": "^2.17.0",
@@ -641,7 +640,7 @@
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/json-schema": "catalog:",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
       },
       "peerDependencies": {
         "leaflet": "~1.9",
@@ -650,7 +649,7 @@
     },
     "packages/entity-finder": {
       "name": "@graviola/entity-finder",
-      "version": "1.3.0",
+      "version": "1.4.6",
       "dependencies": {
         "@graviola/data-mapping-hooks": "workspace:*",
         "@graviola/edb-basic-components": "workspace:*",
@@ -680,7 +679,7 @@
     },
     "packages/eslint-config-edb": {
       "name": "eslint-config-edb",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "dependencies": {
         "@typescript-eslint/typescript-estree": "^8.26.1",
         "eslint-config-next": "^14.1.4",
@@ -700,7 +699,7 @@
     },
     "packages/file-import": {
       "name": "@graviola/edb-file-import",
-      "version": "1.0.8",
+      "version": "1.1.6",
       "dependencies": {
         "@graviola/edb-maintenance-utils": "workspace:*",
         "jsonld": "^8.3.2",
@@ -725,7 +724,7 @@
     },
     "packages/form-renderer/basic-renderer": {
       "name": "@graviola/edb-basic-renderer",
-      "version": "4.0.0",
+      "version": "4.1.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/edb-ui-utils": "workspace:*",
@@ -742,7 +741,7 @@
         "@storybook/react": "10.0.7",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.12",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "eslint-config-edb": "workspace:*",
         "tsup": "^8.0.0",
         "typescript": "^5.8.2",
@@ -760,7 +759,7 @@
     },
     "packages/form-renderer/color-picker-renderer": {
       "name": "@graviola/color-picker-renderer",
-      "version": "3.0.0",
+      "version": "4.0.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "lodash-es": "catalog:",
@@ -775,7 +774,7 @@
         "@storybook/react": "10.0.7",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.12",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "@types/react-color": "^3.0.13",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
@@ -797,7 +796,7 @@
     },
     "packages/form-renderer/layout-renderer": {
       "name": "@graviola/edb-layout-renderer",
-      "version": "1.2.0",
+      "version": "1.3.6",
       "dependencies": {
         "lodash-es": "catalog:",
         "next-i18next": "^15",
@@ -809,7 +808,7 @@
         "@jsonforms/react": "catalog:jsonforms",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.12",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "eslint-config-edb": "workspace:*",
         "tsup": "^8.0.0",
         "typescript": "^5.8.2",
@@ -825,7 +824,7 @@
     },
     "packages/form-renderer/linked-data-renderer": {
       "name": "@graviola/edb-linked-data-renderer",
-      "version": "4.0.2",
+      "version": "5.0.7",
       "dependencies": {
         "@graviola/edb-advanced-components": "workspace:*",
         "@graviola/edb-basic-components": "workspace:*",
@@ -850,7 +849,7 @@
         "@storybook/react": "10.0.7",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.4",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "ajv": "^8.12",
         "depcheck": "^1.4.7",
         "eslint-config-edb": "workspace:*",
@@ -871,7 +870,7 @@
     },
     "packages/form-renderer/map-libre-gl-renderer": {
       "name": "@graviola/map-libre-gl-renderer",
-      "version": "3.0.0",
+      "version": "4.0.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@watergis/maplibre-gl-terradraw": "^1.3.9",
@@ -889,7 +888,7 @@
         "@storybook/react": "10.0.7",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.12",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "eslint-config-edb": "workspace:*",
         "tsup": "^8.0.0",
         "typescript": "^5.8.2",
@@ -906,7 +905,7 @@
     },
     "packages/form-renderer/markdown-renderer": {
       "name": "@graviola/edb-markdown-renderer",
-      "version": "1.3.0",
+      "version": "1.4.6",
       "dependencies": {
         "@graviola/edb-layout-renderer": "workspace:*",
         "lodash-es": "catalog:",
@@ -935,7 +934,7 @@
     },
     "packages/global-types": {
       "name": "@graviola/edb-global-types",
-      "version": "1.2.0",
+      "version": "1.3.6",
       "devDependencies": {
         "@graviola/edb-core-types": "workspace:*",
         "@rdfjs/namespace": "catalog:rdf",
@@ -949,7 +948,7 @@
     },
     "packages/graph-traversal": {
       "name": "@graviola/edb-graph-traversal",
-      "version": "1.4.0",
+      "version": "1.5.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/json-schema-utils": "workspace:*",
@@ -995,25 +994,26 @@
     },
     "packages/ideas/charts": {
       "name": "@graviola/edb-charts",
-      "version": "0.2.2",
+      "version": "0.3.3",
       "devDependencies": {
         "@graviola/edb-core-types": "workspace:*",
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/jest": "^29.5.12",
+        "@types/json-schema": "catalog:",
         "eslint-config-edb": "workspace:*",
-        "react": "^18",
+        "react": "catalog:",
         "recharts": "^2.12.6",
         "typescript": "^5.8.2",
       },
       "peerDependencies": {
-        "react": "^18",
+        "react": "catalog:",
         "recharts": "^2",
       },
     },
     "packages/ideas/resizable-drawer": {
       "name": "@graviola/edb-resizable-drawer",
-      "version": "0.2.3",
+      "version": "0.3.3",
       "dependencies": {
         "zustand": "^4.5.2",
       },
@@ -1022,18 +1022,19 @@
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/jest": "^29.5.12",
+        "@types/json-schema": "catalog:",
         "eslint-config-edb": "workspace:*",
-        "react": "^18",
+        "react": "catalog:",
         "typescript": "^5.8.2",
       },
       "peerDependencies": {
-        "@mui/material": "^7",
-        "react": "^18",
+        "@mui/material": "catalog:mui",
+        "react": "catalog:",
       },
     },
     "packages/json-schema-prisma-utils": {
       "name": "@graviola/json-schema-prisma-utils",
-      "version": "1.2.8",
+      "version": "1.3.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/json-schema-utils": "workspace:*",
@@ -1049,7 +1050,7 @@
     },
     "packages/json-schema-utils": {
       "name": "@graviola/json-schema-utils",
-      "version": "1.4.1",
+      "version": "1.5.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "lodash-es": "catalog:",
@@ -1067,7 +1068,7 @@
     },
     "packages/jsonSchema2PrismaSchema": {
       "name": "@graviola/json-schema2prisma-schema",
-      "version": "0.1.9",
+      "version": "0.2.6",
       "bin": {
         "jsonSchema2Prisma": "./dist/index.cjs",
       },
@@ -1087,7 +1088,7 @@
     },
     "packages/jsonld-utils": {
       "name": "@graviola/jsonld-utils",
-      "version": "1.4.0",
+      "version": "1.5.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/edb-graph-traversal": "workspace:*",
@@ -1110,7 +1111,7 @@
     },
     "packages/kxp-components": {
       "name": "@graviola/edb-kxp-components",
-      "version": "1.0.10",
+      "version": "1.1.3",
       "dependencies": {
         "@graviola/edb-basic-components": "workspace:*",
         "@graviola/edb-graph-traversal": "workspace:*",
@@ -1136,7 +1137,7 @@
     },
     "packages/kxp-utils": {
       "name": "@graviola/edb-kxp-utils",
-      "version": "1.1.8",
+      "version": "1.2.6",
       "dependencies": {
         "@graviola/edb-graph-traversal": "workspace:*",
         "@graviola/edb-marc-to-rdf": "workspace:*",
@@ -1160,7 +1161,7 @@
     },
     "packages/local-oxigraph-store-provider": {
       "name": "@graviola/local-oxigraph-store-provider",
-      "version": "4.0.0",
+      "version": "5.0.6",
       "dependencies": {
         "@graviola/async-oxigraph": "workspace:*",
         "@graviola/remote-query-implementations": "workspace:*",
@@ -1192,7 +1193,7 @@
     },
     "packages/maintenance-utils": {
       "name": "@graviola/edb-maintenance-utils",
-      "version": "1.1.8",
+      "version": "1.2.6",
       "dependencies": {
         "@graviola/edb-graph-traversal": "workspace:*",
         "@graviola/json-schema-utils": "workspace:*",
@@ -1215,7 +1216,7 @@
     },
     "packages/marc-to-rdf": {
       "name": "@graviola/edb-marc-to-rdf",
-      "version": "1.1.5",
+      "version": "1.2.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@rdfjs/data-model": "catalog:rdf",
@@ -1242,7 +1243,7 @@
     },
     "packages/prisma-db-impl": {
       "name": "@graviola/prisma-db-impl",
-      "version": "1.5.6",
+      "version": "1.6.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/json-schema-prisma-utils": "workspace:*",
@@ -1267,7 +1268,7 @@
     },
     "packages/remote-query": {
       "name": "@graviola/remote-query-implementations",
-      "version": "1.3.2",
+      "version": "1.4.6",
       "dependencies": {
         "@rdfjs/dataset": "^2.0.2",
         "lodash-es": "catalog:",
@@ -1287,7 +1288,7 @@
     },
     "packages/rest-store-provider": {
       "name": "@graviola/rest-store-provider",
-      "version": "1.2.2",
+      "version": "1.3.6",
       "dependencies": {
         "@graviola/edb-state-hooks": "workspace:*",
         "@graviola/restfull-fetch-db-impl": "workspace:*",
@@ -1307,7 +1308,7 @@
     },
     "packages/restfull-fetch-db-impl": {
       "name": "@graviola/restfull-fetch-db-impl",
-      "version": "1.4.0",
+      "version": "1.5.6",
       "dependencies": {
         "cross-fetch": "^4.0.0",
         "qs": "^6.12.3",
@@ -1324,7 +1325,7 @@
     },
     "packages/semantic-json-form": {
       "name": "@graviola/semantic-json-form",
-      "version": "1.4.1",
+      "version": "1.5.7",
       "dependencies": {
         "@graviola/edb-advanced-components": "workspace:*",
         "@graviola/edb-basic-components": "workspace:*",
@@ -1359,7 +1360,7 @@
     },
     "packages/semantic-jsonform-types": {
       "name": "@graviola/semantic-jsonform-types",
-      "version": "1.3.0",
+      "version": "1.4.6",
       "devDependencies": {
         "@graviola/edb-core-types": "workspace:*",
         "@graviola/edb-global-types": "workspace:*",
@@ -1377,7 +1378,7 @@
     },
     "packages/simple-local-data-store": {
       "name": "@graviola/simple-local-data-store",
-      "version": "1.0.2",
+      "version": "1.1.6",
       "devDependencies": {
         "@graviola/edb-core-types": "workspace:*",
         "@graviola/edb-global-types": "workspace:*",
@@ -1398,7 +1399,7 @@
     },
     "packages/sparql-db-impl": {
       "name": "@graviola/sparql-db-impl",
-      "version": "1.4.0",
+      "version": "1.5.6",
       "dependencies": {
         "@graviola/json-schema-utils": "workspace:*",
         "@graviola/jsonld-utils": "workspace:*",
@@ -1417,7 +1418,7 @@
     },
     "packages/sparql-schema": {
       "name": "@graviola/sparql-schema",
-      "version": "1.4.0",
+      "version": "1.5.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/edb-graph-traversal": "workspace:*",
@@ -1456,7 +1457,7 @@
     },
     "packages/sparql-store-provider": {
       "name": "@graviola/sparql-store-provider",
-      "version": "4.0.0",
+      "version": "5.0.6",
       "dependencies": {
         "@graviola/remote-query-implementations": "workspace:*",
         "@graviola/sparql-db-impl": "workspace:*",
@@ -1467,7 +1468,7 @@
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/json-schema": "catalog:",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "tsup": "^8.0.0",
         "typescript": "^5.8.2",
       },
@@ -1478,7 +1479,7 @@
     },
     "packages/state-hooks": {
       "name": "@graviola/edb-state-hooks",
-      "version": "1.5.1",
+      "version": "1.6.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/json-schema-utils": "workspace:*",
@@ -1493,7 +1494,7 @@
         "@graviola/semantic-jsonform-types": "workspace:*",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.12",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "eslint-config-edb": "workspace:*",
         "tsup": "^8.0.0",
         "typescript": "^5.8.2",
@@ -1509,7 +1510,7 @@
     },
     "packages/table-components": {
       "name": "@graviola/edb-table-components",
-      "version": "1.3.0",
+      "version": "1.4.6",
       "dependencies": {
         "@graviola/edb-basic-components": "workspace:*",
         "@graviola/edb-core-types": "workspace:*",
@@ -1531,7 +1532,7 @@
         "@tanstack/table-core": "^8",
         "@types/json-schema": "catalog:",
         "@types/lodash-es": "^4.17.12",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "eslint-config-edb": "workspace:*",
         "i18next": "^23.7.7",
         "notistack": "^3",
@@ -1558,7 +1559,7 @@
     },
     "packages/ui-utils": {
       "name": "@graviola/edb-ui-utils",
-      "version": "0.2.6",
+      "version": "0.3.6",
       "dependencies": {
         "@graviola/edb-core-utils": "workspace:*",
         "@graviola/json-schema-utils": "workspace:*",
@@ -1593,7 +1594,7 @@
     },
     "packages/virtualized-components": {
       "name": "@graviola/edb-virtualized-components",
-      "version": "1.0.7",
+      "version": "1.1.3",
       "dependencies": {
         "@graviola/edb-ui-utils": "workspace:*",
       },
@@ -1601,7 +1602,7 @@
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/json-schema": "catalog:",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "react-virtuoso": "^4.6.2",
       },
       "peerDependencies": {
@@ -1613,7 +1614,7 @@
     },
     "packages/vis-timeline": {
       "name": "@graviola/edb-vis-timeline",
-      "version": "1.0.0",
+      "version": "1.1.3",
       "dependencies": {
         "vis-data": "^7.1.9",
         "vis-timeline": "^7.7.3",
@@ -1622,7 +1623,7 @@
         "@graviola/edb-tsconfig": "workspace:*",
         "@graviola/edb-tsup-config": "workspace:*",
         "@types/json-schema": "catalog:",
-        "@types/react": "~18.3",
+        "@types/react": "catalog:",
         "react": "catalog:",
       },
       "peerDependencies": {
@@ -1631,7 +1632,7 @@
     },
     "packages/wikidata-utils": {
       "name": "@graviola/edb-wikidata-utils",
-      "version": "1.1.0",
+      "version": "1.2.6",
       "dependencies": {
         "@graviola/sparql-schema": "workspace:*",
         "@rdfjs/dataset": "^2.0.1",
@@ -1648,10 +1649,14 @@
       },
     },
   },
+  "overrides": {
+    "i18next": ">=25.4.0",
+  },
   "catalog": {
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@types/json-schema": "^7.0.15",
+    "@types/react": "^19",
     "lodash-es": "^4.17.21",
     "react": "^19",
     "react-dom": "^19.0.0",
@@ -2299,7 +2304,7 @@
 
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
-    "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.9", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.0.3", "@jridgewell/sourcemap-codec": "^1.4.10" } }, "sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ=="],
+    "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@jsdevtools/ono": ["@jsdevtools/ono@7.1.3", "", {}, "sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg=="],
 
@@ -2667,7 +2672,7 @@
 
     "@types/bintrees": ["@types/bintrees@1.0.6", "", {}, "sha512-pZWT4Bz+tWwxlDspSjdoIza4PE5lbGI4Xvs3FZV/2v5m5SDA8LwNpU8AXxlndmARO7OaQ1Vf3zFenOsNMzaRkQ=="],
 
-    "@types/bun": ["@types/bun@1.3.10", "", { "dependencies": { "bun-types": "1.3.10" } }, "sha512-0+rlrUrOrTSskibryHbvQkDOWRJwJZqZlxrUs1u4oOoTln8+WIXBPmAuCF35SWB2z4Zl3E84Nl/D0P7803nigQ=="],
+    "@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
 
     "@types/chai": ["@types/chai@5.2.3", "", { "dependencies": { "@types/deep-eql": "*", "assertion-error": "^2.0.1" } }, "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA=="],
 
@@ -2807,7 +2812,7 @@
 
     "@types/rdfjs__namespace": ["@types/rdfjs__namespace@2.0.10", "", { "dependencies": { "@rdfjs/types": "*" } }, "sha512-xoVzEIOxcpyteEmzaj94MSBbrBFs+vqv05joMhzLEiPRwsBBDnhkdBCaaDxR1Tf7wOW0kB2R1IYe4C3vEBFPgA=="],
 
-    "@types/react": ["@types/react@18.3.28", "", { "dependencies": { "@types/prop-types": "*", "csstype": "^3.2.2" } }, "sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw=="],
+    "@types/react": ["@types/react@19.2.14", "", { "dependencies": { "csstype": "^3.2.2" } }, "sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w=="],
 
     "@types/react-color": ["@types/react-color@3.0.13", "", { "dependencies": { "@types/reactcss": "*" }, "peerDependencies": { "@types/react": "*" } }, "sha512-2c/9FZ4ixC5T3JzN0LP5Cke2Mf0MKOP2Eh0NPDPWmuVH3NjPyhEjqNMQpN1Phr5m74egAy+p2lYNAFrX1z9Yrg=="],
 
@@ -3201,8 +3206,6 @@
 
     "cjs-module-lexer": ["cjs-module-lexer@1.4.3", "", {}, "sha512-9z8TZaGM1pfswYeXrUpzPrkx8UnWYdhJclsiYMm6x/w5+nN+8Tf/LnAgfLGQCm59qAOxU8WwHEq2vNwF6i4j+Q=="],
 
-    "clean-package": ["clean-package@2.2.0", "", { "dependencies": { "dot-prop": "^6.0.1" }, "bin": { "clean-package": "bin/main.js" } }, "sha512-vLv8kRqvh4smPDpqAYFPLEijTppAd/cfCz4yBcUGoVl/JKu6ZWKhlo+G/cAmwlSa29RudfBeuyiNEzas8bTwEQ=="],
-
     "clean-stack": ["clean-stack@2.2.0", "", {}, "sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A=="],
 
     "cli-cursor": ["cli-cursor@3.1.0", "", { "dependencies": { "restore-cursor": "^3.1.0" } }, "sha512-I/zHAwsKf9FqGoXM4WWRACob9+SNukZTd94DWF57E4toouRulbCxcUh6RKUEOQlYTHJnzkPMySvPNaaSLNfLZw=="],
@@ -3486,8 +3489,6 @@
     "dot": ["dot@2.0.0-beta.1", "", {}, "sha512-kxM7fSnNQTXOmaeGuBSXM8O3fEsBb7XSDBllkGbRwa0lJSJTxxDE/4eSNGLKZUmlFw0f1vJ5qSV2BljrgQtgIA=="],
 
     "dot-case": ["dot-case@2.1.1", "", { "dependencies": { "no-case": "^2.2.0" } }, "sha512-HnM6ZlFqcajLsyudHq7LeeLDr2rFAVYtDv/hV5qchQEidSck8j9OPUsXY9KwJv/lHMtYlX4DjRQqwFYa+0r8Ug=="],
-
-    "dot-prop": ["dot-prop@6.0.1", "", { "dependencies": { "is-obj": "^2.0.0" } }, "sha512-tE7ztYzXHIeyvc7N+hR3oi7FIbf/NIjVP9hmAt3yMXzrQ072/fpjGLx2GxNxGxUl5V73MEqYzioOMoVhGMJ5cA=="],
 
     "dotenv": ["dotenv@16.6.1", "", {}, "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="],
 
@@ -3913,7 +3914,7 @@
 
     "hygen": ["hygen@6.2.11", "", { "dependencies": { "@types/node": "^17.0.19", "chalk": "^4.1.2", "change-case": "^3.1.0", "debug": "^4.3.3", "degit": "^2.8.4", "ejs": "^3.1.6", "enquirer": "^2.3.6", "execa": "^5.0.0", "front-matter": "^4.0.2", "fs-extra": "^10.0.0", "ignore-walk": "^4.0.1", "inflection": "^1.12.0", "ora": "^5.0.0", "yargs-parser": "^21.0.0" }, "bin": { "hygen": "dist/bin.js" } }, "sha512-t6/zLI2XozP5gvV74nnl8LZSbwpVNFUkUs/O9DwuOdiiBbws5k4AQNVwKZ9FGzcKjdJ5EBBYkVzlcUHkLyY0FQ=="],
 
-    "i18next": ["i18next@23.16.8", "", { "dependencies": { "@babel/runtime": "^7.23.2" } }, "sha512-06r/TitrM88Mg5FdUXAKL96dJMzgqLE5dv3ryBAra4KCwD9mJ4ndOTS95ZuymIGoE+2hzfdaMak2X11/es7ZWg=="],
+    "i18next": ["i18next@25.9.0", "", { "dependencies": { "@babel/runtime": "^7.28.6" }, "peerDependencies": { "typescript": "^5" }, "optionalPeers": ["typescript"] }, "sha512-mJ4rVRNWOTkqh5xnaGR6iMFT5vEw3Y2MTJhcjinR/7u8cRv6dAfC0ofuePh5fVPxoh395p6JdrJTStCcNW66gg=="],
 
     "i18next-fs-backend": ["i18next-fs-backend@2.6.1", "", {}, "sha512-eYWTX7QT7kJ0sZyCPK6x1q+R63zvNKv2D6UdbMf15A8vNb2ZLyw4NNNZxPFwXlIv/U+oUtg8SakW6ZgJZcoqHQ=="],
 
@@ -4016,8 +4017,6 @@
     "is-number": ["is-number@7.0.0", "", {}, "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng=="],
 
     "is-number-object": ["is-number-object@1.1.1", "", { "dependencies": { "call-bound": "^1.0.3", "has-tostringtag": "^1.0.2" } }, "sha512-lZhclumE1G6VYD8VHe35wFaIif+CTy5SJIi5+3y4psDgWu4wPDoBhF8NxUOinEc7pHgiTsT6MaBb92rKhhD+Xw=="],
-
-    "is-obj": ["is-obj@2.0.0", "", {}, "sha512-drqDG3cbczxxEJRoOXcOjtdp1J/lyp1mNn0xaznRs8+muBhgQcrnbspox5X5fOw0HnMnbfDzvnEMEtqDEJEo8w=="],
 
     "is-path-inside": ["is-path-inside@3.0.3", "", {}, "sha512-Fd4gABb+ycGAmKou8eMftCupSir5lRxqf4aD/vd0cD2qc4HL07OjCeuHMr8Ro4CoMaeCKDB0/ECBOVWjTwUvPQ=="],
 
@@ -5469,8 +5468,6 @@
 
     "@babel/core/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
-    "@babel/generator/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-
     "@babel/helper-compilation-targets/lru-cache": ["lru-cache@5.1.1", "", { "dependencies": { "yallist": "^3.0.2" } }, "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w=="],
 
     "@babel/helper-compilation-targets/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
@@ -5487,6 +5484,8 @@
 
     "@comunica/actor-rdf-parse-jsonld/jsonld-streaming-parser": ["jsonld-streaming-parser@3.4.0", "", { "dependencies": { "@bergos/jsonparse": "^1.4.0", "@rdfjs/types": "*", "@types/http-link-header": "^1.0.1", "@types/readable-stream": "^2.3.13", "buffer": "^6.0.3", "canonicalize": "^1.0.1", "http-link-header": "^1.0.2", "jsonld-context-parser": "^2.4.0", "rdf-data-factory": "^1.1.0", "readable-stream": "^4.0.0" } }, "sha512-897CloyQgQidfkB04dLM5XaAXVX/cN9A2hvgHJo4y4jRhIpvg3KLMBBfcrswepV2N3T8c/Rp2JeFdWfVsbVZ7g=="],
 
+    "@cspotcode/source-map-support/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.9", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.0.3", "@jridgewell/sourcemap-codec": "^1.4.10" } }, "sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ=="],
+
     "@emotion/babel-plugin/source-map": ["source-map@0.5.7", "", {}, "sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ=="],
 
     "@eslint/config-array/minimatch": ["minimatch@3.1.5", "", { "dependencies": { "brace-expansion": "^1.1.7" } }, "sha512-VgjWUsnnT6n+NUk6eZq77zeFdpW2LWDzP6zFGrCbHXiYNul5Dzqk2HHQ5uFH2DNW5Xbp8+jVzaeNt94ssEEl4w=="],
@@ -5501,15 +5500,95 @@
 
     "@graphql-tools/executor/@graphql-tools/utils": ["@graphql-tools/utils@9.2.1", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.1.1", "tslib": "^2.4.0" }, "peerDependencies": { "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0" } }, "sha512-WUw506Ql6xzmOORlriNrD6Ugx+HjVgYxt9KCXD9mHAak+eaXSwuGGPyE60hy9xaDEoXKBsG7SkG69ybitaVl6A=="],
 
-    "@graviola/edb-charts/react": ["react@18.3.1", "", { "dependencies": { "loose-envify": "^1.1.0" } }, "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ=="],
+    "@graviola/color-picker-renderer/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/data-mapping-hooks/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-advanced-components/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-api/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-authorities/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-basic-components/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-basic-renderer/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-build-helper/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-charts/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-cli/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-cli-creator/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-config-helper/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-core-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-data-mapping/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-debug-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-default-theme/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-file-import/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-graph-traversal/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-kxp-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-layout-renderer/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-linked-data-renderer/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-maintenance-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-marc-to-rdf/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-prisma-cli/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@graviola/edb-prisma-cli/uuid": ["uuid@9.0.1", "", { "bin": { "uuid": "dist/bin/uuid" } }, "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="],
 
-    "@graviola/edb-resizable-drawer/react": ["react@18.3.1", "", { "dependencies": { "loose-envify": "^1.1.0" } }, "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ=="],
+    "@graviola/edb-resizable-drawer/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-solr-cli/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-state-hooks/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-surreal-api/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/edb-table-components/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@graviola/edb-table-components/uuid": ["uuid@9.0.1", "", { "bin": { "uuid": "dist/bin/uuid" } }, "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="],
 
+    "@graviola/edb-ui-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/entity-finder/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/json-schema-cli/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/json-schema-prisma-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/json-schema-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
     "@graviola/json-schema2prisma-schema/cmd-ts": ["cmd-ts@0.12.1", "", { "dependencies": { "chalk": "^4.0.0", "debug": "^4.3.4", "didyoumean": "^1.2.2", "strip-ansi": "^6.0.0" } }, "sha512-k93f6LgFEzx7/vBy5qV+tu1VI8YuH0DZmwNXPvRaDR4Qp7Fl9+pUSylX/CKHrWoKqHMJjNOLb1NeYTvHOjQ2Kw=="],
+
+    "@graviola/json-schema2prisma-schema/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/jsonld-utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/local-oxigraph-store-provider/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/map-libre-gl-renderer/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/prisma-db-impl/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/remote-query-implementations/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/rest-store-provider/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@graviola/restfull-fetch-db-impl/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@graviola/simple-local-data-store/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
@@ -5555,29 +5634,19 @@
 
     "@jest/fake-timers/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
 
-    "@jest/reporters/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-
     "@jest/reporters/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
 
     "@jest/reporters/glob": ["glob@7.2.3", "", { "dependencies": { "fs.realpath": "^1.0.0", "inflight": "^1.0.4", "inherits": "2", "minimatch": "^3.1.1", "once": "^1.3.0", "path-is-absolute": "^1.0.0" } }, "sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q=="],
 
     "@jest/reporters/slash": ["slash@3.0.0", "", {}, "sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q=="],
 
-    "@jest/source-map/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-
     "@jest/test-sequencer/slash": ["slash@3.0.0", "", {}, "sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q=="],
-
-    "@jest/transform/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@jest/transform/convert-source-map": ["convert-source-map@2.0.0", "", {}, "sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg=="],
 
     "@jest/transform/slash": ["slash@3.0.0", "", {}, "sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q=="],
 
     "@jest/types/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
-
-    "@jridgewell/gen-mapping/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-
-    "@jridgewell/remapping/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@jsonforms/core/ajv-formats": ["ajv-formats@2.1.1", "", { "dependencies": { "ajv": "^8.0.0" } }, "sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA=="],
 
@@ -5651,6 +5720,8 @@
 
     "@turf/square/@turf/helpers": ["@turf/helpers@6.5.0", "", {}, "sha512-VbI1dV5bLFzohYYdgqwikdMVpe7pJ9X3E+dlr425wa2/sMJqYDhTO++ec38/pcPvPE6oD9WEEeU3Xu3gza+VPw=="],
 
+    "@types/bun/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
+
     "@types/cli-progress/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
 
     "@types/graceful-fs/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
@@ -5660,6 +5731,8 @@
     "@types/jsdom/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
 
     "@types/rdfjs__environment/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
+
+    "@types/react-dom/@types/react": ["@types/react@18.3.28", "", { "dependencies": { "@types/prop-types": "*", "csstype": "^3.2.2" } }, "sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw=="],
 
     "@types/readable-stream/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
 
@@ -6309,6 +6382,8 @@
 
     "test-exclude/minimatch": ["minimatch@3.1.5", "", { "dependencies": { "brace-expansion": "^1.1.7" } }, "sha512-VgjWUsnnT6n+NUk6eZq77zeFdpW2LWDzP6zFGrCbHXiYNul5Dzqk2HHQ5uFH2DNW5Xbp8+jVzaeNt94ssEEl4w=="],
 
+    "testapp/@types/react": ["@types/react@18.3.28", "", { "dependencies": { "@types/prop-types": "*", "csstype": "^3.2.2" } }, "sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw=="],
+
     "testapp/eslint": ["eslint@9.39.4", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.8.0", "@eslint-community/regexpp": "^4.12.1", "@eslint/config-array": "^0.21.2", "@eslint/config-helpers": "^0.4.2", "@eslint/core": "^0.17.0", "@eslint/eslintrc": "^3.3.5", "@eslint/js": "9.39.4", "@eslint/plugin-kit": "^0.4.1", "@humanfs/node": "^0.16.6", "@humanwhocodes/module-importer": "^1.0.1", "@humanwhocodes/retry": "^0.4.2", "@types/estree": "^1.0.6", "ajv": "^6.14.0", "chalk": "^4.0.0", "cross-spawn": "^7.0.6", "debug": "^4.3.2", "escape-string-regexp": "^4.0.0", "eslint-scope": "^8.4.0", "eslint-visitor-keys": "^4.2.1", "espree": "^10.4.0", "esquery": "^1.5.0", "esutils": "^2.0.2", "fast-deep-equal": "^3.1.3", "file-entry-cache": "^8.0.0", "find-up": "^5.0.0", "glob-parent": "^6.0.2", "ignore": "^5.2.0", "imurmurhash": "^0.1.4", "is-glob": "^4.0.0", "json-stable-stringify-without-jsonify": "^1.0.1", "lodash.merge": "^4.6.2", "minimatch": "^3.1.5", "natural-compare": "^1.4.0", "optionator": "^0.9.3" }, "peerDependencies": { "jiti": "*" }, "optionalPeers": ["jiti"], "bin": { "eslint": "bin/eslint.js" } }, "sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ=="],
 
     "testapp/typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
@@ -6346,8 +6421,6 @@
     "uvu/diff": ["diff@5.2.2", "", {}, "sha512-vtcDfH3TOjP8UekytvnHH1o1P4FcUdt4eQ1Y+Abap1tk/OB2MWQvcwS2ClCd1zuIhc3JKOx6p3kod8Vfys3E+A=="],
 
     "uvu/kleur": ["kleur@4.1.5", "", {}, "sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ=="],
-
-    "v8-to-istanbul/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "v8-to-istanbul/convert-source-map": ["convert-source-map@2.0.0", "", {}, "sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg=="],
 
@@ -6458,6 +6531,8 @@
     "@testing-library/dom/pretty-format/react-is": ["react-is@17.0.2", "", {}, "sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w=="],
 
     "@turf/square/@turf/distance/@turf/invariant": ["@turf/invariant@6.5.0", "", { "dependencies": { "@turf/helpers": "^6.5.0" } }, "sha512-Wv8PRNCtPD31UVbdJE/KVAWKe7l6US+lJItRR/HOEW3eh+U/JwRCSUl/KZ7bmjM/C+zLNoreM2TU6OoLACs4eg=="],
+
+    "@types/bun/bun-types/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
 
     "@typescript-eslint/typescript-estree/minimatch/brace-expansion": ["brace-expansion@5.0.4", "", { "dependencies": { "balanced-match": "^4.0.2" } }, "sha512-h+DEnpVvxmfVefa4jFbCf5HdH5YMDXRsmKflpf1pILZWRFlTbJpxeU55nJl4Smt5HQaGzg1o6RHFPJaOqnmBDg=="],
 
