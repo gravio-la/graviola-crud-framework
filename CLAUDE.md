@@ -126,6 +126,8 @@ All packages are scoped under `@graviola/`:
 | `@graviola/json-schema-utils` | JSON Schema manipulation (resolve `$ref`, flatten, etc.) |
 | `@graviola/jsonld-utils` | JSON-LD ↔ RDF conversion utilities |
 
+> **Critical constraint**: Layer 1 and Layer 2 packages (below) **must never take on React, MUI, or any browser/frontend dependencies**. They are consumed by the CLI (`apps/edb-cli`, `@graviola/edb-cli-creator`) and the REST API (`apps/edb-api`) running on the server via Bun. Introducing frontend deps into these packages would break non-browser consumers.
+
 ### Layer 2 — Schema → Query Translation
 
 | Package | Purpose |
@@ -325,9 +327,13 @@ packages/<name>/
 
 ### Testing
 
-- **Jest** with `ts-jest` for unit tests in core packages
+> **In transition**: The project is **migrating from Jest to `bun test`**. New tests should be written using `bun:test`. `sparql-schema` is already using it. Jest will be removed once all packages are migrated.
+
+- **`bun test`** (preferred going forward) — built-in, no extra configuration needed
+  - Import from `"bun:test"` instead of `"@jest/globals"` or globals
+  - No `NODE_OPTIONS=--experimental-vm-modules` needed
+- **Jest** with `ts-jest` — still present in many packages, being phased out
 - Test files: `*.test.ts` / `*.test.tsx` co-located with source
-- Run with: `NODE_OPTIONS=--experimental-vm-modules` (configured in package scripts)
 - Packages with tests: `core-utils`, `json-schema-utils`, `data-mapping`, `sparql-schema`, `graph-traversal`
 - **Cypress** for E2E tests in `apps/exhibition-live` (not the primary focus)
 
