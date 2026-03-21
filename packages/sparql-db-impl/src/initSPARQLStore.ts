@@ -17,6 +17,7 @@ import {
   jsonSchema2Select,
   load,
   makeSPARQLInverseSyncQuery,
+  patch,
   remove,
   save,
   searchEntityByLabel,
@@ -392,6 +393,24 @@ export const initSPARQLStore = (
         constructFetch,
         sparqlOptions,
       );
+    },
+    patchDocument: async (typeName, entityIRI, options) => {
+      const { data } = options;
+      const schema = bringDefinitionToTop(rootSchema, typeName) as JSONSchema7;
+      const typeIRI = typeNameToTypeIRI(typeName);
+
+      await patch(entityIRI, typeIRI, data, schema, updateFetch, askFetch, {
+        defaultPrefix,
+        queryBuildOptions,
+        defaultUpdateGraph,
+        jsonldContext,
+      });
+
+      return {
+        entityIRI,
+        updatedProperties: Object.keys(data).filter((k) => !k.startsWith("@")),
+        success: true,
+      };
     },
     iterableImplementation: {
       listDocuments: (typeName, limit) => {

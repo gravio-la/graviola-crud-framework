@@ -326,6 +326,68 @@ export type Entity = {
   image?: string;
 };
 
+/**
+ * Scalar value types supported for partial patch mutations
+ */
+export type PatchScalarValue = string | number | boolean | null;
+
+/**
+ * A nested object value for patch mutation (blank node in RDF).
+ * Objects without @id become blank nodes; objects with @id are entity references.
+ */
+export type PatchObjectValue = {
+  "@id"?: string;
+  "@type"?: string;
+  [key: string]:
+    | PatchScalarValue
+    | PatchObjectValue
+    | PatchObjectValue[]
+    | PatchScalarValue[]
+    | undefined;
+};
+
+/**
+ * A single field value in a patch data payload.
+ * Phase 1: scalars, nested objects, or full array overwrite.
+ * Phase 2 will add { append, remove, where } wrappers for list operations.
+ */
+export type PatchFieldValue =
+  | PatchScalarValue
+  | PatchObjectValue
+  | PatchScalarValue[]
+  | PatchObjectValue[];
+
+/**
+ * The data payload for a partial update (patch) mutation.
+ * Keys are property names; values are the new values to set.
+ *
+ * When typed (T provided), only keys of T are allowed.
+ * When untyped, any string key is accepted and runtime schema validation is used.
+ */
+export type PatchData<T = Record<string, PatchFieldValue>> = {
+  [K in keyof T]?: T[K];
+};
+
+/**
+ * Options for a partial update (patch) mutation
+ */
+export type PatchOptions<T = Record<string, PatchFieldValue>> = {
+  /** The fields to update. Keys are property names from the schema. */
+  data: PatchData<T>;
+};
+
+/**
+ * Result of a patch operation
+ */
+export type PatchResult = {
+  /** The entity IRI that was patched */
+  entityIRI: string;
+  /** The property names that were updated */
+  updatedProperties: string[];
+  /** Whether the patch was successful */
+  success: boolean;
+};
+
 // Legacy runtime (non-typed) filter operators - kept for backward compatibility
 // @deprecated Use the typed versions above instead
 export type WhereOperators = {
