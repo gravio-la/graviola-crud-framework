@@ -50,6 +50,7 @@ export const initSPARQLStore = (
     schema: rootSchema,
     enableInversePropertiesFeature,
     defaultUpdateGraph,
+    validator,
   } = dataStoreConfig;
 
   const typeIRItoTypeName = queryBuildOptions.typeIRItoTypeName;
@@ -404,6 +405,7 @@ export const initSPARQLStore = (
         queryBuildOptions,
         defaultUpdateGraph,
         jsonldContext,
+        validator,
       });
 
       return {

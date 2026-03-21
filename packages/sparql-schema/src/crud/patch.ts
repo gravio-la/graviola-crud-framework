@@ -1,4 +1,4 @@
-import { SPARQLCRUDOptions } from "@graviola/edb-core-types";
+import { SPARQLCRUDOptions, SchemaValidator } from "@graviola/edb-core-types";
 import {
   isJSONSchema,
   resolveSchema,
@@ -16,6 +16,8 @@ import { exists } from "@/crud/exists";
 
 export type PatchOptions = SPARQLCRUDOptions & {
   jsonldContext?: object | string;
+  /** Optional schema validator facade (e.g. AJV). When absent, only structural checks are performed. */
+  validator?: SchemaValidator;
 };
 
 const makePrefixed = (key: string) => (key.includes(":") ? key : `:${key}`);
@@ -183,7 +185,7 @@ export const patch = async (
   askFetch: (query: string) => Promise<boolean>,
   options: PatchOptions,
 ): Promise<void> => {
-  const { defaultPrefix, queryBuildOptions } = options;
+  const { defaultPrefix, queryBuildOptions, validator } = options;
 
   // Filter out JSON-LD metadata
   const dataKeys = Object.keys(data).filter((k) => !k.startsWith("@"));
@@ -192,8 +194,13 @@ export const patch = async (
     return; // Nothing to patch
   }
 
-  // Validate data against schema
-  const validationErrors = validatePatchData(data, schema);
+  // Validate data against schema (delegates type/format checks to validator if present)
+  const validationErrors = validatePatchData(
+    data,
+    schema,
+    undefined,
+    validator,
+  );
   if (validationErrors.length > 0) {
     throw new Error(
       `Patch validation failed: ${validationErrors.map((e) => `${e.property}: ${e.message}`).join("; ")}`,

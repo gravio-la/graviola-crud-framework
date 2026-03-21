@@ -377,6 +377,19 @@ export type PatchOptions<T = Record<string, PatchFieldValue>> = {
 };
 
 /**
+ * Facade for a JSON Schema validator (e.g. AJV).
+ * When provided during store initialization, patch operations will use this
+ * to validate values against the sub-schema at each property path.
+ * When absent, all values are accepted without validation.
+ */
+export type SchemaValidator = {
+  /** Validate data against a JSON Schema. Returns true if valid. */
+  validate(schema: object, data: unknown): boolean;
+  /** Validation errors from the last call to validate (null/undefined if valid). */
+  errors?: Array<{ message?: string; instancePath?: string }> | null;
+};
+
+/**
  * Result of a patch operation
  */
 export type PatchResult = {

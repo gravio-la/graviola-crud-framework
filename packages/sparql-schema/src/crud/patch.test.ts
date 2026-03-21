@@ -1,7 +1,11 @@
 import { describe, test, expect, mock } from "bun:test";
+import Ajv from "ajv";
 import { JSONSchema7 } from "json-schema";
+import type { SchemaValidator } from "@graviola/edb-core-types";
 
 import { patch } from "./patch";
+
+const ajv = new Ajv() as SchemaValidator;
 
 const defaultPrefix = "https://example.com/ontology#";
 const entityIRI = "https://example.com/entity/123";
@@ -59,15 +63,20 @@ const defaultOptions = {
   queryBuildOptions: {},
 };
 
+const optionsWithValidator = {
+  ...defaultOptions,
+  validator: ajv,
+};
+
 describe("patch - SPARQL partial update", () => {
   describe("scalar property updates", () => {
     test("generates DELETE/INSERT for string property", async () => {
-      const { mockUpdateFetch, mockAskFetch, capturedQuery: _ } = createMocks();
       let captured = "";
       const trackedUpdate = mock(async (q: string) => {
         captured = q;
         return {};
       });
+      const mockAskFetch = mock(async () => true);
 
       await patch(
         entityIRI,
@@ -76,7 +85,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         trackedUpdate,
         mockAskFetch,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(trackedUpdate).toHaveBeenCalled();
@@ -103,7 +112,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(captured).toContain("DELETE");
@@ -126,7 +135,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(mockUpdate).toHaveBeenCalledTimes(1); // Single query
@@ -151,7 +160,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(captured).toContain("DELETE");
@@ -178,7 +187,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(captured).toContain("DELETE");
@@ -205,7 +214,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(captured).toContain("DELETE");
@@ -231,7 +240,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(captured).toContain("DELETE");
@@ -255,12 +264,12 @@ describe("patch - SPARQL partial update", () => {
           schema,
           mockUpdate,
           mockAsk,
-          defaultOptions,
+          optionsWithValidator,
         ),
       ).rejects.toThrow("Entity does not exist");
     });
 
-    test("throws on schema validation failure", async () => {
+    test("throws on schema validation failure (non-existent property)", async () => {
       const mockUpdate = mock(async () => ({}));
       const mockAsk = mock(async () => true);
 
@@ -272,12 +281,12 @@ describe("patch - SPARQL partial update", () => {
           schema,
           mockUpdate,
           mockAsk,
-          defaultOptions,
+          optionsWithValidator,
         ),
       ).rejects.toThrow("Patch validation failed");
     });
 
-    test("throws on type mismatch", async () => {
+    test("throws on type mismatch when validator is provided", async () => {
       const mockUpdate = mock(async () => ({}));
       const mockAsk = mock(async () => true);
 
@@ -289,9 +298,31 @@ describe("patch - SPARQL partial update", () => {
           schema,
           mockUpdate,
           mockAsk,
-          defaultOptions,
+          optionsWithValidator,
         ),
       ).rejects.toThrow("Patch validation failed");
+    });
+
+    test("accepts type mismatch when no validator provided", async () => {
+      let captured = "";
+      const mockUpdate = mock(async (q: string) => {
+        captured = q;
+        return {};
+      });
+      const mockAsk = mock(async () => true);
+
+      // Without validator, type mismatches are accepted
+      await patch(
+        entityIRI,
+        typeIRI,
+        { age: "not a number" },
+        schema,
+        mockUpdate,
+        mockAsk,
+        defaultOptions,
+      );
+
+      expect(mockUpdate).toHaveBeenCalled();
     });
 
     test("does nothing when data is empty", async () => {
@@ -305,7 +336,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(mockUpdate).not.toHaveBeenCalled();
@@ -330,7 +361,7 @@ describe("patch - SPARQL partial update", () => {
         mockUpdate,
         mockAsk,
         {
-          ...defaultOptions,
+          ...optionsWithValidator,
           defaultUpdateGraph: "https://example.com/graph/default",
         },
       );
@@ -354,7 +385,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       expect(captured).toContain("OPTIONAL");
@@ -375,7 +406,7 @@ describe("patch - SPARQL partial update", () => {
         schema,
         mockUpdate,
         mockAsk,
-        defaultOptions,
+        optionsWithValidator,
       );
 
       // The INSERT section should not contain rdf:type

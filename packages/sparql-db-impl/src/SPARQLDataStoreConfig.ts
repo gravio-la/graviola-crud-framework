@@ -1,5 +1,6 @@
 import type {
   CRUDFunctions,
+  SchemaValidator,
   SparqlBuildOptions,
   StringToIRIFn,
   WalkerOptions,
@@ -18,4 +19,6 @@ export type SPARQLDataStoreConfig = {
   makeStubSchema?: (schema: JSONSchema7) => JSONSchema7;
   enableInversePropertiesFeature?: boolean;
   defaultUpdateGraph?: string;
+  /** Optional schema validator facade for patch validation (e.g. AJV instance) */
+  validator?: SchemaValidator;
 } & DatastoreBaseConfig;

@@ -1,6 +1,7 @@
+import type { SchemaValidator } from "@graviola/edb-core-types";
 import { JSONSchema7, JSONSchema7Definition } from "json-schema";
 
-import { isJSONSchema, isPrimitive } from "./jsonSchema";
+import { isJSONSchema } from "./jsonSchema";
 import { resolveSchema } from "./resolver";
 
 export type PatchValidationError = {
@@ -8,12 +9,6 @@ export type PatchValidationError = {
   message: string;
   expectedType?: string;
   actualType?: string;
-};
-
-const getActualType = (value: unknown): string => {
-  if (value === null) return "null";
-  if (Array.isArray(value)) return "array";
-  return typeof value;
 };
 
 const resolvePropertySchema = (
@@ -30,11 +25,17 @@ const resolvePropertySchema = (
   return propSchema;
 };
 
+/**
+ * Validates a single value against its sub-schema using the validator facade.
+ * Walks nested objects/arrays to validate each leaf against its positional sub-schema.
+ * If no validator is provided, all values are accepted.
+ */
 const validateValue = (
   propertyPath: string,
   value: unknown,
   schema: JSONSchema7,
   rootSchema: JSONSchema7,
+  validator?: SchemaValidator,
 ): PatchValidationError[] => {
   const errors: PatchValidationError[] = [];
 
@@ -43,62 +44,27 @@ const validateValue = (
 
   const schemaType = schema.type as string | undefined;
 
-  if (schemaType === "array") {
-    if (!Array.isArray(value)) {
-      errors.push({
-        property: propertyPath,
-        message: `expected array, got ${getActualType(value)}`,
-        expectedType: "array",
-        actualType: getActualType(value),
-      });
-      return errors;
-    }
-    // Validate each element against items schema
-    if (schema.items && isJSONSchema(schema.items as JSONSchema7Definition)) {
-      const itemSchema = resolvePropertySchema(
-        schema.items as JSONSchema7Definition,
-        rootSchema,
-      );
-      if (itemSchema) {
-        for (let i = 0; i < value.length; i++) {
-          errors.push(
-            ...validateValue(
-              `${propertyPath}[${i}]`,
-              value[i],
-              itemSchema,
-              rootSchema,
-            ),
-          );
-        }
-      }
-    }
+  // For objects with @id, it's an entity reference — skip property validation
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    "@id" in value &&
+    typeof (value as Record<string, unknown>)["@id"] === "string"
+  ) {
     return errors;
   }
 
-  if (schemaType === "object" || schema.properties) {
-    if (typeof value !== "object" || Array.isArray(value)) {
-      errors.push({
-        property: propertyPath,
-        message: `expected object, got ${getActualType(value)}`,
-        expectedType: "object",
-        actualType: getActualType(value),
-      });
-      return errors;
-    }
-    // For objects with @id, it's an entity reference — skip property validation
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      "@id" in value &&
-      typeof (value as Record<string, unknown>)["@id"] === "string"
-    ) {
-      return errors;
-    }
-    // Validate nested properties (shallow merge context)
+  // For nested objects: walk into sub-properties to validate at leaf level
+  if (
+    (schemaType === "object" || schema.properties) &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  ) {
     if (schema.properties) {
       const obj = value as Record<string, unknown>;
       for (const key of Object.keys(obj)) {
-        if (key.startsWith("@")) continue; // skip JSON-LD metadata
+        if (key.startsWith("@")) continue;
         const nestedPropSchema = schema.properties[key];
         if (nestedPropSchema === undefined) {
           errors.push({
@@ -115,6 +81,7 @@ const validateValue = (
               obj[key],
               resolved,
               rootSchema,
+              validator,
             ),
           );
         }
@@ -123,64 +90,73 @@ const validateValue = (
     return errors;
   }
 
-  if (isPrimitive(schemaType)) {
-    const actual = getActualType(value);
-    if (schemaType === "string" && actual !== "string") {
-      errors.push({
-        property: propertyPath,
-        message: `expected string, got ${actual}`,
-        expectedType: "string",
-        actualType: actual,
-      });
-    } else if (schemaType === "number" && actual !== "number") {
-      errors.push({
-        property: propertyPath,
-        message: `expected number, got ${actual}`,
-        expectedType: "number",
-        actualType: actual,
-      });
-    } else if (schemaType === "integer") {
-      if (actual !== "number") {
+  // For arrays: validate each element against items schema
+  if (schemaType === "array" && Array.isArray(value)) {
+    if (schema.items && isJSONSchema(schema.items as JSONSchema7Definition)) {
+      const itemSchema = resolvePropertySchema(
+        schema.items as JSONSchema7Definition,
+        rootSchema,
+      );
+      if (itemSchema) {
+        for (let i = 0; i < value.length; i++) {
+          errors.push(
+            ...validateValue(
+              `${propertyPath}[${i}]`,
+              value[i],
+              itemSchema,
+              rootSchema,
+              validator,
+            ),
+          );
+        }
+      }
+    }
+    return errors;
+  }
+
+  // Leaf value: delegate to the validator facade if present
+  if (validator) {
+    const valid = validator.validate(schema, value);
+    if (!valid && validator.errors?.length) {
+      for (const err of validator.errors) {
         errors.push({
           property: propertyPath,
-          message: `expected integer, got ${actual}`,
-          expectedType: "integer",
-          actualType: actual,
-        });
-      } else if (!Number.isInteger(value)) {
-        errors.push({
-          property: propertyPath,
-          message: `expected integer, got float`,
-          expectedType: "integer",
-          actualType: "float",
+          message:
+            err.message ??
+            `validation failed against schema at ${propertyPath}`,
         });
       }
-    } else if (schemaType === "boolean" && actual !== "boolean") {
+    } else if (!valid) {
       errors.push({
         property: propertyPath,
-        message: `expected boolean, got ${actual}`,
-        expectedType: "boolean",
-        actualType: actual,
+        message: `validation failed against schema at ${propertyPath}`,
       });
     }
   }
+  // No validator → accept any value
 
   return errors;
 };
 
 /**
  * Validates mutation/patch data against a JSON Schema.
- * Checks that each property exists in the schema and that value types match.
+ * Walks the schema path for each property in the patch data and delegates
+ * value validation to the provided SchemaValidator facade.
+ *
+ * If no validator is provided, only structural checks are performed
+ * (property existence in schema). Type/format validation is skipped.
  *
  * @param data - The patch data to validate (property name -> new value)
  * @param schema - The JSON Schema for the type (should already be brought to top level)
  * @param rootSchema - The root schema for $ref resolution (defaults to schema)
+ * @param validator - Optional SchemaValidator facade (e.g. AJV instance)
  * @returns Array of validation errors (empty = valid)
  */
 export const validatePatchData = (
   data: Record<string, unknown>,
   schema: JSONSchema7,
   rootSchema?: JSONSchema7,
+  validator?: SchemaValidator,
 ): PatchValidationError[] => {
   const root = rootSchema ?? schema;
   const errors: PatchValidationError[] = [];
@@ -212,7 +188,7 @@ export const validatePatchData = (
       continue;
     }
 
-    errors.push(...validateValue(key, value, resolved, root));
+    errors.push(...validateValue(key, value, resolved, root, validator));
   }
 
   return errors;
