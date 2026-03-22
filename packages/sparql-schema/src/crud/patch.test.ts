@@ -391,6 +391,28 @@ describe("patch - SPARQL partial update", () => {
       expect(captured).toContain("OPTIONAL");
     });
 
+    test("uses BIND for subject IRI", async () => {
+      let captured = "";
+      const mockUpdate = mock(async (q: string) => {
+        captured = q;
+        return {};
+      });
+      const mockAsk = mock(async () => true);
+
+      await patch(
+        entityIRI,
+        typeIRI,
+        { name: "Test" },
+        schema,
+        mockUpdate,
+        mockAsk,
+        optionsWithValidator,
+      );
+
+      expect(captured).toContain("BIND");
+      expect(captured).toContain(entityIRI);
+    });
+
     test("does not include rdf:type triples in INSERT", async () => {
       let captured = "";
       const mockUpdate = mock(async (q: string) => {
@@ -418,6 +440,125 @@ describe("patch - SPARQL partial update", () => {
           "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
         );
       }
+    });
+  });
+
+  describe("prefixed properties (prefixMap)", () => {
+    const prefixedSchema: JSONSchema7 = {
+      type: "object",
+      properties: {
+        "foaf:name": { type: "string" },
+        "foaf:age": { type: "integer" },
+        "schema:address": {
+          type: "object",
+          properties: {
+            "schema:streetAddress": { type: "string" },
+            "schema:postalCode": { type: "string" },
+          },
+        },
+      },
+    };
+
+    const prefixMap = {
+      foaf: "http://xmlns.com/foaf/0.1/",
+      schema: "http://schema.org/",
+    };
+
+    test("generates valid SPARQL with prefixed property names", async () => {
+      let captured = "";
+      const mockUpdate = mock(async (q: string) => {
+        captured = q;
+        return {};
+      });
+      const mockAsk = mock(async () => true);
+
+      await patch(
+        entityIRI,
+        typeIRI,
+        { "foaf:name": "Alice" },
+        prefixedSchema,
+        mockUpdate,
+        mockAsk,
+        { ...defaultOptions, prefixMap },
+      );
+
+      expect(mockUpdate).toHaveBeenCalled();
+      expect(captured).toContain("DELETE");
+      expect(captured).toContain("INSERT");
+      // The prefixed property should appear in the DELETE/WHERE patterns
+      expect(captured).toContain("foaf:name");
+      // The INSERT should contain the expanded IRI from JSON-LD processing
+      expect(captured).toContain("Alice");
+    });
+
+    test("handles multiple prefixed properties", async () => {
+      let captured = "";
+      const mockUpdate = mock(async (q: string) => {
+        captured = q;
+        return {};
+      });
+      const mockAsk = mock(async () => true);
+
+      await patch(
+        entityIRI,
+        typeIRI,
+        { "foaf:name": "Bob", "foaf:age": 42 },
+        prefixedSchema,
+        mockUpdate,
+        mockAsk,
+        { ...defaultOptions, prefixMap },
+      );
+
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      expect(captured).toContain("foaf:name");
+      expect(captured).toContain("foaf:age");
+    });
+
+    test("handles nested objects with prefixed properties", async () => {
+      let captured = "";
+      const mockUpdate = mock(async (q: string) => {
+        captured = q;
+        return {};
+      });
+      const mockAsk = mock(async () => true);
+
+      await patch(
+        entityIRI,
+        typeIRI,
+        { "schema:address": { "schema:streetAddress": "123 Main St" } },
+        prefixedSchema,
+        mockUpdate,
+        mockAsk,
+        { ...defaultOptions, prefixMap },
+      );
+
+      expect(mockUpdate).toHaveBeenCalled();
+      expect(captured).toContain("schema:address");
+      expect(captured).toContain("schema:streetAddress");
+      expect(captured).toContain("123 Main St");
+    });
+
+    test("null value with prefixed property generates DELETE only", async () => {
+      let captured = "";
+      const mockUpdate = mock(async (q: string) => {
+        captured = q;
+        return {};
+      });
+      const mockAsk = mock(async () => true);
+
+      await patch(
+        entityIRI,
+        typeIRI,
+        { "foaf:name": null },
+        prefixedSchema,
+        mockUpdate,
+        mockAsk,
+        { ...defaultOptions, prefixMap },
+      );
+
+      expect(captured).toContain("DELETE");
+      expect(captured).toContain("foaf:name");
+      expect(captured).toContain("WHERE");
     });
   });
 });

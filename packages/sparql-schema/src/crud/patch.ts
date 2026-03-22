@@ -1,26 +1,52 @@
-import { SPARQLCRUDOptions, SchemaValidator } from "@graviola/edb-core-types";
+/**
+ * Partial entity update via targeted DELETE/INSERT SPARQL query.
+ *
+ * Uses the same safe SPARQL construction style as normalizedSchema2construct:
+ * - sparql`` template strings for injection-safe query fragments
+ * - df.variable() via createUniqueVar for globally unique variable names
+ * - convertIRIToNode for proper prefix handling of property predicates
+ */
+
+import type {
+  Prefixes,
+  SPARQLCRUDOptions,
+  SchemaValidator,
+} from "@graviola/edb-core-types";
 import {
   isJSONSchema,
   resolveSchema,
   validatePatchData,
 } from "@graviola/json-schema-utils";
 import { dataset2NTriples, jsonld2DataSet } from "@graviola/jsonld-utils";
-import { DELETE, INSERT } from "@tpluscode/sparql-builder";
+import {
+  sparql,
+  SparqlTemplateResult,
+  DELETE,
+} from "@tpluscode/sparql-builder";
+import df from "@rdfjs/data-model";
 import { JSONSchema7, JSONSchema7Definition } from "json-schema";
 
-import {
-  buildQueryWithPrefixAndGraph,
-  makeSPARQLWherePart,
-} from "@/crud/makeSPARQLWherePart";
+import { buildQueryWithPrefixAndGraph } from "@/crud/makeSPARQLWherePart";
 import { exists } from "@/crud/exists";
+import { convertIRIToNode, createUniqueVar } from "@/utils";
+import type { VarCounterContext } from "@/utils";
 
 export type PatchOptions = SPARQLCRUDOptions & {
   jsonldContext?: object | string;
   /** Optional schema validator facade (e.g. AJV). When absent, only structural checks are performed. */
   validator?: SchemaValidator;
+  /** Prefix mappings for property names (e.g., { "foaf": "http://xmlns.com/foaf/0.1/" }) */
+  prefixMap?: Prefixes;
 };
 
-const makePrefixed = (key: string) => (key.includes(":") ? key : `:${key}`);
+/**
+ * Context for patch query construction.
+ * Extends VarCounterContext for unique variable generation.
+ */
+type PatchContext = VarCounterContext & {
+  /** Prefix mappings for property names */
+  prefixMap: Prefixes;
+};
 
 const resolvePropertySchema = (
   propSchema: JSONSchema7Definition,
@@ -47,34 +73,45 @@ const isEntityReference = (value: unknown): boolean =>
   typeof (value as Record<string, unknown>)["@id"] === "string";
 
 /**
- * Generates DELETE patterns for a nested object (blank node), recursively
+ * Create a predicate node from a property name using the shared IRI converter.
+ */
+function createPredicate(propertyName: string, prefixMap: Prefixes) {
+  return convertIRIToNode(propertyName, prefixMap);
+}
+
+/**
+ * Generates DELETE/WHERE patterns for a nested object (blank node), recursively
  * deleting all triples of the blank node based on the schema structure.
  *
  * For shallow merge, we only generate patterns for the properties being set,
  * not all properties of the nested object.
  */
-const generateNestedDeletePatterns = (
-  subjectVar: string,
+function generateNestedDeletePatterns(
+  subjectVar: ReturnType<typeof df.variable>,
   propertyName: string,
   value: Record<string, unknown>,
   schema: JSONSchema7,
   rootSchema: JSONSchema7,
-  varCounter: { value: number },
-): { deletePatterns: string[]; wherePatterns: string[] } => {
-  const deletePatterns: string[] = [];
-  const wherePatterns: string[] = [];
-  const predicate = makePrefixed(propertyName);
-  const objectVar = `?_patch_${propertyName}_${varCounter.value++}`;
+  ctx: PatchContext,
+): {
+  deletePatterns: SparqlTemplateResult[];
+  wherePatterns: SparqlTemplateResult[];
+} {
+  const deletePatterns: SparqlTemplateResult[] = [];
+  const wherePatterns: SparqlTemplateResult[] = [];
+  const predicate = createPredicate(propertyName, ctx.prefixMap);
+  const objectVar = createUniqueVar(`patch_${propertyName}`, ctx);
 
   // We need to find the existing blank node first
-  wherePatterns.push(`OPTIONAL { ${subjectVar} ${predicate} ${objectVar} .`);
+  wherePatterns.push(
+    sparql`OPTIONAL { ${subjectVar} ${predicate} ${objectVar} .`,
+  );
 
-  // For each property in the value, generate delete patterns for old values
   for (const [nestedKey, nestedValue] of Object.entries(value)) {
     if (nestedKey.startsWith("@")) continue;
 
-    const nestedPredicate = makePrefixed(nestedKey);
-    const nestedVar = `?_patch_${nestedKey}_${varCounter.value++}`;
+    const nestedPredicate = createPredicate(nestedKey, ctx.prefixMap);
+    const nestedVar = createUniqueVar(`patch_${nestedKey}`, ctx);
 
     if (
       typeof nestedValue === "object" &&
@@ -91,14 +128,13 @@ const generateNestedDeletePatterns = (
         nestedSchema &&
         (nestedSchema.type === "object" || nestedSchema.properties)
       ) {
-        // Recursively handle deeper nesting
         const nested = generateNestedDeletePatterns(
           objectVar,
           nestedKey,
           nestedValue as Record<string, unknown>,
           nestedSchema,
           rootSchema,
-          varCounter,
+          ctx,
         );
         deletePatterns.push(...nested.deletePatterns);
         wherePatterns.push(...nested.wherePatterns);
@@ -108,32 +144,35 @@ const generateNestedDeletePatterns = (
 
     // Leaf property: delete old value
     wherePatterns.push(
-      `OPTIONAL { ${objectVar} ${nestedPredicate} ${nestedVar} . }`,
+      sparql`OPTIONAL { ${objectVar} ${nestedPredicate} ${nestedVar} . }`,
     );
-    deletePatterns.push(`${objectVar} ${nestedPredicate} ${nestedVar} .`);
+    deletePatterns.push(sparql`${objectVar} ${nestedPredicate} ${nestedVar} .`);
   }
 
-  wherePatterns.push(`}`); // Close the outer OPTIONAL
+  wherePatterns.push(sparql`}`); // Close the outer OPTIONAL
 
   return { deletePatterns, wherePatterns };
-};
+}
 
 /**
- * Generates DELETE patterns for a property.
+ * Generates DELETE/WHERE patterns for a property.
  * For scalars/references: simple triple pattern.
  * For nested objects: recursive schema-driven patterns.
  * For arrays: delete all old values for the predicate.
  */
-const generateDeletePatterns = (
-  subjectVar: string,
+function generateDeletePatterns(
+  subjectVar: ReturnType<typeof df.variable>,
   propertyName: string,
   value: unknown,
   propSchema: JSONSchema7 | undefined,
   rootSchema: JSONSchema7,
-  varCounter: { value: number },
-): { deletePatterns: string[]; wherePatterns: string[] } => {
-  const predicate = makePrefixed(propertyName);
-  const oldVar = `?_patch_old_${propertyName}_${varCounter.value++}`;
+  ctx: PatchContext,
+): {
+  deletePatterns: SparqlTemplateResult[];
+  wherePatterns: SparqlTemplateResult[];
+} {
+  const predicate = createPredicate(propertyName, ctx.prefixMap);
+  const oldVar = createUniqueVar(`patch_old_${propertyName}`, ctx);
 
   // Nested object (blank node) with shallow merge
   if (
@@ -150,16 +189,18 @@ const generateDeletePatterns = (
       value as Record<string, unknown>,
       propSchema,
       rootSchema,
-      varCounter,
+      ctx,
     );
   }
 
   // Scalar, reference, array, or null: delete all old values for this predicate
   return {
-    deletePatterns: [`${subjectVar} ${predicate} ${oldVar} .`],
-    wherePatterns: [`OPTIONAL { ${subjectVar} ${predicate} ${oldVar} . }`],
+    deletePatterns: [sparql`${subjectVar} ${predicate} ${oldVar} .`],
+    wherePatterns: [
+      sparql`OPTIONAL { ${subjectVar} ${predicate} ${oldVar} . }`,
+    ],
   };
-};
+}
 
 /**
  * Partially update specific properties of an entity using a targeted DELETE/INSERT SPARQL query.
@@ -174,7 +215,7 @@ const generateDeletePatterns = (
  * @param schema - JSON Schema for the entity type (already brought to top)
  * @param updateFetch - Function to execute SPARQL UPDATE queries
  * @param askFetch - Function to execute SPARQL ASK queries (for existence check)
- * @param options - SPARQL options (prefix, graph, build options)
+ * @param options - SPARQL options (prefix, graph, build options, prefixMap)
  */
 export const patch = async (
   entityIRI: string,
@@ -185,7 +226,7 @@ export const patch = async (
   askFetch: (query: string) => Promise<boolean>,
   options: PatchOptions,
 ): Promise<void> => {
-  const { defaultPrefix, queryBuildOptions, validator } = options;
+  const { defaultPrefix, queryBuildOptions, validator, prefixMap } = options;
 
   // Filter out JSON-LD metadata
   const dataKeys = Object.keys(data).filter((k) => !k.startsWith("@"));
@@ -213,9 +254,20 @@ export const patch = async (
     throw new Error(`Entity does not exist: ${entityIRI} (type: ${typeIRI})`);
   }
 
-  const varCounter = { value: 0 };
-  const allDeletePatterns: string[] = [];
-  const allWherePatterns: string[] = [];
+  const ctx: PatchContext = {
+    varCounter: { value: 0 },
+    prefixMap: prefixMap || {},
+  };
+
+  const subjectNode = df.namedNode(entityIRI);
+  const allDeletePatterns: SparqlTemplateResult[] = [];
+  const allWherePatterns: SparqlTemplateResult[] = [];
+
+  // We need a variable alias for the subject in delete/where patterns
+  // because generateDeletePatterns works with variables for recursion.
+  // For the top-level entity, we use the concrete IRI directly via a bound variable.
+  const subjectVar = df.variable("patch_subject");
+  allWherePatterns.push(sparql`BIND(${subjectNode} AS ${subjectVar})`);
 
   // Collect non-null entries for INSERT
   const insertData: Record<string, unknown> = {};
@@ -228,12 +280,12 @@ export const patch = async (
       : undefined;
 
     const { deletePatterns, wherePatterns } = generateDeletePatterns(
-      `<${entityIRI}>`,
+      subjectVar,
       key,
       value,
       resolved,
       schema,
-      varCounter,
+      ctx,
     );
 
     allDeletePatterns.push(...deletePatterns);
@@ -248,10 +300,19 @@ export const patch = async (
   // Build the INSERT triples using the JSON-LD pipeline
   let insertTriples = "";
   if (Object.keys(insertData).length > 0) {
+    const jsonldContext: Record<string, unknown> = { "@vocab": defaultPrefix };
+
+    // Add prefix mappings to the JSON-LD context so prefixed properties resolve correctly
+    if (prefixMap) {
+      for (const [prefix, iri] of Object.entries(prefixMap)) {
+        jsonldContext[prefix] = iri;
+      }
+    }
+
     const partialDoc: Record<string, unknown> = {
       "@id": entityIRI,
       ...insertData,
-      "@context": { "@vocab": defaultPrefix },
+      "@context": jsonldContext,
     };
     const ds = await jsonld2DataSet(partialDoc);
     const allTriples = await dataset2NTriples(ds);
@@ -266,17 +327,24 @@ export const patch = async (
       .join("\n");
   }
 
-  // Build the combined query
-  const deleteClause = allDeletePatterns.join("\n");
-  const whereClause = allWherePatterns.join("\n");
+  // Combine SparqlTemplateResult arrays into single template results
+  const deleteClause = allDeletePatterns.reduce(
+    (acc, pattern) => sparql`${acc}\n${pattern}`,
+    sparql``,
+  );
+  const whereClause = allWherePatterns.reduce(
+    (acc, pattern) => sparql`${acc}\n${pattern}`,
+    sparql``,
+  );
 
-  let query: any;
+  // Build the combined query using the builder
+  let query;
   if (insertTriples) {
-    query = DELETE` ${deleteClause} `.INSERT` ${insertTriples} `
-      .WHERE` ${whereClause} `;
+    query = DELETE`${deleteClause}`.INSERT`${insertTriples}`
+      .WHERE`${whereClause}`;
   } else {
     // Only deleting (all values are null)
-    query = DELETE` ${deleteClause} `.WHERE` ${whereClause} `;
+    query = DELETE`${deleteClause}`.WHERE`${whereClause}`;
   }
 
   const builtQuery = buildQueryWithPrefixAndGraph(

@@ -28,7 +28,13 @@ import type {
 import df from "@rdfjs/data-model";
 import type { Variable } from "@rdfjs/types";
 import get from "lodash-es/get";
-import { convertIRIToNode, createBindOrValuesPattern } from "@/utils";
+import {
+  convertIRIToNode,
+  createBindOrValuesPattern,
+  createUniqueVar,
+  sanitizeVariableName,
+} from "@/utils";
+import type { VarCounterContext } from "@/utils";
 import {
   isNilOrEmpty,
   OptionalStringOrStringArray,
@@ -42,7 +48,7 @@ import type { FilterContext } from "@/filters/types";
  * Carries all necessary state through the recursion
  * Similar to ExtractionContext in graph-traversal
  */
-export type QueryConstructionContext = {
+export type QueryConstructionContext = VarCounterContext & {
   /** The current schema being processed */
   schema: NormalizedSchema;
   /** Filter options (select, include, omit, where) carried through recursion */
@@ -57,11 +63,6 @@ export type QueryConstructionContext = {
   excludedProperties: string[];
   /** Max depth at which inverse (x-inverseOf) properties are resolved. Default 0 = root only. */
   resolveInverseMaxDepth: number;
-  /**
-   * Shared mutable counter for generating globally unique SPARQL variable names.
-   * Wrapped in an object so the reference is preserved across recursive calls.
-   */
-  varCounter: { value: number };
 };
 
 /**
@@ -857,25 +858,4 @@ function handleNestedObject(
  */
 function createPredicate(propertyName: string, prefixMap: Prefixes): any {
   return convertIRIToNode(propertyName, prefixMap);
-}
-
-/**
- * Sanitize variable name to be valid in SPARQL
- * Only allow alphanumeric and underscore
- */
-function sanitizeVariableName(name: string): string {
-  const cleaned = name.replace(/[^a-zA-Z0-9_]/g, "_");
-  if (!/^[a-zA-Z]/.test(cleaned)) return `var_${cleaned}`;
-  return cleaned;
-}
-
-/**
- * Single gateway for creating SPARQL variables with globally unique names.
- * Always routes through df.variable() to prevent injection from weird schema property names.
- */
-function createUniqueVar(
-  name: string,
-  ctx: QueryConstructionContext,
-): Variable {
-  return df.variable(`${sanitizeVariableName(name)}_${ctx.varCounter.value++}`);
 }
