@@ -4,12 +4,13 @@ import {
   jsonSchema2PrismaFlatSelect,
   jsonSchema2PrismaSelect,
 } from "@graviola/json-schema-prisma-utils";
-import { defs } from "@graviola/json-schema-utils";
+import { bringDefinitionToTop, defs } from "@graviola/json-schema-utils";
 import type { JSONSchema7 } from "json-schema";
 
 import { toJSONLD } from "./helper";
 import { bindings2RDFResultSet } from "./helper/bindings2RDFResultSet";
 import { importAllDocuments, importSingleDocument } from "./import";
+import { patchPrisma } from "./patch";
 import type { PrismaStoreOptions } from "./types";
 import { upsert } from "./upsert";
 /**
@@ -272,6 +273,21 @@ export const initPrismaStore: (
         }
       }
       return classes;
+    },
+    patchDocument: async (typeName, entityIRI, options) => {
+      const { data } = options;
+      const schema = bringDefinitionToTop(rootSchema, typeName) as JSONSchema7;
+
+      await patchPrisma(typeName, entityIRI, data, schema, rootSchema, prisma, {
+        IRItoId,
+        debug,
+      });
+
+      return {
+        entityIRI,
+        updatedProperties: Object.keys(data).filter((k) => !k.startsWith("@")),
+        success: true,
+      };
     },
     countDocuments: async (
       typeName: string,
