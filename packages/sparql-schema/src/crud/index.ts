@@ -13,3 +13,4 @@ export * from "./moveToTrash";
 export * from "./restoreFromTrash";
 export * from "./loadEntityBasics";
 export * from "./basicFieldsQuery";
+export * from "./patch";

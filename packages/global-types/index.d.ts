@@ -5,6 +5,8 @@ import type {
   WalkerOptions,
   Entity,
   TypedGraphTraversalFilterOptions,
+  PatchFieldValue,
+  PatchResult,
 } from "@graviola/edb-core-types";
 import type { NamespaceBuilder } from "@rdfjs/namespace";
 import type { JsonLdContext } from "jsonld-context-parser";
@@ -283,6 +285,22 @@ export type AbstractDatastore<
     typeName: TypeName,
     options?: TypedDocumentsSearchOptions<T>,
   ) => Promise<T[]>;
+  /**
+   * Partially update specific properties of a document without loading/saving the full document.
+   * Phase 1: supports setting scalars, nested objects (shallow merge), and full array overwrites.
+   * Fails if the entity does not exist.
+   *
+   * @template T - Type of the document for type-safe data payload
+   * @param typeName - Name of the type/class
+   * @param entityIRI - IRI of the entity to patch
+   * @param options - Patch options containing the data fields to update
+   * @returns Promise resolving to the patch result
+   */
+  patchDocument?: <T = any>(
+    typeName: TypeName,
+    entityIRI: string,
+    options: { data: Partial<Record<string, any>> },
+  ) => Promise<PatchResult>;
   iterableImplementation?: AbstractDatastoreIterable<
     TypeName,
     DocumentResultTypeMap,

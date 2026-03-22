@@ -32,10 +32,12 @@
   },
   "devDependencies": {
     "@graviola/edb-build-helper": "workspace:*",
+    "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-tsconfig": "workspace:*",
     "@graviola/edb-tsup-config": "workspace:*",
     "@types/jest": "^29.5.12",
     "@types/json-schema": "catalog:",
+    "ajv": "^8.12",
     "eslint-config-edb": "workspace:*",
     "typescript": "^5.8.2",
     "tsup": "^8.0.0"
