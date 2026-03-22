@@ -86,6 +86,8 @@ export type SPARQLCRUDOptions = {
   /** Max depth at which inverse (x-inverseOf) properties are resolved. Default 0 = root only. */
   resolveInverseMaxDepth?: number;
   defaultUpdateGraph?: string;
+  /** Optional schema validator facade (e.g. AJV). When absent, only structural checks are performed. */
+  validator?: SchemaValidator;
 };
 
 export type ResultBindings = any[];

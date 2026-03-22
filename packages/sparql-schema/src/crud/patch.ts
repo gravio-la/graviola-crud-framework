@@ -7,11 +7,7 @@
  * - convertIRIToNode for proper prefix handling of property predicates
  */
 
-import type {
-  Prefixes,
-  SPARQLCRUDOptions,
-  SchemaValidator,
-} from "@graviola/edb-core-types";
+import type { Prefixes, SPARQLCRUDOptions } from "@graviola/edb-core-types";
 import {
   isJSONSchema,
   resolveSchema,
@@ -33,10 +29,6 @@ import type { VarCounterContext } from "@/utils";
 
 export type PatchOptions = SPARQLCRUDOptions & {
   jsonldContext?: object | string;
-  /** Optional schema validator facade (e.g. AJV). When absent, only structural checks are performed. */
-  validator?: SchemaValidator;
-  /** Prefix mappings for property names (e.g., { "foaf": "http://xmlns.com/foaf/0.1/" }) */
-  prefixMap?: Prefixes;
 };
 
 /**
@@ -63,14 +55,12 @@ const resolvePropertySchema = (
 };
 
 /**
- * Determines if a value represents an entity reference (has @id) vs an inline/blank node object.
+ * Determines if a schema represents an entity reference (has @id property)
+ * vs an inline/blank node object. Follows the same convention as
+ * isRelationshipSchema() in graph-traversal.
  */
-const isEntityReference = (value: unknown): boolean =>
-  typeof value === "object" &&
-  value !== null &&
-  !Array.isArray(value) &&
-  "@id" in value &&
-  typeof (value as Record<string, unknown>)["@id"] === "string";
+const isEntityReferenceSchema = (schema: JSONSchema7): boolean =>
+  !!(schema.properties && "@id" in schema.properties);
 
 /**
  * Create a predicate node from a property name using the shared IRI converter.
@@ -83,13 +73,15 @@ function createPredicate(propertyName: string, prefixMap: Prefixes) {
  * Generates DELETE/WHERE patterns for a nested object (blank node), recursively
  * deleting all triples of the blank node based on the schema structure.
  *
- * For shallow merge, we only generate patterns for the properties being set,
- * not all properties of the nested object.
+ * For shallow merge, we only generate patterns for schema properties that are
+ * present in the patch data — unmentioned properties are preserved.
+ *
+ * @param dataKeys - The property names from the patch data (used to scope shallow merge)
  */
 function generateNestedDeletePatterns(
   subjectVar: ReturnType<typeof df.variable>,
   propertyName: string,
-  value: Record<string, unknown>,
+  dataKeys: string[],
   schema: JSONSchema7,
   rootSchema: JSONSchema7,
   ctx: PatchContext,
@@ -107,42 +99,41 @@ function generateNestedDeletePatterns(
     sparql`OPTIONAL { ${subjectVar} ${predicate} ${objectVar} .`,
   );
 
-  for (const [nestedKey, nestedValue] of Object.entries(value)) {
+  // Iterate over schema properties that are present in the patch data
+  const schemaProps = schema.properties || {};
+  for (const nestedKey of dataKeys) {
     if (nestedKey.startsWith("@")) continue;
+    if (!(nestedKey in schemaProps)) continue;
 
     const nestedPredicate = createPredicate(nestedKey, ctx.prefixMap);
     const nestedVar = createUniqueVar(`patch_${nestedKey}`, ctx);
 
+    const nestedSchema = resolvePropertySchema(
+      schemaProps[nestedKey],
+      rootSchema,
+    );
     if (
-      typeof nestedValue === "object" &&
-      nestedValue !== null &&
-      !Array.isArray(nestedValue) &&
-      !isEntityReference(nestedValue) &&
-      schema.properties?.[nestedKey]
+      nestedSchema &&
+      (nestedSchema.type === "object" || nestedSchema.properties) &&
+      !isEntityReferenceSchema(nestedSchema)
     ) {
-      const nestedSchema = resolvePropertySchema(
-        schema.properties[nestedKey],
+      // Recurse into nested blank node object
+      // For deeper nesting, we use all schema properties (full replace at depth > 1)
+      const nestedDataKeys = Object.keys(nestedSchema.properties || {});
+      const nested = generateNestedDeletePatterns(
+        objectVar,
+        nestedKey,
+        nestedDataKeys,
+        nestedSchema,
         rootSchema,
+        ctx,
       );
-      if (
-        nestedSchema &&
-        (nestedSchema.type === "object" || nestedSchema.properties)
-      ) {
-        const nested = generateNestedDeletePatterns(
-          objectVar,
-          nestedKey,
-          nestedValue as Record<string, unknown>,
-          nestedSchema,
-          rootSchema,
-          ctx,
-        );
-        deletePatterns.push(...nested.deletePatterns);
-        wherePatterns.push(...nested.wherePatterns);
-        continue;
-      }
+      deletePatterns.push(...nested.deletePatterns);
+      wherePatterns.push(...nested.wherePatterns);
+      continue;
     }
 
-    // Leaf property: delete old value
+    // Leaf property or entity reference: delete old value
     wherePatterns.push(
       sparql`OPTIONAL { ${objectVar} ${nestedPredicate} ${nestedVar} . }`,
     );
@@ -155,15 +146,16 @@ function generateNestedDeletePatterns(
 }
 
 /**
- * Generates DELETE/WHERE patterns for a property.
- * For scalars/references: simple triple pattern.
- * For nested objects: recursive schema-driven patterns.
- * For arrays: delete all old values for the predicate.
+ * Generates DELETE/WHERE patterns for a property based on its schema definition.
+ * For scalars/references/arrays: simple triple pattern.
+ * For nested objects (blank nodes): recursive schema-driven patterns.
+ *
+ * @param dataKeys - For nested objects, the property names from the patch data (for shallow merge at top level)
  */
 function generateDeletePatterns(
   subjectVar: ReturnType<typeof df.variable>,
   propertyName: string,
-  value: unknown,
+  dataKeys: string[] | undefined,
   propSchema: JSONSchema7 | undefined,
   rootSchema: JSONSchema7,
   ctx: PatchContext,
@@ -174,26 +166,25 @@ function generateDeletePatterns(
   const predicate = createPredicate(propertyName, ctx.prefixMap);
   const oldVar = createUniqueVar(`patch_old_${propertyName}`, ctx);
 
-  // Nested object (blank node) with shallow merge
+  // Nested object (blank node) with shallow merge — determined by schema, not value
   if (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    !isEntityReference(value) &&
     propSchema &&
-    (propSchema.type === "object" || propSchema.properties)
+    (propSchema.type === "object" || propSchema.properties) &&
+    !isEntityReferenceSchema(propSchema)
   ) {
+    // Use data keys for shallow merge at top level, falling back to all schema properties
+    const keysToDelete = dataKeys || Object.keys(propSchema.properties || {});
     return generateNestedDeletePatterns(
       subjectVar,
       propertyName,
-      value as Record<string, unknown>,
+      keysToDelete,
       propSchema,
       rootSchema,
       ctx,
     );
   }
 
-  // Scalar, reference, array, or null: delete all old values for this predicate
+  // Scalar, entity reference, array, or null: delete all old values for this predicate
   return {
     deletePatterns: [sparql`${subjectVar} ${predicate} ${oldVar} .`],
     wherePatterns: [
@@ -215,7 +206,7 @@ function generateDeletePatterns(
  * @param schema - JSON Schema for the entity type (already brought to top)
  * @param updateFetch - Function to execute SPARQL UPDATE queries
  * @param askFetch - Function to execute SPARQL ASK queries (for existence check)
- * @param options - SPARQL options (prefix, graph, build options, prefixMap)
+ * @param options - SPARQL options (prefix, graph, build options)
  */
 export const patch = async (
   entityIRI: string,
@@ -226,7 +217,8 @@ export const patch = async (
   askFetch: (query: string) => Promise<boolean>,
   options: PatchOptions,
 ): Promise<void> => {
-  const { defaultPrefix, queryBuildOptions, validator, prefixMap } = options;
+  const { defaultPrefix, queryBuildOptions, validator } = options;
+  const prefixMap = queryBuildOptions?.prefixes || {};
 
   // Filter out JSON-LD metadata
   const dataKeys = Object.keys(data).filter((k) => !k.startsWith("@"));
@@ -256,7 +248,7 @@ export const patch = async (
 
   const ctx: PatchContext = {
     varCounter: { value: 0 },
-    prefixMap: prefixMap || {},
+    prefixMap,
   };
 
   const subjectNode = df.namedNode(entityIRI);
@@ -279,10 +271,16 @@ export const patch = async (
       ? resolvePropertySchema(propSchema, schema)
       : undefined;
 
+    // For nested objects, extract the data keys for shallow merge
+    const nestedDataKeys =
+      typeof value === "object" && value !== null && !Array.isArray(value)
+        ? Object.keys(value).filter((k) => !k.startsWith("@"))
+        : undefined;
+
     const { deletePatterns, wherePatterns } = generateDeletePatterns(
       subjectVar,
       key,
-      value,
+      nestedDataKeys,
       resolved,
       schema,
       ctx,
@@ -303,10 +301,8 @@ export const patch = async (
     const jsonldContext: Record<string, unknown> = { "@vocab": defaultPrefix };
 
     // Add prefix mappings to the JSON-LD context so prefixed properties resolve correctly
-    if (prefixMap) {
-      for (const [prefix, iri] of Object.entries(prefixMap)) {
-        jsonldContext[prefix] = iri;
-      }
+    for (const [prefix, iri] of Object.entries(prefixMap)) {
+      jsonldContext[prefix] = iri;
     }
 
     const partialDoc: Record<string, unknown> = {
@@ -317,14 +313,7 @@ export const patch = async (
     const ds = await jsonld2DataSet(partialDoc);
     const allTriples = await dataset2NTriples(ds);
 
-    // Filter out rdf:type triples — we don't want to re-insert the type
-    insertTriples = allTriples
-      .split("\n")
-      .filter(
-        (line) =>
-          !line.includes("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-      )
-      .join("\n");
+    insertTriples = allTriples;
   }
 
   // Combine SparqlTemplateResult arrays into single template results
