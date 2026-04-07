@@ -1,7 +1,6 @@
 import NiceModal from "@ebay/nice-modal-react";
 import { useModifiedRouter } from "@graviola/edb-state-hooks";
-import { Box, Button } from "@mui/material";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import { Box, Button, Grid } from "@mui/material";
 import { hasGrantedAnyScopeGoogle, useGoogleOAuth } from "@react-oauth/google";
 import React, { FunctionComponent, useCallback, useMemo } from "react";
 
@@ -67,7 +66,7 @@ export const ImportPage: FunctionComponent = () => {
         padding: { md: "20px 30px 99px 30px" },
       }}
     >
-      <Grid2
+      <Grid
         container
         justifyContent="space-evenly"
         alignItems="center"
@@ -75,14 +74,14 @@ export const ImportPage: FunctionComponent = () => {
         sx={{ p: { md: 10 } }}
       >
         {clientId && (
-          <Grid2 lg={12}>
+          <Grid size={12}>
             <Login scopes={scopes} />
             {hasAccess && (
               <Button onClick={openDrivePicker}>choose file</Button>
             )}
-          </Grid2>
+          </Grid>
         )}
-        <Grid2 lg={12}>
+        <Grid size={12}>
           {hasAccess &&
             typeof documentId === "string" &&
             typeof sheetId === "number" &&
@@ -93,8 +92,8 @@ export const ImportPage: FunctionComponent = () => {
                 mappingId={mappingId}
               />
             )}
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

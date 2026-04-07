@@ -9,10 +9,10 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Grid,
   styled,
   Typography,
 } from "@mui/material";
-import Grid2 from "@mui/material/Unstable_Grid2";
 import df from "@rdfjs/data-model";
 import { SELECT } from "@tpluscode/sparql-builder";
 import { ParentSize } from "@visx/responsive";
@@ -155,17 +155,17 @@ export const Dashboard = (props) => {
       <Box sx={{ marginBottom: "4rem", marginTop: "1em" }}>
         <HeaderTitle>{t("database_name")}</HeaderTitle>
       </Box>
-      <Grid2
+      <Grid
         container
         justifyContent="space-evenly"
         alignItems="center"
         spacing={3}
         sx={{ p: { md: 10 } }}
       >
-        <Grid2 lg={12}>
+        <Grid size={12}>
           <SearchBar relevantTypes={relevantTypes} />
-        </Grid2>
-        <Grid2 xs={12}>
+        </Grid>
+        <Grid size={12}>
           <OwnCard
             title={"Wichtigste Entitäten"}
             subheader={""}
@@ -177,8 +177,8 @@ export const Dashboard = (props) => {
               )}
             </ParentSize>
           </OwnCard>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

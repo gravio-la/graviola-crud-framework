@@ -14,6 +14,7 @@ import React from "react";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { exhibitionConfig } from "../components/config/exhibitionAppConfig";
 import { kulinarikAppConfig } from "../components/config/kulinarikAppConfig";
+import type { SparqlEndpoint } from "@graviola/edb-core-types";
 import { envToSparqlEndpoint } from "@graviola/edb-core-utils";
 import {
   EditEntityModal,
@@ -34,8 +35,18 @@ import { SemanticJsonFormNoOps } from "@graviola/semantic-json-form";
 
 export const queryClient = new QueryClient();
 
-const sparqlEndpoint = envToSparqlEndpoint(import.meta.env, "VITE");
-console.log(sparqlEndpoint);
+/** Same URL as the "Local" preset in `useLocalSettings` — used when `VITE_SPARQL_ENDPOINT` is unset (typical `bun run dev:vite` without `.env`). */
+const VITE_DEV_SPARQL_FALLBACK: SparqlEndpoint = {
+  label: "Local (dev fallback)",
+  endpoint: "http://localhost:7878/query",
+  active: true,
+  provider: "oxigraph",
+};
+
+const sparqlEndpoint: SparqlEndpoint | undefined =
+  envToSparqlEndpoint(import.meta.env, "VITE") ??
+  (import.meta.env.DEV ? VITE_DEV_SPARQL_FALLBACK : undefined);
+
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const appConfig =
@@ -59,6 +70,18 @@ const Loading = () => {
 };
 
 export const App = ({ children }: { children?: React.ReactNode }) => {
+  if (!sparqlEndpoint) {
+    return (
+      <Box component="main" sx={{ p: 3, maxWidth: 560 }}>
+        <p>
+          Missing <code>VITE_SPARQL_ENDPOINT</code>. Set it in <code>.env</code>{" "}
+          / <code>.env.local</code> (see <code>envToSparqlEndpoint</code> in{" "}
+          <code>@graviola/edb-core-utils</code>) and rebuild.
+        </p>
+      </Box>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
