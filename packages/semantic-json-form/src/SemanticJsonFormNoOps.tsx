@@ -6,6 +6,7 @@ import {
   useRightDrawerState,
 } from "@graviola/edb-state-hooks";
 import { SemanticJsonFormNoOpsProps } from "@graviola/semantic-jsonform-types";
+import { compileSchema } from "@graviola/json-schema-utils";
 import { JsonFormsCore, JsonSchema } from "@jsonforms/core";
 import { JsonForms } from "@jsonforms/react";
 import { Card, CardContent, Grid } from "@mui/material";
@@ -122,6 +123,15 @@ export const SemanticJsonFormNoOps: FunctionComponent<
     config,
     ...jfpProps
   } = jsonFormsProps || {};
+
+  // Compile the schema registry once per schema change.
+  // Injected into JsonForms config so renderers and testers can use it
+  // for O(1) entity classification without runtime $ref resolution.
+  const registry = useMemo(
+    () => (schema ? compileSchema(schema as any) : undefined),
+    [schema],
+  );
+
   const finalJsonFormsProps = useMemo(() => {
     return {
       ...jfpProps,
@@ -134,6 +144,7 @@ export const SemanticJsonFormNoOps: FunctionComponent<
         ...config,
         formsPath,
         typeIRI,
+        registry,
       },
     };
   }, [
@@ -144,6 +155,7 @@ export const SemanticJsonFormNoOps: FunctionComponent<
     typeIRI,
     uischemata,
     typeIRItoTypeName,
+    registry,
   ]);
   const allRenderer = useMemo(
     () => [...(rendererRegistry || []), ...(jfpRenderers || [])],
@@ -157,12 +169,13 @@ export const SemanticJsonFormNoOps: FunctionComponent<
 
   return (
     <Grid container spacing={0}>
-      <Grid  flex={1}>
+      <Grid flex={1}>
         <Grid container spacing={0}>
           <Grid
-           size={
+            size={
               disableSimilarityFinder || enableSidebar || !searchText ? 12 : 6
-            }>
+            }
+          >
             <WithCard wrapWithinCard={wrapWithinCard}>
               {toolbar && React.isValidElement(toolbar) ? toolbar : null}
               <JsonForms
@@ -177,7 +190,7 @@ export const SemanticJsonFormNoOps: FunctionComponent<
             </WithCard>
           </Grid>
           {!disableSimilarityFinder && !enableSidebar && searchText && (
-            <Grid  size={6}>
+            <Grid size={6}>
               <SimilarityFinder
                 finderId={formsPath}
                 search={searchText}
@@ -192,7 +205,7 @@ export const SemanticJsonFormNoOps: FunctionComponent<
         </Grid>
       </Grid>
       {formsPath === globalPath && (
-        <Grid >
+        <Grid>
           <SearchbarWithFloatingButton>
             <SimilarityFinder
               finderId={formsPath}
