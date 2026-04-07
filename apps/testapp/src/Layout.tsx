@@ -46,7 +46,9 @@ export function Layout({ allSchemas, currentSchema }: LayoutProps) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const showSidebar = currentSchema.schemaName === "item-schema";
+  const showSidebar =
+    currentSchema.schemaName === "item-schema" ||
+    currentSchema.schemaName === "course-schema";
 
   const itemMenuGroup = useMemo(() => {
     if (!showSidebar) return null;
