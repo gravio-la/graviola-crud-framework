@@ -3,21 +3,64 @@ import { resolveSchema, isJSONSchema } from "@graviola/json-schema-utils";
 import type { NormalizationContext } from "./types";
 
 /**
- * Checks if a schema represents a relationship (an object with @id property)
+ * Checks if a schema represents a relationship (an object with @id property).
+ *
+ * Returns true when @id is present:
+ * - directly in `properties` (Pattern A, B, C, D), OR
+ * - in any member of an `allOf` array (Pattern E — inheritance via allOf)
+ *
  * @param schema The schema to check
- * @returns True if this schema represents a relationship
+ * @returns True if this schema represents a named entity
  */
 export function isRelationshipSchema(schema: JSONSchema7): boolean {
-  if (schema.type !== "object" && !schema.properties) {
-    return false;
-  }
-
-  // Check if the schema has an @id property (marker for entities)
+  // Direct @id property
   if (schema.properties && "@id" in schema.properties) {
     return true;
   }
 
+  // allOf-inherited @id (Pattern E)
+  if (schema.allOf) {
+    return schema.allOf.some(
+      (part) =>
+        typeof part === "object" &&
+        part !== null &&
+        (part as JSONSchema7).properties !== undefined &&
+        "@id" in (part as JSONSchema7).properties!,
+    );
+  }
+
   return false;
+}
+
+export interface PropertyMetadata {
+  isArray: boolean;
+  itemType?: string;
+  isRelationship: boolean;
+}
+
+/**
+ * Extracts metadata about a property schema: whether it is an array, its item
+ * type, and whether it (or its items) represents a named entity relationship.
+ */
+export function extractPropertyMetadata(
+  schema: JSONSchema7,
+  _context: NormalizationContext,
+): PropertyMetadata {
+  if (schema.type === "array") {
+    const items = Array.isArray(schema.items)
+      ? (schema.items[0] as JSONSchema7 | undefined)
+      : (schema.items as JSONSchema7 | undefined);
+    const itemType = items?.type as string | undefined;
+    return {
+      isArray: true,
+      itemType,
+      isRelationship: items ? isRelationshipSchema(items) : false,
+    };
+  }
+  return {
+    isArray: false,
+    isRelationship: isRelationshipSchema(schema),
+  };
 }
 
 /**

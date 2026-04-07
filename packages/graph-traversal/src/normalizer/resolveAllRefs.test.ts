@@ -39,6 +39,39 @@ describe("isRelationshipSchema", () => {
 
     expect(isRelationshipSchema(schema)).toBe(false);
   });
+
+  test("returns true for allOf-inherited @id (Pattern E)", () => {
+    const schema: JSONSchema7 = {
+      allOf: [
+        {
+          type: "object",
+          properties: {
+            "@id": { type: "string" },
+            "@type": { type: "string" },
+          },
+        },
+        {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+          },
+        },
+      ],
+    };
+
+    expect(isRelationshipSchema(schema)).toBe(true);
+  });
+
+  test("returns false for allOf without @id in any member", () => {
+    const schema: JSONSchema7 = {
+      allOf: [
+        { type: "object", properties: { x: { type: "string" } } },
+        { type: "object", properties: { y: { type: "number" } } },
+      ],
+    };
+
+    expect(isRelationshipSchema(schema)).toBe(false);
+  });
 });
 
 describe("extractPropertyMetadata", () => {

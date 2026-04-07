@@ -8,3 +8,4 @@ export * from "./getSubschemaByPath";
 export * from "./inversePropertyAnnotations";
 export * from "./extractTranslationKeysFromSchema";
 export * from "./walkJSONSchema";
+export * from "./schemaRegistry";
