@@ -21,6 +21,7 @@ import {
   Resolve,
   resolveSchema,
 } from "@jsonforms/core";
+import type { SchemaRegistry } from "@graviola/json-schema-utils";
 import { useJsonForms, withJsonFormsControlProps } from "@jsonforms/react";
 import {
   Box,
@@ -59,13 +60,16 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
     components: { SimilarityFinder, EditEntityModal },
   } = useAdbContext();
   const appliedUiSchemaOptions = merge({}, config, uischema.options);
-  const typeIRI =
-    appliedUiSchemaOptions.context?.typeIRI ||
-    schema.properties?.["@type"]?.const ||
-    appliedUiSchemaOptions.typeIRI;
+  const ctx = useJsonForms();
+  const registry = (ctx?.config as any)?.registry as SchemaRegistry | undefined;
   const { $ref } = appliedUiSchemaOptions || {};
   const enableFinder = appliedUiSchemaOptions.enableFinder || false;
-  const ctx = useJsonForms();
+  // Resolve typeIRI: explicit options → schema @type.const → registry O(1) lookup via $ref
+  const typeIRI: string | undefined =
+    appliedUiSchemaOptions.context?.typeIRI ||
+    (schema.properties?.["@type"]?.const as string | undefined) ||
+    appliedUiSchemaOptions.typeIRI ||
+    (registry && $ref ? registry.byPath.get($ref)?.typeIRI : undefined);
   const prepareNewEntityData =
     typeof appliedUiSchemaOptions.prepareNewEntityData === "function"
       ? appliedUiSchemaOptions.prepareNewEntityData
@@ -104,20 +108,20 @@ const InlineDropdownSemanticFormsRendererComponent = (props: ControlProps) => {
   );
   const subSchema = useMemo(() => {
     if (!$ref) return;
-    const schema2 = {
-      ...schema,
-      $ref,
-    };
+    // Fast path: O(1) registry lookup
+    if (registry) {
+      const entry = registry.byPath.get($ref);
+      if (entry) return { ...(rootSchema as object), ...entry.resolvedSchema };
+    }
+    // Fallback: runtime resolution
+    const schema2 = { ...schema, $ref };
     const resolvedSchema = resolveSchema(
       schema2 as JsonSchema,
       "",
       rootSchema as JsonSchema,
     );
-    return {
-      ...rootSchema,
-      ...resolvedSchema,
-    };
-  }, [$ref, schema, rootSchema]);
+    return { ...rootSchema, ...resolvedSchema };
+  }, [$ref, schema, rootSchema, registry]);
 
   useEffect(() => {
     if (!data) setRealLabel("");

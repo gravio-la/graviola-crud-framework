@@ -16,6 +16,7 @@ import {
   Resolve,
   resolveSchema,
 } from "@jsonforms/core";
+import type { SchemaRegistry } from "@graviola/json-schema-utils";
 import { useJsonForms, withJsonFormsControlProps } from "@jsonforms/react";
 import {
   Box,
@@ -54,8 +55,18 @@ const InlineCondensedSemanticFormsRendererComponent = (props: ControlProps) => {
     components: { SimilarityFinder },
   } = useAdbContext();
   const appliedUiSchemaOptions = merge({}, config, uischema.options);
-  const { $ref, typeIRI, mapData, getID } =
-    appliedUiSchemaOptions.context || {};
+  const {
+    $ref,
+    typeIRI: typeIRIFromContext,
+    mapData,
+    getID,
+  } = appliedUiSchemaOptions.context || {};
+  const ctx = useJsonForms();
+  const registry = (ctx?.config as any)?.registry as SchemaRegistry | undefined;
+  // Resolve typeIRI: explicit context option → registry O(1) lookup via $ref
+  const typeIRI: string | undefined =
+    typeIRIFromContext ||
+    (registry && $ref ? registry.byPath.get($ref)?.typeIRI : undefined);
   const entityIRI = useMemo(() => {
     if (!data) return null;
     return getID ? getID(data) : data["@id"] || data;
@@ -65,7 +76,6 @@ const InlineCondensedSemanticFormsRendererComponent = (props: ControlProps) => {
     () => typeIRI && typeIRIToTypeName(typeIRI),
     [typeIRI, typeIRIToTypeName],
   );
-  const ctx = useJsonForms();
   const [realLabel, setRealLabel] = useState("");
   const formsPath = useMemo(
     () => makeFormsPath(config?.formsPath, path),
@@ -80,20 +90,20 @@ const InlineCondensedSemanticFormsRendererComponent = (props: ControlProps) => {
   );
   const subSchema = useMemo(() => {
     if (!$ref) return;
-    const schema2 = {
-      ...schema,
-      $ref,
-    };
+    // Fast path: O(1) registry lookup
+    if (registry) {
+      const entry = registry.byPath.get($ref);
+      if (entry) return { ...(rootSchema as object), ...entry.resolvedSchema };
+    }
+    // Fallback: runtime resolution
+    const schema2 = { ...schema, $ref };
     const resolvedSchema = resolveSchema(
       schema2 as JsonSchema,
       "",
       rootSchema as JsonSchema,
     );
-    return {
-      ...rootSchema,
-      ...resolvedSchema,
-    };
-  }, [$ref, schema, rootSchema]);
+    return { ...rootSchema, ...resolvedSchema };
+  }, [$ref, schema, rootSchema, registry]);
 
   useEffect(() => {
     if (!entityIRI) setRealLabel("");
