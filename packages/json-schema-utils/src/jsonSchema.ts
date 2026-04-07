@@ -146,9 +146,17 @@ export const bringDefinitionToTop: (
   const definitions = defs(schema);
   const specificModel = (definitions?.[name] as object | undefined) || {};
   const { title, description, ...rest } = schema;
+  // Strip definitions/$defs from the specific model so they don't override
+  // the root schema's definitions (which are needed for $ref resolution).
+  // The root definitions are the "global" namespace and must always win.
+  const {
+    definitions: _dropDefs,
+    $defs: _dropDollarDefs,
+    ...specificModelRest
+  } = specificModel as Record<string, unknown>;
   return {
     ...rest,
-    ...specificModel,
+    ...specificModelRest,
   } as JSONSchema7;
 };
 

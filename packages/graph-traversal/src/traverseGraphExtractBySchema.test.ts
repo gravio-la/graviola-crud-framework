@@ -24,16 +24,7 @@ const testResult01 = JSON.parse(
 
 function sampleDataset() {
   const input = fs.createReadStream(
-    resolve(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "node_modules",
-      "tbbt-ld",
-      "dist",
-      "tbbt.nq",
-    ),
+    resolve(__dirname, "..", "node_modules", "tbbt-ld", "dist", "tbbt.nq"),
   );
   const parser = new N3Parser();
 
