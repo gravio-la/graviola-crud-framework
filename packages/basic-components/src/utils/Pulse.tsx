@@ -1,6 +1,5 @@
 import React from "react";
-import styled from "@emotion/styled";
-import { Theme } from "@mui/material";
+import { styled, Theme } from "@mui/material";
 
 const pulsate = () => `
   0%, 100% {
@@ -27,34 +26,33 @@ type PulsatingDotProps = {
   pulse?: boolean;
 };
 
-const PulsatingDot = styled.div<PulsatingDotProps>`
-  animation: ${pulsate} 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite;
-  border-radius: ${({ borderRadius }) => borderRadius || "50%"};
-  box-sizing: border-box;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+const PulsatingDot = styled("div")<PulsatingDotProps>(
+  ({ theme, borderRadius, dotColor }) => ({
+    animation:
+      pulsate() +
+      " 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite",
+    borderRadius: borderRadius || "50%",
+    boxSizing: "border-box",
+    position: "relative",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
 
-  &:before {
-    animation: pulseRing 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-    background-color: ${({ dotColor, theme }) =>
-      dotColor || (theme as Theme).palette?.primary?.main};
-    border-radius: ${({ borderRadius }) => borderRadius || "50%"};
-    content: "";
-    display: block;
-    height: 300%;
-    left: -100%;
-    position: absolute;
-    top: -100%;
-    width: 300%;
-  }
-
-  @keyframes pulseRing {
-    ${pulseRing}
-  }
-`;
-
+    "&:before": {
+      animation:
+        pulseRing() + " 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite",
+      backgroundColor: dotColor || (theme as Theme).palette?.primary?.main,
+      borderRadius: borderRadius || "50%",
+      content: '""',
+      display: "block",
+      height: "300%",
+      left: "-100%",
+      position: "absolute",
+      top: "-100%",
+      width: "300%",
+    },
+  }),
+);
 export type PulseProps = PulsatingDotProps & { children: React.ReactNode };
 
 export const Pulse = ({
