@@ -2,6 +2,7 @@ import type Yasgui from "@triply/yasgui";
 import React, { FunctionComponent, useEffect, useRef } from "react";
 
 import { Prefixes } from "@graviola/edb-core-types";
+import { formatSparqlQuerySafe } from "./formatSparqlQuerySafe";
 import { YasguiSPARQLEditorProps } from "./YasguiSPARQLEditorProps";
 import { patchYasqeQueryToUseCrud } from "./yasqeCrudQuery";
 
@@ -14,7 +15,7 @@ const withPrefixes = (yg: Yasgui, prefixes?: Prefixes) => {
 const setYasqeValue = (yg: Yasgui, query: string | undefined) => {
   if (query === undefined) return;
   const yasqe = yg.getTab(yg.persistentConfig.currentId())?.getYasqe();
-  yasqe?.setValue(query);
+  yasqe?.setValue(formatSparqlQuerySafe(query));
 };
 
 const YasguiSPARQLEditor: FunctionComponent<YasguiSPARQLEditorProps> = ({

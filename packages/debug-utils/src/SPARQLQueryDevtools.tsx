@@ -31,6 +31,7 @@ import React, {
 } from "react";
 
 import YasguiSPARQLEditor from "./YasguiSPARQLEditor";
+import { formatSparqlQuerySafe } from "./formatSparqlQuerySafe";
 import {
   clearSparqlQueryLog,
   getSparqlQueryLogSnapshot,
@@ -164,6 +165,11 @@ export const SPARQLQueryDevtools: React.FC<SPARQLQueryDevtoolsProps> = ({
   const selected = useMemo(
     () => entries.find((e) => e.id === selectedId) ?? null,
     [entries, selectedId],
+  );
+
+  const selectedQueryDisplay = useMemo(
+    () => (selected ? formatSparqlQuerySafe(selected.query) : ""),
+    [selected?.id, selected?.query],
   );
 
   const handleDownloadTriples = useCallback(async () => {
@@ -346,14 +352,14 @@ export const SPARQLQueryDevtools: React.FC<SPARQLQueryDevtoolsProps> = ({
                       m: 0,
                     }}
                   >
-                    {selected.query}
+                    {selectedQueryDisplay}
                   </Box>
                   <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
                     <Button
                       size="small"
                       variant="outlined"
                       onClick={() =>
-                        void navigator.clipboard.writeText(selected.query)
+                        void navigator.clipboard.writeText(selectedQueryDisplay)
                       }
                     >
                       Copy query

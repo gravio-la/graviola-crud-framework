@@ -1,4 +1,8 @@
 export * from "./FormDebuggingTools";
+export {
+  formatSparqlQuerySafe,
+  type SparqlFormattingMode,
+} from "./formatSparqlQuerySafe";
 export { default as YasguiSPARQLEditor } from "./YasguiSPARQLEditor";
 export type { YasguiSPARQLEditorProps } from "./YasguiSPARQLEditorProps";
 export { SPARQLQueryDevtools } from "./SPARQLQueryDevtools";
