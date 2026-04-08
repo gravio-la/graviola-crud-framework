@@ -34,15 +34,15 @@
     "zustand": "^4.5.2"
   },
   "dependencies": {
+    "@graviola/async-oxigraph": "workspace:*",
     "@graviola/edb-core-utils": "workspace:*",
     "@graviola/remote-query-implementations": "workspace:*",
     "@graviola/sparql-db-impl": "workspace:*",
-    "@graviola/async-oxigraph": "workspace:*",
-    "@rdfjs/dataset": "^2.0.2",
     "@rdfjs/data-model": "catalog:rdf",
+    "@rdfjs/dataset": "^2.0.2",
     "lodash-es": "catalog:",
     "n3": "^1.17.2",
-    "oxigraph": "^0.4.8"
+    "oxigraph": "^0.5.6"
   },
   "devDependencies": {
     "@graviola/edb-build-helper": "workspace:*",
