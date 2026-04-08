@@ -2,6 +2,12 @@ import type { AuthConfig, FetchConfig } from "@graviola/edb-core-types";
 
 import { createAuthHeaders, hasAuth } from "./authHelpers";
 
+/** Minimal fetch signature (avoids engine-specific extras on `typeof fetch`, e.g. Bun). */
+export type HttpFetchFn = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<Response>;
+
 export const sparqlFetchConfigs = {
   ntriples: {
     accept: "application/n-triples,*/*;q=0.9",
@@ -24,8 +30,11 @@ export const sparqlFetchConfigs = {
   },
 } as const;
 
+const defaultFetch: HttpFetchFn = (input, init) =>
+  globalThis.fetch(input, init);
+
 export const createSparqlFetchFunction =
-  (config: FetchConfig) =>
+  (config: FetchConfig, fetchImpl: HttpFetchFn = defaultFetch) =>
   (
     query: string,
     endpoint: string,
@@ -33,7 +42,7 @@ export const createSparqlFetchFunction =
     additionalHeaders?: Record<string, string>,
   ) => {
     const requestMode = config.cors || "cors";
-    return fetch(endpoint, {
+    return fetchImpl(endpoint, {
       headers: createAuthHeaders(
         {
           accept: config.accept,

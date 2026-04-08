@@ -38,7 +38,7 @@ export const basicAuthHeader = (username: string, password: string): string => {
  */
 export const createAuthHeaders = (
   baseHeaders: Record<string, string> = {},
-  auth?: { username?: string; password?: string; token?: string },
+  auth?: AuthConfig,
   additionalHeaders?: Record<string, string>,
 ): Record<string, string> => {
   const headers = { ...baseHeaders };
