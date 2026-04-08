@@ -193,8 +193,8 @@ export async function filterTypedDocuments<T = any>(
   // Direct `flavour` field takes precedence; fall back to the store-level
   // `queryBuildOptions.sparqlFlavour` forwarded by initSPARQLStore.
   const effectiveFlavour: SPARQLFlavour =
-    (buildOptions as any).flavour ??
-    (buildOptions as any).queryBuildOptions?.sparqlFlavour ??
+    buildOptions.flavour ??
+    buildOptions.queryBuildOptions?.sparqlFlavour ??
     "default";
 
   // Step 1: Build type-safe SPARQL query (includes flavour for SPARQL dialect)
