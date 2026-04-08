@@ -169,7 +169,21 @@ export type SparqlEndpoint = {
   defaultUpdateGraph?: string;
 };
 
-export type SPARQLFlavour = "default" | "oxigraph" | "blazegraph" | "allegro";
+/**
+ * **"sparql12"** — SPARQL 1.2 engines (e.g. Jena ARQ, Oxigraph) that support
+ * `LATERAL`. For relationship arrays with `include.take` / `orderBy`, the query
+ * emits `OPTIONAL { LATERAL { SELECT ?subject ?item … ORDER BY … LIMIT … } }`.
+ * The **subject variable must be projected** in that SELECT so the LATERAL
+ * `inject` step correlates per outer row (SEP-0006). Sort order in JSON is still
+ * finalized in extraction (`applyIncludeOrderBy`) after CONSTRUCT.
+ */
+export type SPARQLFlavour =
+  | "default"
+  | "oxigraph"
+  | "oxigraph-local"
+  | "blazegraph"
+  | "allegro"
+  | "sparql12";
 
 export type WorkerProvider = Record<
   NonNullable<SparqlEndpoint["provider"]>,
@@ -277,9 +291,10 @@ export type PaginationOptions = {
 /**
  * Pagination metadata that can be attached to array schemas
  *
- * The `_stage` field indicates where pagination was applied:
- * - "extraction": Apply during graph traversal (default)
- * - "query": Already applied at SPARQL CONSTRUCT query stage (skip during extraction)
+ * The `_stage` field records where pagination is applied (same meaning everywhere:
+ * `include` options, `extractArrayProperty`, and `ConstructResult.paginationMetadata`):
+ * - "extraction": Sort/slice during graph traversal (default when SPARQL returns the full relation)
+ * - "query": LIMIT/OFFSET already applied in SPARQL (`sparql12` LATERAL subselect); extraction must not re-slice
  *
  * The `orderBy` field specifies sort criteria (Prisma-style):
  * - Required for consistent pagination on blank nodes (unnamed nodes)

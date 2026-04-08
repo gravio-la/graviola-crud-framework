@@ -15,13 +15,17 @@
 
 import type { JSONSchema7 } from "json-schema";
 import type { DatasetCore } from "@rdfjs/types";
-import type { Dataset } from "@rdfjs/types";
 import type {
   WalkerOptions,
   Entity,
   SparqlBuildOptions,
+  ExtendedWalkerOptions,
+  SPARQLFlavour,
 } from "@graviola/edb-core-types";
-import { traverseGraphExtractBySchema } from "@graviola/edb-graph-traversal";
+import {
+  extractFromGraph,
+  sortObjectArrayByOrderBy,
+} from "@graviola/edb-graph-traversal";
 import { buildTypedSPARQLQuery } from "../schema2sparql/buildTypedSPARQLQuery";
 import type { BuildTypedSPARQLQueryOptions } from "../schema2sparql/buildTypedSPARQLQuery";
 import df from "@rdfjs/data-model";
@@ -44,6 +48,81 @@ export interface TypedFilterOptions<
   defaultPrefix?: string;
   /** Query build options for SPARQL generation */
   queryBuildOptions?: SparqlBuildOptions;
+}
+
+/**
+ * Walk the `include` options tree and sort (and optionally slice) any
+ * extracted array properties whose include entry specifies `orderBy`.
+ *
+ * SPARQL CONSTRUCT builds an unordered triple set: ORDER BY in a SUBSELECT
+ * determines *which* triples are included (via LIMIT/OFFSET), but the order
+ * in which clownface iterates them is arbitrary. Post-extraction sorting makes
+ * the ordering deterministic regardless of the SPARQL engine.
+ *
+ * When `applySlicing` is true (all flavours except `"sparql12"`), skip/take are
+ * applied here after sorting — SPARQL does not paginate nested arrays for those
+ * flavours. For `"sparql12"`, LIMIT/OFFSET run in `LATERAL { SELECT … }`; we only
+ * sort here to fix JSON array order after CONSTRUCT.
+ *
+ * Only top-level array properties are handled here; nested `orderBy` (e.g.
+ * friends.posts.orderBy) is not yet supported.
+ */
+function applyIncludeOrderBy<T>(
+  result: T,
+  include: Record<string, any> | undefined,
+  applySlicing: boolean,
+): T {
+  if (!include || typeof result !== "object" || result === null) return result;
+
+  const obj = result as Record<string, any>;
+  for (const [property, includeValue] of Object.entries(include)) {
+    if (
+      typeof includeValue !== "object" ||
+      includeValue === null ||
+      !includeValue.orderBy
+    )
+      continue;
+
+    const arr = obj[property];
+    if (!Array.isArray(arr)) continue;
+
+    let sorted = sortObjectArrayByOrderBy(arr, includeValue.orderBy);
+
+    if (applySlicing) {
+      const skip: number | undefined = includeValue.skip;
+      const take: number | undefined = includeValue.take;
+      const start = skip !== undefined && skip > 0 ? skip : 0;
+      const end = take !== undefined ? start + take : undefined;
+      if (start > 0 || end !== undefined) {
+        sorted = sorted.slice(start, end);
+      }
+    }
+
+    obj[property] = sorted;
+  }
+  return result;
+}
+
+/**
+ * For `sparql12`, relationship LIMIT/OFFSET run inside `LATERAL { SELECT … }`.
+ * Set `include.*._stage: "query"` (same field as `PaginationMetadata._stage` / construct
+ * metadata) so `extractArrayProperty` does not re-apply skip/take (double-slice).
+ */
+function markIncludeQueryStageForSparql12(
+  include: Record<string, any> | undefined,
+  flavour: SPARQLFlavour,
+): Record<string, any> | undefined {
+  if (!include || flavour !== "sparql12") return include;
+  return Object.fromEntries(
+    Object.entries(include).map(([key, value]) => [
+      key,
+      typeof value === "object" &&
+      value !== null &&
+      (value.take !== undefined || value.skip !== undefined)
+        ? { ...value, _stage: "query" as const }
+        : value,
+    ]),
+  );
 }
 
 /**
@@ -110,37 +189,62 @@ export async function filterTypedDocuments<T = any>(
         ? { "": defaultPrefix }
         : {};
 
-  // Step 1: Build type-safe SPARQL query
+  // Resolve the effective SPARQL flavour from the options.
+  // Direct `flavour` field takes precedence; fall back to the store-level
+  // `queryBuildOptions.sparqlFlavour` forwarded by initSPARQLStore.
+  const effectiveFlavour: SPARQLFlavour =
+    (buildOptions as any).flavour ??
+    (buildOptions as any).queryBuildOptions?.sparqlFlavour ??
+    "default";
+
+  // Step 1: Build type-safe SPARQL query (includes flavour for SPARQL dialect)
   const { query } = buildTypedSPARQLQuery<T>(entityIRIs, typeIRIs, schema, {
     ...buildOptions,
     prefixMap: finalPrefixMap,
+    flavour: effectiveFlavour,
   });
 
   // Step 2: Execute CONSTRUCT query
   const dataset = await constructFetch(query);
 
-  if (Array.isArray(entityIRIs) && entityIRIs.length > 0) {
-    // Batch extraction
-    const results: T[] = entityIRIs.map((iri) =>
-      traverseGraphExtractBySchema(
-        defaultPrefix,
+  const include = (options as Record<string, any>).include as
+    | Record<string, any>
+    | undefined;
+
+  const useExtractionSlicing = effectiveFlavour !== "sparql12";
+
+  // Build extraction options: graph-traversal fields only.
+  const extractionOptions: Partial<ExtendedWalkerOptions<T>> = {
+    ...walkerOptions,
+    include: markIncludeQueryStageForSparql12(include, effectiveFlavour) as
+      | ExtendedWalkerOptions<T>["include"]
+      | undefined,
+    select: (options as any).select,
+    where: (options as any).where,
+    omit: (options as any).omit,
+    includeRelationsByDefault: (options as any).includeRelationsByDefault,
+    maxRecursion: (options as any).maxRecursion ?? walkerOptions?.maxRecursion,
+  };
+
+  const extract = (iri: string): T =>
+    applyIncludeOrderBy(
+      extractFromGraph<T>(
         iri,
-        dataset as Dataset,
+        dataset,
         schema,
-        walkerOptions,
+        extractionOptions,
+        defaultPrefix,
       ),
+      include,
+      useExtractionSlicing,
     );
-    return results;
-  } else if (typeof entityIRIs === "string") {
-    // Single entity extraction
-    const result: T = await traverseGraphExtractBySchema(
-      defaultPrefix,
-      entityIRIs,
-      dataset as Dataset,
-      schema,
-      walkerOptions,
-    );
-    return [result];
+
+  if (Array.isArray(entityIRIs) && entityIRIs.length > 0) {
+    return entityIRIs.map(extract);
+  }
+
+  if (typeof entityIRIs === "string") {
+    return [extract(entityIRIs)];
   }
 
   const subjectIRIs = dataset.match(
@@ -150,15 +254,7 @@ export async function filterTypedDocuments<T = any>(
   );
   const results: T[] = [];
   for (const quad of subjectIRIs) {
-    results.push(
-      traverseGraphExtractBySchema(
-        defaultPrefix,
-        quad.subject.value,
-        dataset as Dataset,
-        schema,
-        walkerOptions,
-      ),
-    );
+    results.push(extract(quad.subject.value));
   }
   return results;
 }
