@@ -39,6 +39,7 @@
     "eslint-config-edb": "workspace:*",
     "tsup": "^8.0.0",
     "typescript": "^5.8.2",
+    "@rdfjs/types": "catalog:rdf",
     "@types/json-schema": "catalog:"
   },
   "peerDependencies": {
@@ -51,6 +52,7 @@
     "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-state-hooks": "workspace:*",
     "@triply/yasgui": "^4.2.28",
+    "@triply/yasqe": "^4.2.28",
     "n3": "^1.17.2",
     "react-json-view-lite": "^2.4.1"
   },
