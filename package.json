@@ -57,6 +57,7 @@
       "mui": {
         "@mui/material": "^7",
         "@mui/icons-material": "^7",
+        "@mui/system": "^7",
         "@mui/x-date-pickers": "^8"
       },
       "rdf": {
