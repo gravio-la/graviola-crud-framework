@@ -1,10 +1,11 @@
 /**
  * Remote SPARQL HTTP adapter.
  *
- * Connects to an HTTP SPARQL endpoint (Oxigraph Docker, Blazegraph, etc.).
+ * Connects to an HTTP SPARQL endpoint (Oxigraph Docker, Blazegraph, Jena Fuseki, etc.).
  * Activated by environment variables:
  *   OXIGRAPH_URL   — e.g. http://localhost:7878   (Oxigraph)
  *   BLAZEGRAPH_URL — e.g. http://localhost:9999/bigdata  (Blazegraph)
+ *   FUSEKI_URL     — e.g. http://localhost:3030/ds  (Jena Fuseki dataset base)
  *
  * Oxigraph HTTP endpoints:
  *   Query:  GET/POST ${base}/query
@@ -13,6 +14,10 @@
  * Blazegraph HTTP endpoints:
  *   Query:  POST ${base}/sparql
  *   Update: POST ${base}/sparql  (with application/sparql-update content-type)
+ *
+ * Fuseki (TDB) HTTP endpoints:
+ *   Query:  POST ${base}/sparql
+ *   Update: POST ${base}/update
  */
 import type { AbstractDatastore } from "@graviola/edb-global-types";
 import { initSPARQLStore } from "@graviola/sparql-db-impl";
@@ -35,7 +40,7 @@ type EndpointConfig = {
 
 function buildEndpointConfig(
   baseUrl: string,
-  type: "oxigraph" | "blazegraph",
+  type: "oxigraph" | "blazegraph" | "fuseki",
 ): EndpointConfig {
   const base = baseUrl.replace(/\/$/, "");
   if (type === "blazegraph") {
@@ -43,6 +48,13 @@ function buildEndpointConfig(
       queryUrl: `${base}/sparql`,
       updateUrl: `${base}/sparql`,
       flavour: "blazegraph",
+    };
+  }
+  if (type === "fuseki") {
+    return {
+      queryUrl: `${base}/sparql`,
+      updateUrl: `${base}/update`,
+      flavour: "default",
     };
   }
   return {
@@ -55,7 +67,7 @@ function buildEndpointConfig(
 export function createSparqlAdapter(
   name: string,
   baseUrl: string,
-  type: "oxigraph" | "blazegraph",
+  type: "oxigraph" | "blazegraph" | "fuseki",
 ): DatastoreAdapter {
   const cfg = buildEndpointConfig(baseUrl, type);
 
@@ -79,9 +91,8 @@ export function createSparqlAdapter(
 
     setup: async () => {
       // Verify the endpoint is reachable before running tests
-      const healthUrl = type === "blazegraph" ? cfg.queryUrl : cfg.queryUrl;
       try {
-        const res = await fetch(healthUrl, {
+        const res = await fetch(cfg.queryUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/sparql-query",

@@ -1,6 +1,7 @@
 # Docker services for datastore-tests.
 # Start all: docker compose up -d --wait
 # Then run:  OXIGRAPH_URL=http://localhost:7878 BLAZEGRAPH_URL=http://localhost:9999/bigdata \
+#            FUSEKI_URL=http://localhost:3030/ds \
 #            POSTGRES_URL=postgresql://test:test@localhost:5432/graviola_test \
 #            MARIADB_URL=mysql://test:test@localhost:3307/graviola_test \
 #            MONGODB_URL='mongodb://test:test@localhost:27017/graviola_test?authSource=admin&directConnection=true&replicaSet=rs0' \
@@ -42,6 +43,32 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
+
+  # Apache Jena Fuseki + TDB2 (`ds`). Image supplies the server; `fuseki-assembler.ttl`
+  # replaces the default SeCo assembler so the default graph is queryable without GRAPH {}
+  # (their stock config sets tdb:unionDefaultGraph true, which hides default-graph triples).
+  # SPARQL: http://localhost:3030/ds/sparql — Update: http://localhost:3030/ds/update
+  fuseki:
+    image: secoresearch/fuseki:5.5.0
+    ports:
+      - "3030:3030"
+    environment:
+      ADMIN_PASSWORD: test
+    volumes:
+      - fuseki_data:/fuseki-base/databases
+      - ./fuseki-assembler.ttl:/fuseki-base/configuration/assembler.ttl:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "wget -q --spider http://127.0.0.1:3030/$$/ping || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
 
   # ─── Relational databases ───────────────────────────────────────────────────
 
@@ -132,6 +159,7 @@ services:
       - ./mongo-keyfile:/keyfile.in:ro
 
 volumes:
+  fuseki_data:
   postgres_data:
   mariadb_data:
   mongodb_data:

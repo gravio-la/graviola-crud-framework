@@ -20,6 +20,7 @@ function skipDefaultAdaptersEnv(): boolean {
  * Opt-in via env vars:
  *   - OXIGRAPH_URL    → SPARQL/Oxigraph (Docker HTTP)
  *   - BLAZEGRAPH_URL  → SPARQL/Blazegraph (Docker HTTP)
+ *   - FUSEKI_URL      → SPARQL/Jena Fuseki TDB (Docker HTTP; dataset base, e.g. …/ds)
  *   - SQLITE_URL      → Prisma/SQLite (with SKIP_DEFAULT_ADAPTER, must be set explicitly to include SQLite)
  *   - POSTGRES_URL    → Prisma/PostgreSQL
  *   - MARIADB_URL     → Prisma/MariaDB
@@ -30,7 +31,7 @@ function skipDefaultAdaptersEnv(): boolean {
  *   To include Prisma/SQLite in that mode, set SQLITE_URL explicitly.
  *
  * Example — run with all SPARQL backends:
- *   OXIGRAPH_URL=http://localhost:7878 BLAZEGRAPH_URL=http://localhost:9999/bigdata bun test
+ *   OXIGRAPH_URL=http://localhost:7878 BLAZEGRAPH_URL=http://localhost:9999/bigdata FUSEKI_URL=http://localhost:3030/ds bun test
  *
  * Example — SQLite Prisma (schema is generated on first Prisma adapter setup):
  *   SQLITE_URL=file:./prisma/test.db bun test
@@ -64,6 +65,16 @@ export async function getActiveAdapters(): Promise<DatastoreAdapter[]> {
         "SPARQL/Blazegraph (Docker)",
         process.env.BLAZEGRAPH_URL,
         "blazegraph",
+      ),
+    );
+  }
+
+  if (process.env.FUSEKI_URL) {
+    adapters.push(
+      createSparqlAdapter(
+        "SPARQL/Jena Fuseki (Docker)",
+        process.env.FUSEKI_URL,
+        "fuseki",
       ),
     );
   }

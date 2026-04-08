@@ -173,6 +173,7 @@ const propertiesToSPARQLSelectPatterns = (
               true,
             );
           const typeVariable = makeVariable([...subPath, "type"]);
+          const typeSampleAlias = makeVariable([...subPath, "rdf_type"]);
           const typeName = subSchema.$ref.substring(
             subSchema.$ref.lastIndexOf("/") + 1,
             subSchema.$ref.length,
@@ -187,9 +188,11 @@ const propertiesToSPARQLSelectPatterns = (
                 ...subPath,
                 `${key}_all`,
               ]);
-              const primarySingleVariable = makeVariable([...subPath, key]);
+              // Alias must not reuse the same name as inner row variables (e.g. ?category_name) or
+              // strict SPARQL engines (Jena) reject: "Variable used when already in-scope".
+              const primaryAggAlias = makeVariable([...subPath, key, "pri"]);
               primaryInfoWhere += `OPTIONAL { ${variable} ${makePrefixedProperty(value)} ${primaryMultiVariable} . } `;
-              select += ` (SAMPLE(${primaryMultiVariable}) AS ${primarySingleVariable}) `;
+              select += ` (SAMPLE(${primaryMultiVariable}) AS ${primaryAggAlias}) `;
             });
           }
           if (subSchema["x-inverseOf"]) {
@@ -211,7 +214,7 @@ const propertiesToSPARQLSelectPatterns = (
               isRequired,
             );
           }
-          select += ` (SAMPLE(${variable}) AS ${variable}_IRI) (SAMPLE(${typeVariable}) AS ${typeVariable}) `;
+          select += ` (SAMPLE(${variable}) AS ${variable}_IRI) (SAMPLE(${typeVariable}) AS ${typeSampleAlias}) `;
           select += subSelect;
         }
       }

@@ -57,6 +57,7 @@ Alternatively, run `nix develop .#prisma6` or `nix develop`, then `cd apps/datas
 | `MONGODB_URL`          | Enables **Prisma/MongoDB** (Prisma 6.x here). For local Docker, add **`replicaSet=rs0`** and usually **`directConnection=true`** (see [MongoDB notes](#mongodb-notes)). |
 | `OXIGRAPH_URL`         | SPARQL over HTTP against Oxigraph (e.g. `http://localhost:7878`).                                                                                                       |
 | `BLAZEGRAPH_URL`       | SPARQL over HTTP against Blazegraph (e.g. `http://localhost:9999/bigdata`).                                                                                             |
+| `FUSEKI_URL`           | SPARQL over HTTP against Jena Fuseki with a TDB-backed dataset; value is the **dataset base** (e.g. `http://localhost:3030/ds` — not `/ds/sparql`).                     |
 
 `DATABASE_URL` is set internally by Prisma setup from the adapter URL; you normally do not set it yourself for tests.
 
@@ -83,6 +84,14 @@ Only MariaDB Prisma (after `docker compose up` for `mariadb`):
 ```bash
 SKIP_DEFAULT_ADAPTER=1 MARIADB_URL='mysql://test:test@localhost:3307/graviola_test' bun test
 ```
+
+Jena Fuseki (after `docker compose up` for `fuseki`):
+
+```bash
+FUSEKI_URL=http://localhost:3030/ds bun test
+```
+
+The `fuseki` service mounts [`fuseki-assembler.ttl`](fuseki-assembler.ttl) so TDB2 uses a normal default graph (the stock SeCo image’s assembler sets `unionDefaultGraph`, which hides triples from plain `SELECT`/`CONSTRUCT`).
 
 Docker URLs for this repo’s `docker-compose.yml` are summarized at the top of that file.
 
