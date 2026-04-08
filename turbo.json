@@ -2,16 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [".env"],
   "tasks": {
-    "storybook": {
-      "dependsOn": ["^build:packages"]
-    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
-    },
-    "build:pages": {
-      "dependsOn": ["^build"],
-      "outputs": ["_site"]
     },
     "dev:api": {},
     "build:watch": {},
@@ -31,11 +24,6 @@
     "dev": {
       "cache": false,
       "persistent": true
-    },
-    "depcheck": {
-      "outputs": ["reports/**"],
-      "cache": false,
-      "persistent": false
     }
   }
 }

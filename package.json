@@ -1,67 +1,41 @@
 {
-  "name": "@graviola/edb-crud",
+  "name": "@slub/exhibition-monorepo",
   "version": "0.1.0",
-  "description": "monorepo of the Graviola CRUD project",
+  "description": "SLUB exhibition and kulinarik manifestations plus exhibition-live, edb-api, and edb-cli (depends on @graviola packages from npm and vendor tarballs)",
   "main": "index.js",
   "author": "Sebastian Tilsch <graviola@sebastian-tilsch.de>",
   "keywords": [
     "jsonforms",
-    "form",
-    "forms",
     "semantic",
     "rdf",
-    "schema",
-    "jsonschema",
-    "jsonld",
-    "frontend",
-    "oxigraph",
-    "database",
-    "knowledge-base",
-    "library-institution",
+    "exhibition",
     "slub",
     "slub-dresden"
   ],
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "turbo run demo",
     "build": "turbo run build",
-    "build:packages": "turbo run build --filter='./packages/**/*' --continue",
     "build:manifestations": "turbo run build --filter='./manifestation/*' --continue",
-    "build:pages": "turbo run build:pages",
     "cli": "bun ./apps/edb-cli/src/index.ts",
     "dev": "turbo run dev --parallel",
     "dev:api": "turbo run dev:api",
     "dev:exhibition": "turbo run dev --parallel --filter='./apps/exhibition-live'",
     "dev:vite": "turbo run dev:vite --parallel --filter='./apps/exhibition-live'",
-    "dev:packages": "turbo run dev --parallel --filter='./packages/*'",
-    "dev:form-renderer": "turbo run dev --parallel --filter='./packages/form-renderer/*'",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "docs": "bunx typedoc",
     "lint:fix": "turbo run lint:fix",
     "format": "prettier --write \"**/*.{js,ts,tsx,jsx,md}\"",
     "prepare": "[ \"$CI\" != \"true\" ] && husky install || echo \"Skipping husky install in CI environment\"",
     "precommit": "lint-staged",
-    "changeset:init": "changeset init",
-    "changeset": "changeset",
-    "release": "turbo run release --continue --concurrency 1",
-    "helper:deps": "bun ./packages/build-helper/get-dependencies.js",
+    "vendor:pack-graviola": "bash ./scripts/pack-vendor-packages.sh",
     "build:prisma": "turbo run build:prisma && sed -i \"s/env(\\\"DATABASE_PROVIDER\\\")/\\\"${DATABASE_PROVIDER:-sqlite}\\\"/g\" ./prisma/*.prisma",
     "prisma:exhibition:generate": "prisma generate --schema ./prisma/exhibition.prisma",
     "prisma:exhibition:migrate": "prisma migrate dev --schema ./prisma/exhibition.prisma",
-    "purge": "rm -rf node_modules && find -maxdepth 3 -name node_modules | xargs rm -rf",
-    "syncpack:mismatches": "syncpack list-mismatches --types prod",
-    "depcheck": "turbo run depcheck --filter='./packages/*' --continue"
+    "purge": "rm -rf node_modules && find -maxdepth 3 -name node_modules | xargs rm -rf"
   },
   "workspaces": {
-    "packages": [
-      "packages/*",
-      "packages/ideas/*",
-      "packages/form-renderer/*",
-      "manifestation/*",
-      "apps/*"
-    ],
+    "packages": ["manifestation/*", "apps/*"],
     "catalog": {
       "react": "^19",
       "react-dom": "^19.0.0",
@@ -98,16 +72,11 @@
     }
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.12",
     "@turbo/gen": "^2.4.0",
-    "depcheck": "^1.4.7",
-    "dependency-cruiser": "^16.10.0",
     "eslint": "^8.57.1",
     "husky": "^8.0.0",
-    "hygen": "^6.2.11",
     "lint-staged": "^15.4.3",
     "prettier": "^3.4.2",
-    "syncpack": "^13.0.2",
     "tsup": "^8.3.6",
     "turbo": "^2.4.0",
     "typescript": "5.8.2"
@@ -117,8 +86,6 @@
   },
   "packageManager": "bun@1.3.10",
   "lint-staged": {
-    "*.{js,ts,jsx,tsx,md}": [
-      "prettier --write --ignore-unknown"
-    ]
+    "*.{js,ts,jsx,tsx,md}": ["prettier --write --ignore-unknown"]
   }
 }

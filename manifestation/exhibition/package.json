@@ -24,17 +24,21 @@
   },
   "devDependencies": {
     "@types/rdfjs__namespace": "^2.0.8",
-    "@graviola/json-schema-prisma-utils": "workspace:*",
-    "@graviola/edb-build-helper": "workspace:*",
-    "@graviola/edb-data-mapping": "workspace:*",
-    "@graviola/edb-core-types": "workspace:*",
+    "@graviola/edb-tsconfig": "file:../../vendor/graviola-packs/graviola-edb-tsconfig-0.1.0.tgz",
+    "@graviola/edb-tsup-config": "file:../../vendor/graviola-packs/graviola-edb-tsup-config-1.1.0.tgz",
+    "@graviola/json-schema-utils": "^1.4.1",
+    "@graviola/json-schema-prisma-utils": "^1.2.8",
+    "@graviola/edb-build-helper": "file:../../vendor/graviola-packs/graviola-edb-build-helper-0.4.4.tgz",
+    "@graviola/edb-data-mapping": "^0.2.7",
+    "@graviola/edb-core-types": "^1.3.0",
     "@adobe/jsonschema2md": "^7.1.5",
     "schema2typebox": "^1.7.5",
-    "@types/json-schema": "catalog:"
+    "@types/json-schema": "catalog:",
+    "tsup": "^8.5.1"
   },
   "dependencies": {
     "@rdfjs/namespace": "catalog:rdf",
-    "@graviola/edb-wikidata-utils": "workspace:*",
-    "@graviola/edb-authorities": "workspace:*"
+    "@graviola/edb-wikidata-utils": "^1.1.0",
+    "@graviola/edb-authorities": "^0.2.4"
   }
 }

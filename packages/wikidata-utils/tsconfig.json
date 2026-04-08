@@ -1,9 +1,0 @@
-{
-  "extends": "@graviola/edb-tsconfig/base.json",
-  "include": ["."],
-  "exclude": ["dist", "build", "node_modules"],
-  "compilerOptions": {
-    "strictNullChecks": false,
-    "resolveJsonModule": true
-  }
-}
