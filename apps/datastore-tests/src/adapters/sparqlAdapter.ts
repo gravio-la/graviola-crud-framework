@@ -1,11 +1,12 @@
 /**
  * Remote SPARQL HTTP adapter.
  *
- * Connects to an HTTP SPARQL endpoint (Oxigraph Docker, Blazegraph, Jena Fuseki, etc.).
+ * Connects to an HTTP SPARQL endpoint (Oxigraph Docker, Blazegraph, Jena Fuseki, OpenLink Virtuoso, etc.).
  * Activated by environment variables:
  *   OXIGRAPH_URL   — e.g. http://localhost:7878   (Oxigraph)
  *   BLAZEGRAPH_URL — e.g. http://localhost:9999/bigdata  (Blazegraph)
  *   FUSEKI_URL     — e.g. http://localhost:3030/ds  (Jena Fuseki dataset base)
+ *   VIRTUOSO_URL   — e.g. http://localhost:8890  (OpenLink Virtuoso; see VIRTUOSO_* below)
  *
  * Oxigraph HTTP endpoints:
  *   Query:  GET/POST ${base}/query
@@ -18,11 +19,20 @@
  * Fuseki (TDB) HTTP endpoints:
  *   Query:  POST ${base}/sparql
  *   Update: POST ${base}/update
+ *
+ * Virtuoso HTTP endpoints (default SPARQL flavour, `default-graph-uri` on all requests):
+ *   Query:  POST ${base}/sparql?default-graph-uri=...
+ *   Update: POST ${base}/sparql-auth?default-graph-uri=...  (HTTP Digest: VIRTUOSO_USER / VIRTUOSO_PASSWORD)
  */
+import type { AuthConfig, SPARQLFlavour } from "@graviola/edb-core-types";
 import type { AbstractDatastore } from "@graviola/edb-global-types";
 import { initSPARQLStore } from "@graviola/sparql-db-impl";
-import type { SPARQLFlavour } from "@graviola/edb-core-types";
-import { createHttpSparqlCrudFunctions } from "@graviola/remote-query-implementations";
+import {
+  type HttpFetchFn,
+  applySparqlUrlSearchParams,
+  createHttpSparqlCrudFunctions,
+  sparqlUpdateHttp,
+} from "@graviola/remote-query-implementations";
 
 import {
   rawTestSchema,
@@ -31,16 +41,30 @@ import {
   BASE_IRI,
 } from "../schema/testSchema";
 import type { DatastoreAdapter } from "../types";
+import { createVirtuosoDigestFetch } from "./virtuosoDigestFetch";
 
 type EndpointConfig = {
   queryUrl: string;
   updateUrl: string;
   flavour: SPARQLFlavour;
+  auth?: AuthConfig;
+  urlSearchParams?: Record<string, string>;
+  customFetch?: HttpFetchFn;
+};
+
+export type SparqlAdapterOptions = {
+  sparqlFlavour?: SPARQLFlavour;
+  /** Virtuoso: named graph IRI (`default-graph-uri` query parameter). */
+  defaultGraph?: string;
+  /** Virtuoso: Digest credentials for `/sparql-auth`. */
+  username?: string;
+  password?: string;
 };
 
 function buildEndpointConfig(
   baseUrl: string,
-  type: "oxigraph" | "blazegraph" | "fuseki",
+  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso",
+  opts?: SparqlAdapterOptions,
 ): EndpointConfig {
   const base = baseUrl.replace(/\/$/, "");
   if (type === "blazegraph") {
@@ -57,6 +81,18 @@ function buildEndpointConfig(
       flavour: "default",
     };
   }
+  if (type === "virtuoso") {
+    const graph = opts?.defaultGraph ?? "urn:default";
+    const user = opts?.username ?? "dba";
+    const pass = opts?.password ?? "dba";
+    return {
+      queryUrl: `${base}/sparql`,
+      updateUrl: `${base}/sparql-auth`,
+      flavour: "default",
+      urlSearchParams: { "default-graph-uri": graph },
+      customFetch: createVirtuosoDigestFetch(user, pass),
+    };
+  }
   return {
     queryUrl: `${base}/query`,
     updateUrl: `${base}/update`,
@@ -67,11 +103,19 @@ function buildEndpointConfig(
 export function createSparqlAdapter(
   name: string,
   baseUrl: string,
-  type: "oxigraph" | "blazegraph" | "fuseki",
-  opts?: { sparqlFlavour?: SPARQLFlavour },
+  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso",
+  opts?: SparqlAdapterOptions,
 ): DatastoreAdapter {
-  const cfg = buildEndpointConfig(baseUrl, type);
+  const cfg = buildEndpointConfig(baseUrl, type, opts);
   const flavour = opts?.sparqlFlavour ?? cfg.flavour;
+
+  const crudOptions = {
+    queryUrl: cfg.queryUrl,
+    updateUrl: cfg.updateUrl,
+    auth: cfg.auth,
+    urlSearchParams: cfg.urlSearchParams,
+    customFetch: cfg.customFetch,
+  };
 
   return {
     name,
@@ -94,7 +138,11 @@ export function createSparqlAdapter(
     setup: async () => {
       // Verify the endpoint is reachable before running tests
       try {
-        const res = await fetch(cfg.queryUrl, {
+        const healthUrl = applySparqlUrlSearchParams(
+          cfg.queryUrl,
+          cfg.urlSearchParams,
+        );
+        const res = await fetch(healthUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/sparql-query",
@@ -112,10 +160,7 @@ export function createSparqlAdapter(
         );
       }
 
-      const crudFunctions = createHttpSparqlCrudFunctions({
-        queryUrl: cfg.queryUrl,
-        updateUrl: cfg.updateUrl,
-      });
+      const crudFunctions = createHttpSparqlCrudFunctions(crudOptions);
 
       return initSPARQLStore({
         schema: rawTestSchema as any,
@@ -132,16 +177,7 @@ export function createSparqlAdapter(
     },
 
     clearAll: async (_store: AbstractDatastore) => {
-      const res = await fetch(cfg.updateUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/sparql-update" },
-        body: "CLEAR ALL",
-      });
-      if (!res.ok) {
-        throw new Error(
-          `CLEAR ALL failed (${res.status}): ${await res.text()}`,
-        );
-      }
+      await sparqlUpdateHttp(crudOptions, "CLEAR ALL");
     },
 
     teardown: async () => {

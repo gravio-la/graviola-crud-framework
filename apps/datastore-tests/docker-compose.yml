@@ -1,7 +1,7 @@
 # Docker services for datastore-tests.
 # Start all: docker compose up -d --wait
 # Then run:  OXIGRAPH_URL=http://localhost:7878 BLAZEGRAPH_URL=http://localhost:9999/bigdata \
-#            FUSEKI_URL=http://localhost:3030/ds \
+#            FUSEKI_URL=http://localhost:3030/ds VIRTUOSO_URL=http://localhost:8890 \
 #            POSTGRES_URL=postgresql://test:test@localhost:5432/graviola_test \
 #            MARIADB_URL=mysql://test:test@localhost:3307/graviola_test \
 #            MONGODB_URL='mongodb://test:test@localhost:27017/graviola_test?authSource=admin&directConnection=true&replicaSet=rs0' \
@@ -69,6 +69,34 @@ services:
       timeout: 5s
       retries: 20
       start_period: 15s
+
+  # OpenLink Virtuoso — query: /sparql, authenticated update: /sparql-auth (Digest).
+  # Tests pass `default-graph-uri` on every request (VIRTUOSO_DEFAULT_GRAPH, default urn:default).
+  virtuoso:
+    image: openlink/virtuoso-opensource-7:latest
+    platform: linux/amd64
+    environment:
+      DBA_PASSWORD: dba
+      VIRT_Parameters_DirsAllowed: "., ../vad, /usr/share/proj"
+      VIRT_SPARQL_ResultSetMaxRows: 1000000
+      VIRT_SPARQL_MaxQueryCostEstimationTime: 0
+      VIRT_SPARQL_MaxQueryExecutionTime: 0
+    ports:
+      - "8890:8890"
+    volumes:
+      - virtuoso_data:/database
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "wget -q --spider http://127.0.0.1:8890/sparql || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
 
   # ─── Relational databases ───────────────────────────────────────────────────
 
@@ -160,6 +188,7 @@ services:
 
 volumes:
   fuseki_data:
+  virtuoso_data:
   postgres_data:
   mariadb_data:
   mongodb_data:

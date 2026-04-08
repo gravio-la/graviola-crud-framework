@@ -12,6 +12,7 @@
  *   OXIGRAPH_URL=http://localhost:7878    → SPARQL/Oxigraph (Docker)
  *   BLAZEGRAPH_URL=http://localhost:9999/bigdata  → SPARQL/Blazegraph (Docker)
  *   FUSEKI_URL=http://localhost:3030/ds   → SPARQL/Jena Fuseki TDB (Docker)
+ *   VIRTUOSO_URL=http://localhost:8890    → SPARQL/OpenLink Virtuoso (Docker; optional VIRTUOSO_DEFAULT_GRAPH, VIRTUOSO_USER, VIRTUOSO_PASSWORD)
  *   POSTGRES_URL=postgresql://...        → Prisma/PostgreSQL
  *   MARIADB_URL=mysql://...              → Prisma/MariaDB
  *   MONGODB_URL=mongodb://...            → Prisma/MongoDB (Docker single-node RS: add
