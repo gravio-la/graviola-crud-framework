@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "@ebay/nice-modal-react": "^1.2.13",
+    "@graviola/edb-core-types": "workspace:*",
     "@graviola/edb-advanced-components": "workspace:*",
     "@graviola/edb-basic-components": "workspace:*",
     "@graviola/edb-core-utils": "workspace:*",
