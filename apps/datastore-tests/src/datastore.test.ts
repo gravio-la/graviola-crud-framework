@@ -39,6 +39,7 @@ import { runImportSuite } from "./suites/import.suite";
 import { runClassesSuite } from "./suites/classes.suite";
 import { runIterableSuite } from "./suites/iterable.suite";
 import { runFindByLabelSuite } from "./suites/findByLabel.suite";
+import { runTypedFilterSuite } from "./suites/typedFilter.suite";
 
 // ─── Adapter loop ─────────────────────────────────────────────────────────────
 // Top-level await is supported in bun:test — adapters are resolved before
@@ -97,6 +98,10 @@ for (const adapter of adapters) {
 
     if (adapter.capabilities.findDocumentsByLabel) {
       runFindByLabelSuite(() => store);
+    }
+
+    if (adapter.capabilities.filterTyped) {
+      runTypedFilterSuite(() => store);
     }
   });
 }
