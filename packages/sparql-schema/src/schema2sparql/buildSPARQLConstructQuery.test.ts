@@ -110,6 +110,6 @@ describe("buildCompleteSPARQLQuery", () => {
     expect(query).toContain("VALUES ?subject");
     expect(query).toContain("<http://example.com/person/1>");
     expect(query).toMatch(/\?subject :friends \?friends_\d+ \./);
-    expect(query).toMatch(/OPTIONAL \{ \?friends_\d+ :name \?name \. \}/);
+    expect(query).toMatch(/OPTIONAL \{ \?friends_\d+ :name \?name_\d+ \. \}/);
   });
 });

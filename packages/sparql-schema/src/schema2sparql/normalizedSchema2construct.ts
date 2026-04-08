@@ -47,6 +47,8 @@ export type QueryConstructionContext = {
   schema: NormalizedSchema;
   /** Filter options (select, include, omit, where) carried through recursion */
   filterOptions: GraphTraversalFilterOptions;
+  /** SPARQL dialect for BIND/VALUES and filter generation */
+  flavour: SPARQLFlavour;
   /** Prefix mappings for property names */
   prefixMap: Prefixes;
   /** Current recursion depth */
@@ -246,6 +248,116 @@ function extractNestedFilterOptions(
 }
 
 /**
+ * True if this include value or any nested `include` subtree has a `where` clause.
+ * Used to promote the relationship traversal to a required WHERE spine (not OPTIONAL),
+ * so filters actually constrain the solution set instead of living only inside OPTIONAL.
+ */
+function hasFilterInSubtree(includeValue: unknown): boolean {
+  if (typeof includeValue !== "object" || includeValue === null) {
+    return false;
+  }
+  if ("where" in includeValue) {
+    return true;
+  }
+  const nested = (includeValue as NestedFilterOptions).include;
+  if (!nested || typeof nested !== "object") {
+    return false;
+  }
+  return Object.values(nested).some((v) => hasFilterInSubtree(v));
+}
+
+/**
+ * Keys that `filterToSparql` interprets as operators at the top level — not Prisma field names.
+ */
+const FILTER_WHERE_TOP_LEVEL_OPERATORS = new Set([
+  "equals",
+  "not",
+  "in",
+  "notIn",
+  "gt",
+  "gte",
+  "lt",
+  "lte",
+  "contains",
+  "startsWith",
+  "endsWith",
+  "some",
+  "every",
+  "none",
+  "AND",
+  "OR",
+  "NOT",
+  "mode",
+]);
+
+/**
+ * True for a single operator bag (`{ gte: 21 }`, `{ AND: [...] }`), false for
+ * Prisma-style object filters (`{ age: { gte: 21 }, email: { contains: "x" } }`).
+ */
+function isOperatorOnlyWhereClause(where: Record<string, unknown>): boolean {
+  const keys = Object.keys(where);
+  if (keys.length === 0) {
+    return true;
+  }
+  return keys.every((k) => FILTER_WHERE_TOP_LEVEL_OPERATORS.has(k));
+}
+
+/**
+ * Apply `include.<rel>.where` when it lists fields of the related item (same shape as top-level `where`).
+ */
+function applyFieldKeyedIncludeWhere(
+  whereClause: Record<string, unknown>,
+  relatedSubjectVar: Variable,
+  itemSchema: JSONSchema7,
+  ctx: QueryConstructionContext,
+  flavour: SPARQLFlavour,
+): { patterns: SparqlTemplateResult[]; filters: SparqlTemplateResult[] } {
+  const patterns: SparqlTemplateResult[] = [];
+  const filters: SparqlTemplateResult[] = [];
+  const itemProps =
+    itemSchema.type === "object" && itemSchema.properties
+      ? itemSchema.properties
+      : {};
+
+  for (const [fieldName, fieldFilter] of Object.entries(whereClause)) {
+    if (FILTER_WHERE_TOP_LEVEL_OPERATORS.has(fieldName)) {
+      continue;
+    }
+
+    const nestedPred = createPredicate(fieldName, ctx.prefixMap);
+    const nestedVar = createUniqueVar(fieldName, ctx);
+    const nestedPropSchema = itemProps[fieldName];
+    const nestedSchemaType =
+      nestedPropSchema &&
+      typeof nestedPropSchema === "object" &&
+      nestedPropSchema !== null
+        ? (nestedPropSchema as JSONSchema7).type
+        : undefined;
+
+    const nestedFilterContext: FilterContext = {
+      subject: relatedSubjectVar,
+      property: fieldName,
+      propertyVar: nestedVar,
+      predicateNode: nestedPred,
+      schemaType: nestedSchemaType as string | undefined,
+      prefixMap: ctx.prefixMap,
+      flavour,
+      depth: ctx.depth,
+      schema:
+        nestedPropSchema && typeof nestedPropSchema === "object"
+          ? (nestedPropSchema as JSONSchema7)
+          : undefined,
+    };
+
+    const filterResult = filterToSparql(fieldFilter, nestedFilterContext);
+    patterns.push(...filterResult.patterns);
+    filters.push(...filterResult.filters);
+  }
+
+  return { patterns, filters };
+}
+
+/**
  * Build nested query construction context with filter options
  * Increments depth and applies nested filter options
  */
@@ -411,6 +523,7 @@ export function normalizedSchema2construct(
   const ctx: QueryConstructionContext = {
     schema: normalizedSchema,
     filterOptions: options?.filterOptions || {},
+    flavour: options?.flavour || "default",
     prefixMap: options?.prefixMap || {},
     depth: 0,
     maxRecursion: options?.maxRecursion || 4,
@@ -525,7 +638,7 @@ export function normalizedSchema2construct(
                 ? ((propertySchema as JSONSchema7).type as string)
                 : undefined,
             prefixMap: ctx.prefixMap,
-            flavour: options?.flavour || "default",
+            flavour: ctx.flavour,
             depth: ctx.depth,
             schema:
               typeof propertySchema !== "boolean"
@@ -699,26 +812,39 @@ function createPropertyPatterns(
 
     // Apply WHERE filters for relationship filtering
     if (whereClause && typeof whereClause === "object") {
-      const filterContext: FilterContext = {
-        subject: subject,
-        property: propertyName,
-        propertyVar: objectVar,
-        predicateNode: predicate,
-        schemaType:
-          typeof itemSchema !== "boolean"
-            ? (itemSchema.type as string)
-            : undefined,
-        prefixMap: ctx.prefixMap,
-        flavour: "default", // Use default flavour for filters
-        depth: ctx.depth,
-        schema: typeof itemSchema !== "boolean" ? itemSchema : undefined,
-      };
+      const flavour = ctx.flavour;
 
-      const filterResult = filterToSparql(whereClause, filterContext);
+      if (isOperatorOnlyWhereClause(whereClause as Record<string, unknown>)) {
+        const filterContext: FilterContext = {
+          subject: subject,
+          property: propertyName,
+          propertyVar: objectVar,
+          predicateNode: predicate,
+          schemaType:
+            typeof itemSchema !== "boolean"
+              ? (itemSchema.type as string)
+              : undefined,
+          prefixMap: ctx.prefixMap,
+          flavour,
+          depth: ctx.depth,
+          schema: typeof itemSchema !== "boolean" ? itemSchema : undefined,
+        };
 
-      // Add filter patterns to relationship patterns
-      relationshipPatterns.push(...filterResult.patterns);
-      relationshipPatterns.push(...filterResult.filters);
+        const filterResult = filterToSparql(whereClause, filterContext);
+        relationshipPatterns.push(...filterResult.patterns);
+        relationshipPatterns.push(...filterResult.filters);
+      } else if (typeof itemSchema !== "boolean") {
+        const { patterns: fieldPatterns, filters: fieldFilters } =
+          applyFieldKeyedIncludeWhere(
+            whereClause as Record<string, unknown>,
+            objectVar,
+            itemSchema as JSONSchema7,
+            ctx,
+            flavour,
+          );
+        relationshipPatterns.push(...fieldPatterns);
+        relationshipPatterns.push(...fieldFilters);
+      }
     }
 
     // Build nested structure for array items
@@ -738,9 +864,12 @@ function createPropertyPatterns(
     }
     // For array of primitives, no further recursion needed
 
+    const hasFilterAnywhere =
+      whereClause !== undefined || hasFilterInSubtree(includeValue);
+
     // Create WHERE part with proper nesting
     const wherePart: WherePart = {
-      required: isRequired,
+      required: isRequired || hasFilterAnywhere,
       whereTemplates: relationshipPatterns,
       children: nestedWhereParts.length > 0 ? nestedWhereParts : undefined,
     };

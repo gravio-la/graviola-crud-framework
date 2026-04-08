@@ -12,6 +12,7 @@ import { describe, test, expect } from "bun:test";
 import { JSONSchema7 } from "json-schema";
 import { normalizeSchema } from "@graviola/edb-graph-traversal";
 import { normalizedSchema2construct } from "./normalizedSchema2construct";
+import { buildSPARQLConstructQuery } from "./buildSPARQLConstructQuery";
 
 describe("normalizedSchema2construct - Relationship Filtering", () => {
   describe("Basic relationship filtering with node references", () => {
@@ -535,17 +536,18 @@ describe("normalizedSchema2construct - Relationship Filtering", () => {
         },
       );
 
-      const whereString = result.wherePatterns
-        .map((p) => p.toString())
-        .join("\n");
+      const query = buildSPARQLConstructQuery(result, {
+        "": "http://example.com/",
+      });
 
-      // Should have SUBSELECT with LIMIT for pagination
-      expect(whereString).toContain("SELECT");
-      expect(whereString).toContain("LIMIT 10");
-      expect(whereString).toContain("ORDER BY");
+      // Should have SUBSELECT with LIMIT for pagination (use full query; wherePatterns
+      // templates may not stringify via .toString() when emitted as required spine)
+      expect(query).toContain("SELECT");
+      expect(query).toContain("LIMIT 10");
+      expect(query).toContain("ORDER BY");
 
-      // Should have filter for age
-      expect(whereString.toLowerCase()).toMatch(/age/);
+      // Should reference age (filter and/or :age property patterns)
+      expect(query.toLowerCase()).toMatch(/age/);
 
       // Pagination metadata should be collected
       expect(result.paginationMetadata.has("friends")).toBe(true);

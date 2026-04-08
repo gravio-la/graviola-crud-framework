@@ -80,6 +80,30 @@ const personJSONSchema: JSONSchema7 = {
   },
 };
 
+/** Person with recursively nested `friends` (for deep include / where tests). */
+const recursiveFriendPersonJSONSchema: JSONSchema7 = {
+  type: "object",
+  $defs: {
+    PersonNode: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        friends: {
+          type: "array",
+          items: { $ref: "#/$defs/PersonNode" },
+        },
+      },
+    },
+  },
+  properties: {
+    name: { type: "string" },
+    friends: {
+      type: "array",
+      items: { $ref: "#/$defs/PersonNode" },
+    },
+  },
+};
+
 const BlogPostSchema = z.object({
   title: z.string(),
   content: z.string(),
@@ -263,6 +287,7 @@ describe("buildTypedSPARQLQuery - WHERE Filters", () => {
   it("should generate query with numeric range filters", () => {
     const result = buildTypedSPARQLQuery<Person>(
       "http://example.com/person/1",
+      undefined,
       personJSONSchema,
       {
         where: {
@@ -666,7 +691,6 @@ describe("buildTypedSPARQLQuery - Real-World Use Cases", () => {
     expect(result.query).toContain(":name");
     expect(result.query).toContain(":age");
     expect(result.query).toContain(":email");
-    console.log(result.query);
     // Demonstrates combining WHERE filters on the main entity
     // with deeply nested include patterns (friends.include with multiple fields
     // including nested arrays like superPowers)
@@ -675,7 +699,7 @@ describe("buildTypedSPARQLQuery - Real-World Use Cases", () => {
   it("should build query with deeply nested where and include patterns", () => {
     const result = buildTypedSPARQLQuery<Person>(
       "http://example.com/person/1",
-      undefined,
+      "http://example.com/Person",
       personJSONSchema,
       {
         select: { name: true, email: true, friends: true },
@@ -711,6 +735,84 @@ describe("buildTypedSPARQLQuery - Real-World Use Cases", () => {
     // Demonstrates true nested filtering: top-level WHERE filters the Person,
     // while friends.where filters which friends are included (age 21-40, email contains @example.com)
   });
+
+  it("should recurse four levels of friends and filter the innermost by name (required spine)", () => {
+    const result = buildTypedSPARQLQuery<any>(
+      "http://example.com/person/1",
+      undefined,
+      recursiveFriendPersonJSONSchema,
+      {
+        maxRecursion: 8,
+        select: { name: true, friends: true },
+        include: {
+          friends: {
+            include: {
+              friends: {
+                include: {
+                  friends: {
+                    include: {
+                      friends: {
+                        where: {
+                          name: { contains: "Ghandi" },
+                        },
+                        include: {
+                          name: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        filterValidationMode: "warn",
+        prefixMap: { "": "http://example.com/" },
+      },
+    );
+
+    expect(result.query).toBeDefined();
+    expect(result.query).toContain("CONSTRUCT");
+    expect(result.query).toContain("Ghandi");
+    expect(result.query).toMatch(/:friends/);
+    expect(result.query).toMatch(/:name/);
+    expect(result.query).toMatch(/FILTER|CONTAINS|REGEX/);
+
+    // Include where: path to the filter must be a required spine (not wrapped in OPTIONAL),
+    // otherwise filters would not constrain the solution set.
+    expect(result.query).not.toContain("OPTIONAL { ?subject :friends");
+    expect(result.query).not.toContain("OPTIONAL { ?friends_1 :friends");
+    expect(result.query).not.toContain("OPTIONAL { ?friends_4 :friends");
+    expect(result.query).not.toContain("OPTIONAL { ?friends_7 :friends");
+    expect(result.query).toMatch(
+      /\?friends_7 :friends \?friends_\d+ \.\s*\n\?friends_\d+ :name \?name_\d+ \.\s*\nFILTER/,
+    );
+  });
+
+  it("should promote include spine when filtering nested include without a bound subject IRI", () => {
+    const result = buildTypedSPARQLQuery<Person>(
+      undefined,
+      undefined,
+      personJSONSchema,
+      {
+        select: { friends: true },
+        include: {
+          friends: {
+            where: {
+              name: { contains: "NestedFilter" },
+            },
+            include: { name: true },
+          },
+        },
+        filterValidationMode: "warn",
+        prefixMap: { "": "http://example.com/" },
+      },
+    );
+
+    expect(result.query).toContain("CONSTRUCT");
+    expect(result.query).toContain("NestedFilter");
+    expect(result.query).not.toContain("OPTIONAL { ?subject :friends");
+  });
 });
 
 describe("buildTypedSPARQLQuery - Edge Cases", () => {
@@ -731,6 +833,7 @@ describe("buildTypedSPARQLQuery - Edge Cases", () => {
   it("should handle query with only pagination", () => {
     const result = buildTypedSPARQLQuery<Person>(
       "http://example.com/person/1",
+      undefined,
       personJSONSchema,
       {
         include: {
