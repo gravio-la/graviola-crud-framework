@@ -4,10 +4,10 @@ import {
   prepareStubbedSchema,
 } from "@graviola/json-schema-utils";
 import { cleanJSONLD } from "@graviola/jsonld-utils";
-import { PrismaClient } from "@prisma/client";
 import type { JSONSchema7 } from "json-schema";
 
 import { save } from "./save";
+import type { AbstractPrismaClient } from "./types";
 
 function logTree(message: string, debug: boolean, depth: number = 0) {
   if (!debug) return;
@@ -16,8 +16,10 @@ function logTree(message: string, debug: boolean, depth: number = 0) {
   console.log(`${indent}${depth > 0 ? "└─ " : ""}${message}`);
 }
 
-export interface UpsertOptions {
-  prisma: PrismaClient;
+export interface UpsertOptions<
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+> {
+  prisma: TPrisma;
   schema: JSONSchema7;
   defaultPrefix: string;
   jsonldContext?: any;
@@ -37,10 +39,12 @@ interface NestedElement {
   depth: number;
 }
 
-async function cleanAndSave(
+async function cleanAndSave<
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   typeName: string,
   doc: any,
-  prisma: PrismaClient,
+  prisma: TPrisma,
   error: Set<string>,
   options: {
     schema: JSONSchema7;
@@ -140,9 +144,11 @@ function collectNestedElements(
   return elements;
 }
 
-async function createNestedElements(
+async function createNestedElements<
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   doc: any,
-  prisma: PrismaClient,
+  prisma: TPrisma,
   error: Set<string>,
   options: {
     schema: JSONSchema7;
@@ -193,11 +199,9 @@ async function createNestedElements(
   }
 }
 
-export async function upsert(
-  typeName: string,
-  doc: any,
-  options: UpsertOptions,
-) {
+export async function upsert<
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(typeName: string, doc: any, options: UpsertOptions<TPrisma>) {
   const {
     prisma,
     schema: rootSchema,

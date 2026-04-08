@@ -39,8 +39,7 @@
     "@graviola/edb-global-types": "workspace:*",
     "@types/json-schema": "catalog:",
     "eslint-config-edb": "workspace:*",
-    "typescript": "^5.8.2",
-    "prisma": "catalog:prisma"
+    "typescript": "^5.8.2"
   },
   "dependencies": {
     "@graviola/json-schema-prisma-utils": "workspace:*",

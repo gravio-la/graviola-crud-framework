@@ -10,7 +10,7 @@ import type { JSONSchema7 } from "json-schema";
 import { toJSONLD } from "./helper";
 import { bindings2RDFResultSet } from "./helper/bindings2RDFResultSet";
 import { importAllDocuments, importSingleDocument } from "./import";
-import type { PrismaStoreOptions } from "./types";
+import type { AbstractPrismaClient, PrismaStoreOptions } from "./types";
 import { upsert } from "./upsert";
 
 /** Prisma accepts `mode` on string filters only for some connectors. */
@@ -65,15 +65,12 @@ function buildPrimaryLabelContainsFilter(
  * @param options.isAllowedNestedElement A function to check if a nested element is allowed to be created
  * @param options.datasourceProvider Prisma `datasource db` provider string (e.g. `sqlite`, `postgresql`)
  */
-export const initPrismaStore: (
-  prisma: any,
+export function initPrismaStore<
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
+  prisma: TPrisma,
   rootSchema: JSONSchema7,
   primaryFields: Partial<PrimaryFieldDeclaration>,
-  options: PrismaStoreOptions,
-) => AbstractDatastore = (
-  prisma,
-  rootSchema,
-  primaryFields,
   {
     jsonldContext,
     defaultPrefix,
@@ -88,8 +85,8 @@ export const initPrismaStore: (
     maxRecursionDepth = 4,
     debug,
     datasourceProvider,
-  },
-) => {
+  }: PrismaStoreOptions,
+): AbstractDatastore {
   const primarySearchFilter = (
     searchString: string,
     likeInsensitive: boolean,
@@ -347,4 +344,4 @@ export const initPrismaStore: (
   };
 
   return dataStore;
-};
+}

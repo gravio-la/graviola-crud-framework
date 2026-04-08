@@ -1,9 +1,9 @@
 import { IRIToStringFn, StringToIRIFn } from "@graviola/edb-core-types";
 import { AbstractDatastore } from "@graviola/edb-global-types";
-import { PrismaClient } from "@prisma/client";
 
 import { importDocument } from "./importDocument";
 import { startBulkImport } from "./startBulkImport";
+import type { AbstractPrismaClient } from "../types";
 
 /**
  * Import all documents of a given type, will either use the iterable implementation if implemented within the importStore implementation
@@ -14,23 +14,19 @@ import { startBulkImport } from "./startBulkImport";
  * @param prisma The prisma client to import to
  * @param limit The limit of documents to import
  */
-export const importAllDocuments: (
+export const importAllDocuments = async <
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   typeName: string,
   importStore: AbstractDatastore,
-  prisma: PrismaClient,
-  limit?: number,
-  options?: {
+  prisma: TPrisma,
+  limit: number = 10000,
+  options: {
     IRItoId?: IRIToStringFn;
     typeNameToTypeIRI?: StringToIRIFn;
     typeIsNotIRI?: boolean;
-  },
-) => Promise<any> = (
-  typeName,
-  importStore,
-  prisma,
-  limit = 10000,
-  options = {},
-) =>
+  } = {},
+): Promise<any> =>
   importStore.iterableImplementation
     ?.listDocuments(typeName, limit)
     .then(async (result) =>

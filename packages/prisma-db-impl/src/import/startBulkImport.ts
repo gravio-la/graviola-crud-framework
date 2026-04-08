@@ -2,10 +2,10 @@ import {
   AbstractDatastore,
   CountAndIterable,
 } from "@graviola/edb-global-types";
-import { PrismaClient } from "@prisma/client";
 import cliProgress from "cli-progress";
 
 import { importDocument } from "./importDocument";
+import type { AbstractPrismaClient } from "../types";
 
 /**
  * Start the bulk import of a given type
@@ -17,10 +17,12 @@ import { importDocument } from "./importDocument";
  * @param limit how many documents to import
  * @param result
  */
-export const startBulkImport = async (
+export const startBulkImport = async <
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   typeName: string,
   importStore: AbstractDatastore,
-  prisma: PrismaClient,
+  prisma: TPrisma,
   limit: number,
   result: CountAndIterable<any>,
 ) => {

@@ -1,8 +1,8 @@
 import { IRIToStringFn, StringToIRIFn } from "@graviola/edb-core-types";
 import { AbstractDatastore } from "@graviola/edb-global-types";
-import type { PrismaClient } from "@prisma/client";
 
 import { getPropertiesAndConnects } from "../helper";
+import type { AbstractPrismaClient } from "../types";
 
 /**
  * Import a document into the prisma store and connect it to other documents
@@ -15,11 +15,13 @@ import { getPropertiesAndConnects } from "../helper";
  * @param visited
  * @param importError
  */
-export const importDocument = async (
+export const importDocument = async <
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   typeNameOrigin: string,
   document: any,
   importStore: AbstractDatastore,
-  prisma: PrismaClient,
+  prisma: TPrisma,
   visited: Set<any>,
   importError: Set<string>,
   options?: {
@@ -134,11 +136,13 @@ export const importDocument = async (
   }
   return null;
 };
-export const importSingleDocument = (
+export const importSingleDocument = <
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   typeName: string,
   entityIRI: string,
   importStore: AbstractDatastore,
-  prisma: PrismaClient,
+  prisma: TPrisma,
   options?: {
     IRItoId?: IRIToStringFn;
     typeNameToTypeIRI?: StringToIRIFn;
@@ -158,10 +162,7 @@ export const importSingleDocument = (
         options ?? {},
       ),
     )
-    .then(async () => {
-      await prisma.$disconnect();
-    })
     .catch(async (e) => {
-      await prisma.$disconnect();
       console.error(e);
-    });
+    })
+    .finally(() => prisma.$disconnect());

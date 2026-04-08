@@ -1,12 +1,13 @@
 import { IRIToStringFn, StringToIRIFn } from "@graviola/edb-core-types";
-import { PrismaClient } from "@prisma/client";
 
-import { PropertiesAndConnects } from "../types";
+import { AbstractPrismaClient, PropertiesAndConnects } from "../types";
 
-export const getPropertiesAndConnects = async (
+export const getPropertiesAndConnects = async <
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   typeNameOrigin: string,
   document: any,
-  prisma: PrismaClient,
+  prisma: TPrisma,
   importError: Set<string>,
   prefix: string = "",
   options: {

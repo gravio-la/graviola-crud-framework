@@ -1,12 +1,14 @@
 import { StringToIRIFn } from "@graviola/edb-core-types";
-import { PrismaClient } from "@prisma/client";
 
 import { getPropertiesAndConnects } from "./helper";
+import type { AbstractPrismaClient } from "./types";
 
-export const save = async (
+export const save = async <
+  TPrisma extends AbstractPrismaClient = AbstractPrismaClient,
+>(
   typeNameOrigin: string,
   document: any,
-  prisma: PrismaClient,
+  prisma: TPrisma,
   importError: Set<string>,
   options: {
     allowNonTransactionalFallback?: boolean;
@@ -92,7 +94,7 @@ export const save = async (
   if (needsNonTransactionalFallback && options.allowNonTransactionalFallback) {
     try {
       // MongoDB without replica-set cannot run transactions; execute the upsert directly.
-      const upsertResult = await runUpsert(prisma as any);
+      const upsertResult = await runUpsert(prisma);
       return { upsertResult };
     } catch (error) {
       if (options.debug) {

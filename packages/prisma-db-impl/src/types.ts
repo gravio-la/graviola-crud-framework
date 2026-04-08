@@ -1,5 +1,10 @@
 import type { IRIToStringFn, StringToIRIFn } from "@graviola/edb-core-types";
 
+export interface AbstractPrismaClient extends Record<string, any> {
+  $transaction<T>(fn: (tx: AbstractPrismaClient) => Promise<T>): Promise<T>;
+  $disconnect(): Promise<void>;
+}
+
 export type PropertiesAndConnects = {
   id?: string;
   properties: Record<string, any>;
