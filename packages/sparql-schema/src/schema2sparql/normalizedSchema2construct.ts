@@ -76,10 +76,9 @@ export type ConstructResult = {
   /** WHERE clause patterns */
   wherePatterns: SparqlTemplateResult[];
   /**
-   * Pagination metadata for arrays with source marked as "query"
-   * This indicates pagination was applied at the SPARQL query stage
+   * Per-relationship pagination options plus `_stage` (see `PaginationMetadata` in core-types).
    */
-  paginationMetadata: Map<string, PaginationMetadata & { source: "query" }>;
+  paginationMetadata: Map<string, PaginationMetadata>;
 };
 
 /**
@@ -433,18 +432,16 @@ function hasOrderBy(paginationMeta: PaginationOptions | undefined): boolean {
 }
 
 /**
- * Create a paginated SUBSELECT with ORDER BY for array relationships
+ * Create a paginated SUBSELECT with ORDER BY for array relationships (used inside
+ * `LATERAL { … }` when `flavour === "sparql12"`).
  *
- * Uses the SPARQL query builder's SELECT to build a proper SUBSELECT.
- * The SUBSELECT:
- * 1. Selects the array items with proper ordering
- * 2. Applies LIMIT and OFFSET for pagination
- * 3. Includes necessary properties for ORDER BY
+ * The SELECT **must** project both `?subject` and the object variable so the LATERAL
+ * inject step correlates the inner pattern to each outer row (SPARQL 1.2 / SEP-0006).
  *
  * Example output:
  * {
- *   SELECT ?friend WHERE {
- *     <subject> :friends ?friend .
+ *   SELECT ?subject ?friend WHERE {
+ *     ?subject :friends ?friend .
  *     OPTIONAL { ?friend :name ?name }
  *   }
  *   ORDER BY ?name
@@ -468,8 +465,8 @@ function createPaginatedSubselect(
   paginationMeta: PaginationOptions | undefined,
   ctx: QueryConstructionContext,
 ): SparqlTemplateResult {
-  // Start with SELECT builder - select the object variable (dots required by SPARQL syntax)
-  let query = SELECT`${objectVar}`
+  // Project subject + object so LATERAL inject correlates ?subject per outer row.
+  let query = SELECT`${subject} ${objectVar}`
     .WHERE`${subject} ${predicate} ${objectVar} .`;
 
   // Track ORDER BY property variables so we can reuse them between WHERE and ORDER BY
@@ -516,14 +513,13 @@ function createPaginatedSubselect(
     }
   }
 
-  // Apply LIMIT if specified
+  const hasSkip = paginationMeta.skip !== undefined && paginationMeta.skip > 0;
+
   if (paginationMeta.take !== undefined) {
     query = query.LIMIT(paginationMeta.take);
   }
-
-  // Apply OFFSET if specified
-  if (paginationMeta.skip !== undefined && paginationMeta.skip > 0) {
-    query = query.OFFSET(paginationMeta.skip);
+  if (hasSkip) {
+    query = query.OFFSET(paginationMeta.skip as number);
   }
 
   // Return the query - when used in a WHERE clause, it will automatically be wrapped in { }
@@ -568,15 +564,7 @@ export function normalizedSchema2construct(
 
   const constructPatterns: SparqlTemplateResult[] = [];
   const whereParts: WherePart[] = [];
-  const paginationMetadata = new Map<
-    string,
-    {
-      skip?: number;
-      take?: number;
-      orderBy?: OrderByClause | OrderByClause[];
-      source: "query";
-    }
-  >();
+  const paginationMetadata = new Map<string, PaginationMetadata>();
 
   // Create subject variable
   const subjectVar = df.variable("subject");
@@ -733,10 +721,9 @@ export function normalizedSchema2construct(
 
         // Collect pagination metadata if present
         if (propertyPatterns.pagination) {
-          // Mark with source: "query" to tell extractor not to paginate again
           paginationMetadata.set(propertyName, {
             ...propertyPatterns.pagination,
-            source: "query", // Critical: prevents double-pagination!
+            _stage: propertyPatterns.paginationStage ?? "extraction",
           });
         }
       },
@@ -788,6 +775,8 @@ function createPropertyPatterns(
   construct: SparqlTemplateResult[];
   whereParts: WherePart[];
   pagination?: PaginationOptions;
+  /** Mirrors `PaginationMetadata._stage` for this relationship when `pagination` is set */
+  paginationStage?: "query" | "extraction";
   objectVar?: Variable;
 } {
   const construct: SparqlTemplateResult[] = [];
@@ -852,16 +841,19 @@ function createPropertyPatterns(
       ? propertySchema.items[0]
       : propertySchema.items;
 
-    // Check if we need a SUBSELECT for pagination with ORDER BY
-    const needsSubselect =
-      paginationMeta &&
+    // Non-sparql12: never emit a bare SUBSELECT for pagination — SPARQL 1.1 subqueries
+    // apply LIMIT globally, not per subject, and can leak unrelated triples. App-layer
+    // sort/slice (filterTypedDocument + extractFromGraph) handles windowing.
+    // sparql12: LATERAL { SELECT ?subject ?item … LIMIT … } correlates via projected ?subject.
+    const useLateralSubselect =
+      ctx.flavour === "sparql12" &&
+      paginationMeta !== undefined &&
       (paginationMeta.take !== undefined || hasOrderBy(paginationMeta));
 
     const isRequired = ctx.schema.required?.includes(propertyName) || false;
     const relationshipPatterns: SparqlTemplateResult[] = [];
 
-    if (needsSubselect) {
-      // Use SUBSELECT for pagination with ORDER BY
+    if (useLateralSubselect && paginationMeta) {
       const subselect = createPaginatedSubselect(
         subject,
         predicate,
@@ -870,9 +862,8 @@ function createPropertyPatterns(
         paginationMeta,
         ctx,
       );
-      relationshipPatterns.push(subselect);
+      relationshipPatterns.push(sparql`LATERAL { ${subselect} }`);
     } else {
-      // Regular pattern without pagination (use inverse WHERE when x-inverseOf)
       relationshipPatterns.push(whereTriplePattern);
     }
 
@@ -944,6 +935,12 @@ function createPropertyPatterns(
       construct,
       whereParts: [wherePart],
       pagination: paginationMeta,
+      paginationStage:
+        paginationMeta !== undefined
+          ? useLateralSubselect
+            ? "query"
+            : "extraction"
+          : undefined,
       objectVar,
     };
   } else if (propertySchema.type === "object" && propertySchema.properties) {
