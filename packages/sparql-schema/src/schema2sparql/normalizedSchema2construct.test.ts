@@ -299,22 +299,23 @@ describe("normalizedSchema2construct - Step 3: Pagination with Query-Stage Marki
       "http://example.com/person1",
       undefined,
       normalized,
+      {
+        filterOptions: {
+          include: {
+            friends: { take: 10, skip: 0 },
+          },
+        },
+      },
     );
 
-    // Should extract pagination metadata from normalized schema
+    // Pagination comes from filterOptions.include, not from schema annotations
     expect(result.paginationMetadata).toBeDefined();
-
-    // Check if pagination was detected (normalizer adds x-pagination)
-    const friendsProperty = normalized.properties?.friends as JSONSchema7;
-    if (friendsProperty && (friendsProperty as any)["x-pagination"]) {
-      // Pagination metadata should be marked with source: "query"
-      const pagMeta = result.paginationMetadata.get("friends");
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.source).toBe("query");
-    }
+    const pagMeta = result.paginationMetadata.get("friends");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
-  test("marks pagination source as 'query' to prevent double-pagination", () => {
+  test("marks pagination source as 'extraction' when SPARQL does not paginate arrays", () => {
     const schema: JSONSchema7 = {
       type: "object",
       properties: {
@@ -335,19 +336,19 @@ describe("normalizedSchema2construct - Step 3: Pagination with Query-Stage Marki
       "http://example.com/user1",
       undefined,
       normalized,
+      {
+        filterOptions: {
+          include: {
+            posts: { take: 20 },
+          },
+        },
+      },
     );
 
-    // If normalizer added pagination metadata, our function should mark it
-    const postsProperty = normalized.properties?.posts as JSONSchema7;
-    if (postsProperty && (postsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("posts");
-
-      if (pagMeta) {
-        // CRITICAL: source must be "query" so extractor skips pagination
-        expect(pagMeta.source).toBe("query");
-        expect(pagMeta.take).toBe(20);
-      }
-    }
+    const pagMeta = result.paginationMetadata.get("posts");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?._stage).toBe("extraction");
+    expect(pagMeta?.take).toBe(20);
   });
 
   test("handles array without pagination metadata", () => {

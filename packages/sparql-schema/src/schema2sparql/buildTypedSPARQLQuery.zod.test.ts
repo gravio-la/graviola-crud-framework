@@ -97,11 +97,13 @@ describe("buildTypedSPARQLQuery - Zod Schema Support", () => {
           },
         },
         prefixMap: { "": "http://example.com/" },
+        flavour: "sparql12",
       },
     );
 
     expect(result.query).toContain("CONSTRUCT");
     expect(result.query).toContain(":friends");
+    expect(result.query).toContain("LATERAL");
     expect(result.query).toContain("LIMIT 5");
   });
 

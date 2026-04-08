@@ -57,7 +57,7 @@ describe("buildCompleteSPARQLQuery", () => {
     expect(query).toMatch(/OPTIONAL \{ \?subject :name \?name_\d+ \. \}/);
   });
 
-  it("should handle pagination with SUBSELECT correctly", () => {
+  it("should handle pagination with LATERAL SUBSELECT when flavour is sparql12", () => {
     const schema: JSONSchema7 = {
       type: "object",
       properties: {
@@ -69,10 +69,6 @@ describe("buildCompleteSPARQLQuery", () => {
             properties: {
               name: { type: "string" },
             },
-          },
-          "x-pagination": {
-            take: 10,
-            orderBy: { name: "asc" },
           },
         },
       },
@@ -94,13 +90,14 @@ describe("buildCompleteSPARQLQuery", () => {
       normalized,
       {
         filterOptions,
+        flavour: "sparql12",
       },
     );
     const query = buildSPARQLConstructQuery(result, {
       "": "http://example.com/",
     });
 
-    // Check for SUBSELECT with pagination
+    expect(query).toContain("LATERAL");
     expect(query).toContain("SELECT");
     expect(query).toContain("ORDER BY");
     expect(query).toContain("LIMIT 10");

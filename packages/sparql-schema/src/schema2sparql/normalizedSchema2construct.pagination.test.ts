@@ -1,10 +1,9 @@
 /**
  * Pagination metadata tests for normalizedSchema2construct
  *
- * These tests verify that pagination metadata is correctly:
- * - Extracted from normalized schemas
- * - Marked with source: "query"
- * - Passed through to prevent double-pagination
+ * Default flavour: metadata uses _stage: "extraction" (SPARQL does not paginate
+ * nested arrays; traversal applies skip/take after sorting).
+ * sparql12: _stage: "query" when LATERAL SUBSELECT applies LIMIT/OFFSET.
  */
 
 import { describe, expect, test } from "@jest/globals";
@@ -26,27 +25,25 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         friends: { take: 20 },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/person1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    // Check if normalizer added pagination
-    const friendsProperty = normalized.properties?.friends as JSONSchema7;
-    if (friendsProperty && (friendsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("friends");
-
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.take).toBe(20);
-      expect(pagMeta?.source).toBe("query"); // Critical!
-    }
+    const pagMeta = result.paginationMetadata.get("friends");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?.take).toBe(20);
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
   test("extracts pagination with both take and skip", () => {
@@ -60,27 +57,26 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         posts: { take: 10, skip: 5 },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/user1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    const postsProperty = normalized.properties?.posts as JSONSchema7;
-    if (postsProperty && (postsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("posts");
-
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.take).toBe(10);
-      expect(pagMeta?.skip).toBe(5);
-      expect(pagMeta?.source).toBe("query");
-    }
+    const pagMeta = result.paginationMetadata.get("posts");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?.take).toBe(10);
+    expect(pagMeta?.skip).toBe(5);
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
   test("does not create pagination metadata for non-paginated arrays", () => {
@@ -94,7 +90,6 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    // No pagination in include
     const normalized = normalizeSchema(schema, {});
 
     const result = normalizedSchema2construct(
@@ -103,7 +98,6 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       normalized,
     );
 
-    // Should not have pagination metadata
     expect(result.paginationMetadata.get("tags")).toBeUndefined();
   });
 
@@ -126,44 +120,37 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         friends: { take: 10 },
         posts: { take: 20, skip: 5 },
-        // comments not paginated
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/person1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    // Check friends pagination
-    const friendsProperty = normalized.properties?.friends as JSONSchema7;
-    if (friendsProperty && (friendsProperty as any)["x-pagination"]) {
-      const friendsPag = result.paginationMetadata.get("friends");
-      expect(friendsPag).toBeDefined();
-      expect(friendsPag?.take).toBe(10);
-      expect(friendsPag?.source).toBe("query");
-    }
+    const friendsPag = result.paginationMetadata.get("friends");
+    expect(friendsPag).toBeDefined();
+    expect(friendsPag?.take).toBe(10);
+    expect(friendsPag?._stage).toBe("extraction");
 
-    // Check posts pagination
-    const postsProperty = normalized.properties?.posts as JSONSchema7;
-    if (postsProperty && (postsProperty as any)["x-pagination"]) {
-      const postsPag = result.paginationMetadata.get("posts");
-      expect(postsPag).toBeDefined();
-      expect(postsPag?.take).toBe(20);
-      expect(postsPag?.skip).toBe(5);
-      expect(postsPag?.source).toBe("query");
-    }
+    const postsPag = result.paginationMetadata.get("posts");
+    expect(postsPag).toBeDefined();
+    expect(postsPag?.take).toBe(20);
+    expect(postsPag?.skip).toBe(5);
+    expect(postsPag?._stage).toBe("extraction");
 
-    // Comments should not have pagination
     expect(result.paginationMetadata.get("comments")).toBeUndefined();
   });
 
-  test("source is always 'query' to prevent double-pagination", () => {
+  test("default flavour marks _stage as extraction (not query-stage pagination)", () => {
     const schema: JSONSchema7 = {
       type: "object",
       properties: {
@@ -174,27 +161,51 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         items: { take: 100 },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/collection1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    const itemsProperty = normalized.properties?.items as JSONSchema7;
-    if (itemsProperty && (itemsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("items");
+    expect(result.paginationMetadata.get("items")?._stage).toBe("extraction");
+  });
 
-      // The CRITICAL check: source must be "query"
-      // This tells the extractor that pagination was applied at query stage
-      // so it should NOT paginate again (would cause double-pagination!)
-      expect(pagMeta?.source).toBe("query");
-    }
+  test("sparql12 marks _stage as query when LATERAL SUBSELECT paginates", () => {
+    const schema: JSONSchema7 = {
+      type: "object",
+      properties: {
+        items: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+    };
+
+    const filterOpts = {
+      include: {
+        items: { take: 100 },
+      },
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
+
+    const result = normalizedSchema2construct(
+      "http://example.com/collection1",
+      undefined,
+      normalized,
+      { filterOptions: filterOpts, flavour: "sparql12" },
+    );
+
+    expect(result.paginationMetadata.get("items")?._stage).toBe("query");
   });
 
   test("pagination on nested array properties", () => {
@@ -218,7 +229,7 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         department: {
           include: {
@@ -226,16 +237,17 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
           },
         },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/company1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    // Nested pagination should be tracked
-    // (Note: This depends on how normalizer handles nested pagination)
     expect(result.paginationMetadata).toBeDefined();
   });
 
@@ -250,26 +262,25 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
-        logs: { take: 0 }, // Explicitly fetch none
+        logs: { take: 0 },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/system1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    const logsProperty = normalized.properties?.logs as JSONSchema7;
-    if (logsProperty && (logsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("logs");
-
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.take).toBe(0);
-      expect(pagMeta?.source).toBe("query");
-    }
+    const pagMeta = result.paginationMetadata.get("logs");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?.take).toBe(0);
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
   test("pagination with large skip value", () => {
@@ -283,27 +294,26 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
-        records: { skip: 1000, take: 10 }, // Start from 1001st record
+        records: { skip: 1000, take: 10 },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/db1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    const recordsProperty = normalized.properties?.records as JSONSchema7;
-    if (recordsProperty && (recordsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("records");
-
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.skip).toBe(1000);
-      expect(pagMeta?.take).toBe(10);
-      expect(pagMeta?.source).toBe("query");
-    }
+    const pagMeta = result.paginationMetadata.get("records");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?.skip).toBe(1000);
+    expect(pagMeta?.take).toBe(10);
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
   test("pagination with orderBy - single sort criterion", () => {
@@ -322,30 +332,29 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         friends: {
           take: 10,
           orderBy: { name: "asc" },
         },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/person1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    const friendsProperty = normalized.properties?.friends as JSONSchema7;
-    if (friendsProperty && (friendsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("friends");
-
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.orderBy).toEqual({ name: "asc" });
-      expect(pagMeta?.take).toBe(10);
-      expect(pagMeta?.source).toBe("query");
-    }
+    const pagMeta = result.paginationMetadata.get("friends");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?.orderBy).toEqual({ name: "asc" });
+    expect(pagMeta?.take).toBe(10);
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
   test("pagination with orderBy - multiple sort criteria", () => {
@@ -365,33 +374,29 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         posts: {
           take: 20,
           orderBy: [{ createdAt: "desc" }, { title: "asc" }],
         },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/blog1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    const postsProperty = normalized.properties?.posts as JSONSchema7;
-    if (postsProperty && (postsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("posts");
-
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.orderBy).toEqual([
-        { createdAt: "desc" },
-        { title: "asc" },
-      ]);
-      expect(pagMeta?.take).toBe(20);
-      expect(pagMeta?.source).toBe("query");
-    }
+    const pagMeta = result.paginationMetadata.get("posts");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?.orderBy).toEqual([{ createdAt: "desc" }, { title: "asc" }]);
+    expect(pagMeta?.take).toBe(20);
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
   test("pagination without orderBy - named nodes", () => {
@@ -411,30 +416,28 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         friends: {
           take: 10,
-          // No orderBy - named nodes have natural order
         },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/person1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    const friendsProperty = normalized.properties?.friends as JSONSchema7;
-    if (friendsProperty && (friendsProperty as any)["x-pagination"]) {
-      const pagMeta = result.paginationMetadata.get("friends");
-
-      expect(pagMeta).toBeDefined();
-      expect(pagMeta?.take).toBe(10);
-      expect(pagMeta?.orderBy).toBeUndefined(); // No orderBy for named nodes
-      expect(pagMeta?.source).toBe("query");
-    }
+    const pagMeta = result.paginationMetadata.get("friends");
+    expect(pagMeta).toBeDefined();
+    expect(pagMeta?.take).toBe(10);
+    expect(pagMeta?.orderBy).toBeUndefined();
+    expect(pagMeta?._stage).toBe("extraction");
   });
 
   test("pagination metadata is preserved in returned map", () => {
@@ -448,26 +451,27 @@ describe("normalizedSchema2construct - Pagination Metadata", () => {
       },
     };
 
-    const normalized = normalizeSchema(schema, {
+    const filterOpts = {
       include: {
         data: { take: 5, skip: 2 },
       },
-    });
+    };
+
+    const normalized = normalizeSchema(schema, filterOpts);
 
     const result = normalizedSchema2construct(
       "http://example.com/dataset1",
       undefined,
       normalized,
+      { filterOptions: filterOpts },
     );
 
-    // Metadata map should be returned
     expect(result.paginationMetadata).toBeInstanceOf(Map);
-    expect(result.paginationMetadata.size).toBeGreaterThanOrEqual(0);
-
-    // If pagination was applied, it should be in the map
-    const dataProperty = normalized.properties?.data as JSONSchema7;
-    if (dataProperty && (dataProperty as any)["x-pagination"]) {
-      expect(result.paginationMetadata.has("data")).toBe(true);
-    }
+    expect(result.paginationMetadata.has("data")).toBe(true);
+    expect(result.paginationMetadata.get("data")).toMatchObject({
+      take: 5,
+      skip: 2,
+      _stage: "extraction",
+    });
   });
 });

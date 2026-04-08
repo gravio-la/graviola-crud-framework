@@ -340,7 +340,7 @@ describe("buildTypedSPARQLQuery - Include Patterns", () => {
     expect(result.query).toContain(":friends");
   });
 
-  it("should generate query with paginated include", () => {
+  it("should generate query with paginated include when flavour is sparql12", () => {
     const result = buildTypedSPARQLQuery<Person>(
       "http://example.com/person/1",
       undefined,
@@ -354,11 +354,12 @@ describe("buildTypedSPARQLQuery - Include Patterns", () => {
           },
         },
         prefixMap: { "": "http://example.com/" },
+        flavour: "sparql12",
       },
     );
 
     expect(result.query).toContain(":friends");
-    // Should contain SUBSELECT for pagination
+    expect(result.query).toContain("LATERAL");
     expect(result.query.toLowerCase()).toContain("select");
     expect(result.query).toContain("LIMIT 10");
   });
@@ -598,10 +599,12 @@ describe("buildTypedSPARQLQuery - Real-World Use Cases", () => {
         },
         filterValidationMode: "throw",
         prefixMap: { "": "http://example.com/" },
+        flavour: "sparql12",
       },
     );
 
     expect(result.query).toContain(":friends");
+    expect(result.query).toContain("LATERAL");
     expect(result.query).toContain("LIMIT 10");
   });
 
@@ -843,9 +846,11 @@ describe("buildTypedSPARQLQuery - Edge Cases", () => {
           },
         },
         prefixMap: { "": "http://example.com/" },
+        flavour: "sparql12",
       },
     );
 
+    expect(result.query).toContain("LATERAL");
     expect(result.query).toContain("LIMIT 100");
     expect(result.query).toContain("OFFSET 50");
   });

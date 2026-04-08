@@ -231,6 +231,7 @@ describe("normalizedSchema2construct - Multiple Subjects", () => {
             friends: { take: 10, orderBy: { name: "asc" } },
           },
         },
+        flavour: "sparql12",
       },
     );
 
@@ -240,6 +241,7 @@ describe("normalizedSchema2construct - Multiple Subjects", () => {
     expect(whereQuery).toContain("VALUES");
     expect(whereQuery).toContain("?subject");
     expect(whereQuery).toMatch(/\?friends_\d+/);
+    expect(whereQuery).toContain("LATERAL");
     expect(whereQuery).toContain("SELECT");
     expect(whereQuery).toContain("LIMIT 10");
   });

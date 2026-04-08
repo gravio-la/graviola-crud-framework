@@ -533,6 +533,7 @@ describe("normalizedSchema2construct - Relationship Filtering", () => {
         normalized,
         {
           filterOptions,
+          flavour: "sparql12",
         },
       );
 
@@ -540,8 +541,8 @@ describe("normalizedSchema2construct - Relationship Filtering", () => {
         "": "http://example.com/",
       });
 
-      // Should have SUBSELECT with LIMIT for pagination (use full query; wherePatterns
-      // templates may not stringify via .toString() when emitted as required spine)
+      // sparql12: LATERAL { SELECT ?subject ?friend … LIMIT … }
+      expect(query).toContain("LATERAL");
       expect(query).toContain("SELECT");
       expect(query).toContain("LIMIT 10");
       expect(query).toContain("ORDER BY");

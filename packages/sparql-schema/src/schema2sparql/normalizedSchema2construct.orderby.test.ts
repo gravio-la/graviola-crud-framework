@@ -4,18 +4,17 @@ import { normalizeSchema } from "@graviola/edb-graph-traversal";
 import { normalizedSchema2construct } from "./normalizedSchema2construct";
 
 /**
- * Focused tests for ORDER BY generation in paginated SUBSELECTs.
+ * Focused tests for ORDER BY generation inside `sparql12` LATERAL SUBSELECTs.
  *
- * createPaginatedSubselect is a private function, so we test it through
- * normalizedSchema2construct. These tests verify the generated SPARQL string
- * contains correct ORDER BY clauses with proper variable references and direction.
+ * Default flavours no longer emit nested SELECT/LIMIT for relationships; only
+ * `flavour: "sparql12"` does (LATERAL { SELECT ?subject ?item … }).
  */
 
 function getWhereString(result: ReturnType<typeof normalizedSchema2construct>) {
   return result.wherePatterns.map((p) => p.toString()).join("\n");
 }
 
-describe("createPaginatedSubselect - ORDER BY", () => {
+describe("createPaginatedSubselect - ORDER BY (sparql12)", () => {
   test("single asc orderBy produces ORDER BY ?var", () => {
     const schema: JSONSchema7 = {
       type: "object",
@@ -46,10 +45,13 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
+    expect(where).toContain("LATERAL");
+    expect(where).toContain("SELECT");
+    expect(where).toContain("?subject");
     expect(where).toContain("ORDER BY");
     expect(where).not.toContain("desc(");
   });
@@ -84,7 +86,7 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
@@ -124,7 +126,7 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
@@ -170,7 +172,7 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
@@ -211,7 +213,7 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
@@ -250,7 +252,7 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
@@ -287,7 +289,7 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
@@ -335,6 +337,7 @@ describe("createPaginatedSubselect - ORDER BY", () => {
           schema: "http://schema.org/",
         },
         filterOptions,
+        flavour: "sparql12",
       },
     );
 
@@ -374,12 +377,52 @@ describe("createPaginatedSubselect - ORDER BY", () => {
       "http://example.com/s",
       undefined,
       normalized,
-      { filterOptions },
+      { filterOptions, flavour: "sparql12" },
     );
 
     const where = getWhereString(result);
     expect(where).toContain("ORDER BY");
     expect(where).toContain("desc(");
     expect(where).toContain("LIMIT 25");
+  });
+});
+
+describe("default flavour — no relationship SUBSELECT", () => {
+  test("WHERE has no LATERAL, SELECT, or LIMIT for paginated include", () => {
+    const schema: JSONSchema7 = {
+      type: "object",
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+            },
+          },
+        },
+      },
+    };
+
+    const filterOptions = {
+      include: {
+        items: {
+          take: 10,
+          orderBy: { name: "asc" as const },
+        },
+      },
+    };
+
+    const normalized = normalizeSchema(schema, filterOptions);
+    const result = normalizedSchema2construct(
+      "http://example.com/s",
+      undefined,
+      normalized,
+      { filterOptions },
+    );
+
+    const where = getWhereString(result);
+    expect(where).not.toContain("LATERAL");
+    expect(where).not.toContain("LIMIT ");
   });
 });
