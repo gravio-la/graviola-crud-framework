@@ -485,6 +485,48 @@ export function runTypedFilterSuite(getStore: () => AbstractDatastore): void {
         const names = result!.tags!.map((t: { name: string }) => t.name);
         expect(names).toEqual(["Sale", "New", "Featured"]);
       });
+
+      test("include: { tags: { skip: 1, take: 2, orderBy: { name: 'asc' } } } — windowed page", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: { name: { equals: "Laptop" } },
+          include: {
+            tags: {
+              skip: 1,
+              take: 2,
+              orderBy: { name: "asc" as const },
+            },
+          },
+        });
+
+        expect(result.length).toBe(1);
+        expect(Array.isArray(result[0].tags)).toBe(true);
+        expect(result[0].tags.length).toBe(2);
+        const names = result[0].tags.map((t: { name: string }) => t.name);
+        // Full sorted asc: [Featured, New, Sale]; skip 1, take 2 → [New, Sale]
+        expect(names).toEqual(["New", "Sale"]);
+      });
+
+      test("include: { tags: { skip: 1, take: 2, orderBy: { name: 'desc' } } } — windowed page descending", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: { name: { equals: "Laptop" } },
+          include: {
+            tags: {
+              skip: 1,
+              take: 2,
+              orderBy: { name: "desc" as const },
+            },
+          },
+        });
+
+        expect(result.length).toBe(1);
+        expect(Array.isArray(result[0].tags)).toBe(true);
+        expect(result[0].tags.length).toBe(2);
+        const names = result[0].tags.map((t: { name: string }) => t.name);
+        // Full sorted desc: [Sale, New, Featured]; skip 1, take 2 → [New, Featured]
+        expect(names).toEqual(["New", "Featured"]);
+      });
     });
 
     describe("filterTypedDocuments — combined", () => {
@@ -539,6 +581,206 @@ export function runTypedFilterSuite(getStore: () => AbstractDatastore): void {
         expect(result[0].name).toBe("Laptop");
         expect(Array.isArray(result[0].tags)).toBe(true);
         expect(result[0].tags.length).toBeLessThanOrEqual(2);
+      });
+    });
+
+    /**
+     * Comprehensive deep-equality tests for sorted + paginated relationship arrays.
+     *
+     * Two items (Camera, Drone) each have 5 / 4 tags with names chosen so that
+     * alphabetical sort order is unambiguous:
+     *
+     *   Camera tags (asc): alpha < beta < delta < epsilon < gamma
+     *   Drone  tags (asc): alpha < delta < epsilon < zeta
+     *
+     * Each test asserts the exact ordered array of names — possible only because
+     * the ordering is deterministic. The multi-subject test verifies that the
+     * per-subject SUBSELECT windows are applied independently for each item.
+     */
+    describe("filterTypedDocuments — deep-equality sorted pagination", () => {
+      const tagAlpha = entityIRI("Tag", "alpha");
+      const tagBeta = entityIRI("Tag", "beta");
+      const tagDelta = entityIRI("Tag", "delta");
+      const tagEpsilon = entityIRI("Tag", "epsilon");
+      const tagGamma = entityIRI("Tag", "gamma");
+      const tagZeta = entityIRI("Tag", "zeta");
+      const catGadgets = entityIRI("Category", "gadgets");
+      const itemCamera = entityIRI("Item", "camera");
+      const itemDrone = entityIRI("Item", "drone");
+
+      beforeEach(async () => {
+        const store = getStore();
+
+        for (const [id, name] of [
+          ["alpha", "alpha"],
+          ["beta", "beta"],
+          ["delta", "delta"],
+          ["epsilon", "epsilon"],
+          ["gamma", "gamma"],
+          ["zeta", "zeta"],
+        ] as [string, string][]) {
+          await store.upsertDocument(
+            "Tag",
+            entityIRI("Tag", id),
+            makeTag(id, { name, description: `${name} tag` }),
+          );
+        }
+
+        await store.upsertDocument(
+          "Category",
+          catGadgets,
+          makeCategory("gadgets", {
+            name: "Gadgets",
+            description: "Electronic gadgets",
+          }),
+        );
+
+        // Camera → 5 tags (alpha beta delta epsilon gamma)
+        await store.upsertDocument(
+          "Item",
+          itemCamera,
+          makeItem("camera", {
+            name: "Camera",
+            description: "Digital camera",
+            price: 499.99,
+            isAvailable: true,
+            category: { "@id": catGadgets },
+            tags: [
+              { "@id": tagAlpha },
+              { "@id": tagBeta },
+              { "@id": tagDelta },
+              { "@id": tagEpsilon },
+              { "@id": tagGamma },
+            ],
+          }),
+        );
+
+        // Drone → 4 tags (alpha delta epsilon zeta)
+        await store.upsertDocument(
+          "Item",
+          itemDrone,
+          makeItem("drone", {
+            name: "Drone",
+            description: "Flying drone",
+            price: 799.99,
+            isAvailable: true,
+            category: { "@id": catGadgets },
+            tags: [
+              { "@id": tagAlpha },
+              { "@id": tagDelta },
+              { "@id": tagEpsilon },
+              { "@id": tagZeta },
+            ],
+          }),
+        );
+      });
+
+      // ── Camera: single-item window positions ─────────────────────────────────
+
+      // sorted asc: [alpha, beta, delta, epsilon, gamma]
+      test("Camera take:3 orderBy:asc — first page [alpha, beta, delta]", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocument!("Item", itemCamera, {
+          include: { tags: { take: 3, orderBy: { name: "asc" as const } } },
+        });
+        expect(result!.tags.map((t: { name: string }) => t.name)).toEqual([
+          "alpha",
+          "beta",
+          "delta",
+        ]);
+      });
+
+      test("Camera skip:1 take:3 orderBy:asc — middle page [beta, delta, epsilon]", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocument!("Item", itemCamera, {
+          include: {
+            tags: { skip: 1, take: 3, orderBy: { name: "asc" as const } },
+          },
+        });
+        expect(result!.tags.map((t: { name: string }) => t.name)).toEqual([
+          "beta",
+          "delta",
+          "epsilon",
+        ]);
+      });
+
+      test("Camera skip:3 take:2 orderBy:asc — tail page [epsilon, gamma]", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocument!("Item", itemCamera, {
+          include: {
+            tags: { skip: 3, take: 2, orderBy: { name: "asc" as const } },
+          },
+        });
+        expect(result!.tags.map((t: { name: string }) => t.name)).toEqual([
+          "epsilon",
+          "gamma",
+        ]);
+      });
+
+      // sorted desc: [gamma, epsilon, delta, beta, alpha]
+      test("Camera skip:1 take:2 orderBy:desc — [epsilon, delta]", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocument!("Item", itemCamera, {
+          include: {
+            tags: { skip: 1, take: 2, orderBy: { name: "desc" as const } },
+          },
+        });
+        expect(result!.tags.map((t: { name: string }) => t.name)).toEqual([
+          "epsilon",
+          "delta",
+        ]);
+      });
+
+      // ── Drone: verify different-cardinality subject ───────────────────────────
+
+      // sorted asc: [alpha, delta, epsilon, zeta]
+      test("Drone skip:1 take:2 orderBy:asc — [delta, epsilon]", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocument!("Item", itemDrone, {
+          include: {
+            tags: { skip: 1, take: 2, orderBy: { name: "asc" as const } },
+          },
+        });
+        expect(result!.tags.map((t: { name: string }) => t.name)).toEqual([
+          "delta",
+          "epsilon",
+        ]);
+      });
+
+      // ── Multi-subject: each item gets its own independent window ─────────────
+      //
+      // This is the regression for the Oxigraph SUBSELECT bug: when two subjects
+      // share the same SUBSELECT pattern, the LIMIT must be applied per-subject,
+      // not globally across all subjects' triples.
+      //
+      //   Camera (5 tags) skip:1 take:2 asc → [beta, delta]
+      //   Drone  (4 tags) skip:1 take:2 asc → [delta, epsilon]
+      test("Camera + Drone simultaneously — per-subject windows are independent", async () => {
+        const store = getStore();
+        const results = await store.filterTypedDocuments!("Item", {
+          where: { name: { in: ["Camera", "Drone"] } },
+          include: {
+            tags: { skip: 1, take: 2, orderBy: { name: "asc" as const } },
+          },
+        });
+
+        expect(results.length).toBe(2);
+
+        // Sort by item name so the assertion is order-independent
+        const byName = [...results].sort((a: any, b: any) =>
+          a.name.localeCompare(b.name),
+        );
+
+        const cameraNames = byName[0].tags.map((t: { name: string }) => t.name);
+        const droneNames = byName[1].tags.map((t: { name: string }) => t.name);
+
+        expect(byName[0].name).toBe("Camera");
+        // Camera asc full: [alpha, beta, delta, epsilon, gamma] → skip 1 take 2 → [beta, delta]
+        expect(cameraNames).toEqual(["beta", "delta"]);
+
+        expect(byName[1].name).toBe("Drone");
+        // Drone asc full: [alpha, delta, epsilon, zeta] → skip 1 take 2 → [delta, epsilon]
+        expect(droneNames).toEqual(["delta", "epsilon"]);
       });
     });
 

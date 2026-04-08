@@ -11,6 +11,7 @@
  * Opt-in adapters:
  *   OXIGRAPH_URL=http://localhost:7878    → SPARQL/Oxigraph (Docker)
  *   BLAZEGRAPH_URL=http://localhost:9999/bigdata  → SPARQL/Blazegraph (Docker)
+ *   FUSEKI_URL=http://localhost:3030/ds   → SPARQL/Jena Fuseki TDB (Docker)
  *   POSTGRES_URL=postgresql://...        → Prisma/PostgreSQL
  *   MARIADB_URL=mysql://...              → Prisma/MariaDB
  *   MONGODB_URL=mongodb://...            → Prisma/MongoDB (Docker single-node RS: add

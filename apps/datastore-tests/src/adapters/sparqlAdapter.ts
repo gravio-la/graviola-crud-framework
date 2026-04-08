@@ -68,8 +68,10 @@ export function createSparqlAdapter(
   name: string,
   baseUrl: string,
   type: "oxigraph" | "blazegraph" | "fuseki",
+  opts?: { sparqlFlavour?: SPARQLFlavour },
 ): DatastoreAdapter {
   const cfg = buildEndpointConfig(baseUrl, type);
+  const flavour = opts?.sparqlFlavour ?? cfg.flavour;
 
   return {
     name,
@@ -122,7 +124,7 @@ export function createSparqlAdapter(
         typeNameToTypeIRI,
         queryBuildOptions: {
           ...queryBuildOptions,
-          sparqlFlavour: cfg.flavour,
+          sparqlFlavour: flavour,
         },
         sparqlQueryFunctions: crudFunctions,
         defaultLimit: 100,

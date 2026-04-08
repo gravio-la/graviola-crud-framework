@@ -57,6 +57,16 @@ export async function getActiveAdapters(): Promise<DatastoreAdapter[]> {
         "oxigraph",
       ),
     );
+    if (process.env.OXIGRAPH_SPARQL12) {
+      adapters.push(
+        createSparqlAdapter(
+          "SPARQL/Oxigraph (Docker) [sparql12]",
+          process.env.OXIGRAPH_URL,
+          "oxigraph",
+          { sparqlFlavour: "sparql12" },
+        ),
+      );
+    }
   }
 
   if (process.env.BLAZEGRAPH_URL) {
@@ -77,6 +87,16 @@ export async function getActiveAdapters(): Promise<DatastoreAdapter[]> {
         "fuseki",
       ),
     );
+    if (process.env.FUSEKI_SPARQL12) {
+      adapters.push(
+        createSparqlAdapter(
+          "SPARQL/Jena Fuseki (Docker) [sparql12]",
+          process.env.FUSEKI_URL,
+          "fuseki",
+          { sparqlFlavour: "sparql12" },
+        ),
+      );
+    }
   }
 
   // ─── Prisma adapters ──────────────────────────────────────────────────────

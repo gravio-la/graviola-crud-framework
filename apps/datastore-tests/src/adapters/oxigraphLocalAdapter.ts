@@ -92,7 +92,10 @@ export function createOxigraphLocalAdapter(): DatastoreAdapter {
         defaultPrefix: BASE_IRI,
         jsonldContext: { "@vocab": BASE_IRI },
         typeNameToTypeIRI,
-        queryBuildOptions,
+        queryBuildOptions: {
+          ...queryBuildOptions,
+          sparqlFlavour: "oxigraph-local" as const,
+        },
         sparqlQueryFunctions: crudFunctions,
         defaultLimit: 100,
       });

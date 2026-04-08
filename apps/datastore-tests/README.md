@@ -56,8 +56,10 @@ Alternatively, run `nix develop .#prisma6` or `nix develop`, then `cd apps/datas
 | `MARIADB_URL`          | Enables **Prisma/MariaDB** (e.g. `mysql://test:test@localhost:3307/graviola_test`).                                                                                     |
 | `MONGODB_URL`          | Enables **Prisma/MongoDB** (Prisma 6.x here). For local Docker, add **`replicaSet=rs0`** and usually **`directConnection=true`** (see [MongoDB notes](#mongodb-notes)). |
 | `OXIGRAPH_URL`         | SPARQL over HTTP against Oxigraph (e.g. `http://localhost:7878`).                                                                                                       |
+| `OXIGRAPH_SPARQL12`    | If set (with `OXIGRAPH_URL`), registers a second adapter using `sparqlFlavour: "sparql12"` (LATERAL + projected SUBSELECT for nested pagination).                       |
 | `BLAZEGRAPH_URL`       | SPARQL over HTTP against Blazegraph (e.g. `http://localhost:9999/bigdata`).                                                                                             |
 | `FUSEKI_URL`           | SPARQL over HTTP against Jena Fuseki with a TDB-backed dataset; value is the **dataset base** (e.g. `http://localhost:3030/ds` — not `/ds/sparql`).                     |
+| `FUSEKI_SPARQL12`      | If set (with `FUSEKI_URL`), registers a second adapter with `sparqlFlavour: "sparql12"`.                                                                                |
 
 `DATABASE_URL` is set internally by Prisma setup from the adapter URL; you normally do not set it yourself for tests.
 
