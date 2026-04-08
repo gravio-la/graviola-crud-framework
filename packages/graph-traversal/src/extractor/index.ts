@@ -23,6 +23,11 @@ export { extractLiteral } from "./extractLiteral";
 
 // Utilities
 export { expandPropertyName } from "./expandPropertyName";
+export {
+  normalizeOrderBy,
+  compareByOrderBy,
+  sortObjectArrayByOrderBy,
+} from "./applyOrderBy";
 
 // Types
 export type {

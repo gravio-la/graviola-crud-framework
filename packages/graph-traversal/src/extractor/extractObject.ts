@@ -231,12 +231,15 @@ function extractArrayProperty(
     ? (includeValue as any)
     : undefined;
 
-  // Determine if we should apply pagination at extraction stage
+  // Determine if we should apply pagination at extraction stage.
+  // When `orderBy` is set, sorting + slicing happen in `applyIncludeOrderBy` after
+  // the full array is extracted — do not slice pointers here.
   const shouldPaginate =
     paginationOptions &&
     (paginationOptions.take !== undefined ||
       paginationOptions.skip !== undefined) &&
-    (!paginationOptions._stage || paginationOptions._stage === "extraction");
+    (!paginationOptions._stage || paginationOptions._stage === "extraction") &&
+    paginationOptions.orderBy === undefined;
 
   let itemsToExtract: clownface.GraphPointer[];
 

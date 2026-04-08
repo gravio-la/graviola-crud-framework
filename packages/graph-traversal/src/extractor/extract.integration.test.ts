@@ -574,9 +574,9 @@ describe("extractFromGraph - Integration Tests with TBBT Dataset", () => {
     expect(result).toBeDefined();
     expect(result.givenName).toBe("Leonard");
 
-    // The dataset contains all friends (not pre-paginated in our test)
-    // But the extractor should NOT apply pagination because source: "query"
-    // In a real scenario, the CONSTRUCT query would have already limited results
+    // The dataset contains all friends (not pre-paginated in our test).
+    // With `include.knows: { take, _stage: "query" }`, the extractor skips re-slicing;
+    // this test uses empty options, so it only documents the `_stage` contract.
     if (result.knows) {
       expect(Array.isArray(result.knows)).toBe(true);
 
