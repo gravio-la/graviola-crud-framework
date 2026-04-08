@@ -4,14 +4,12 @@ import { z } from "zod";
 import Ajv from "ajv";
 import mapValues from "lodash-es/mapValues";
 import {
-  normalizeSchema,
   extractFromGraph,
-  type TypedGraphTraversalFilterOptions,
-  createConsoleLogger,
+  normalizeSchema,
 } from "@graviola/edb-graph-traversal";
 import {
   normalizedSchema2construct,
-  buildCompleteSPARQLQuery,
+  buildTypedSPARQLQuery,
 } from "@graviola/sparql-schema";
 import { useCrudProvider } from "@graviola/edb-state-hooks";
 import {
@@ -47,6 +45,7 @@ import "react-json-view-lite/dist/index.css";
 import { schemaPrefixes } from "../sparql-schema/showcases";
 import { bringDefinitionToTop } from "@graviola/json-schema-utils";
 import type { JSONSchema7Definition } from "json-schema";
+import type { TypedGraphTraversalFilterOptions } from "@graviola/edb-core-types";
 
 // ============================================================================
 // Shared Constants
@@ -383,29 +382,21 @@ const TypeSafePipelineDemo = <T extends any>({
       });
 
       try {
-        const constructResult = normalizedSchema2construct(
+        const sparqlQuery = buildTypedSPARQLQuery<T>(
           targetIRI,
-          normalizedSchema as any,
+          undefined,
+          zodSchema,
           {
             prefixMap: tbbtSchemaPrefixes,
             maxRecursion: 3,
           },
-        );
-
-        const sparqlQuery = buildCompleteSPARQLQuery(
-          constructResult,
-          tbbtSchemaPrefixes,
-        );
+        ).query;
 
         addPipelineStep({
           step: "Generate SPARQL CONSTRUCT Query",
           status: "success",
           output: sparqlQuery,
           outputType: "sparql",
-          metadata: {
-            CONSTRUCT: constructResult.constructPatterns.length,
-            WHERE: constructResult.wherePatterns.length,
-          },
         });
 
         // Step 4: Execute SPARQL
@@ -459,7 +450,6 @@ const TypeSafePipelineDemo = <T extends any>({
               filters as any,
               "http://schema.org/",
               schemaPrefixes,
-              createConsoleLogger("debug") as any,
             );
 
             addPipelineStep({

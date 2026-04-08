@@ -15,7 +15,10 @@ import "react-json-view-lite/dist/index.css";
 export type ConstructResult = {
   constructPatterns: SparqlTemplateResult[];
   wherePatterns: SparqlTemplateResult[];
-  paginationMetadata: Map<string, PaginationMetadata & { source: "query" }>;
+  paginationMetadata: Map<
+    string,
+    PaginationMetadata & { _stage: "query" | "extraction" }
+  >;
 };
 
 /**
@@ -77,12 +80,12 @@ export const QueryGeneratorShowcase: React.FC<QueryGeneratorShowcaseProps> = ({
         justifyContent="center"
         spacing={2}
       >
-        <Grid item flex={1} sx={{ maxHeight: "70vh", overflow: "auto" }}>
+        <Grid flex={1} sx={{ maxHeight: "70vh", overflow: "auto" }}>
           <Typography variant="h5">Input Schema</Typography>
           <JsonView data={schema} shouldExpandNode={(lvl) => lvl < 3} />
         </Grid>
 
-        <Grid item flex={1} sx={{ maxHeight: "70vh", overflow: "auto" }}>
+        <Grid flex={1} sx={{ maxHeight: "70vh", overflow: "auto" }}>
           <Typography variant="h5">Normalized Schema</Typography>
           <JsonView
             data={normalizedSchema}
@@ -90,7 +93,7 @@ export const QueryGeneratorShowcase: React.FC<QueryGeneratorShowcaseProps> = ({
           />
         </Grid>
 
-        <Grid item flex={1} sx={{ maxHeight: "70vh", overflow: "auto" }}>
+        <Grid flex={1} sx={{ maxHeight: "70vh", overflow: "auto" }}>
           <Box
             sx={{
               display: "flex",
@@ -150,14 +153,14 @@ export const QueryGeneratorShowcase: React.FC<QueryGeneratorShowcaseProps> = ({
               {Array.from(constructResult.paginationMetadata.entries()).map(
                 ([prop, meta]: [
                   string,
-                  PaginationMetadata & { source: "query" },
+                  PaginationMetadata & { _stage: "query" | "extraction" },
                 ]) => (
                   <Typography
                     key={prop}
                     variant="body2"
                     sx={{ color: "#155724" }}
                   >
-                    • {prop}: take={meta.take}, orderBy=
+                    • {prop}: _stage={meta._stage}, take={meta.take}, orderBy=
                     {JSON.stringify(meta.orderBy)}
                   </Typography>
                 ),
