@@ -172,9 +172,7 @@ export function runTypedFilterSuite(getStore: () => AbstractDatastore): void {
         expect(names).toEqual(["Football", "TypeScript Handbook"]);
       });
 
-      // NOTE: Boolean filters appear to have issues in the current implementation
-      // Skipping until boolean filter support is confirmed/fixed
-      test.skip("isAvailable equals true", async () => {
+      test("isAvailable equals true", async () => {
         const store = getStore();
         const result = await store.filterTypedDocuments!("Item", {
           where: { isAvailable: { equals: true } },
@@ -204,8 +202,7 @@ export function runTypedFilterSuite(getStore: () => AbstractDatastore): void {
         expect(names).toEqual(["Football", "Laptop"]);
       });
 
-      // NOTE: Skipping due to boolean filter issue
-      test.skip("AND — price gte 10 AND isAvailable true", async () => {
+      test("AND — price gte 10 AND isAvailable true", async () => {
         const store = getStore();
         const result = await store.filterTypedDocuments!("Item", {
           where: {
@@ -220,6 +217,45 @@ export function runTypedFilterSuite(getStore: () => AbstractDatastore): void {
         expect(result.length).toBe(2);
         const names = result.map((r: any) => r.name).sort();
         expect(names).toEqual(["Laptop", "TypeScript Handbook"]);
+      });
+
+      test("NOT — not available", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: {
+            NOT: { isAvailable: { equals: true } },
+          },
+        });
+        console.log(
+          "[typedFilter] NOT compound:\n",
+          JSON.stringify(result, null, 2),
+        );
+
+        // Should return items where isAvailable is NOT true (i.e., false)
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe("Football");
+        expect(result[0].isAvailable).toBe(false);
+      });
+
+      test("NOT with AND — not (price < 20 AND available)", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: {
+            NOT: {
+              AND: [{ price: { lt: 20 } }, { isAvailable: { equals: true } }],
+            },
+          },
+        });
+        console.log(
+          "[typedFilter] NOT with AND:\n",
+          JSON.stringify(result, null, 2),
+        );
+
+        // Should return items that don't match (price < 20 AND available)
+        // Laptop (1299.99), TypeScript Handbook (29.99), Football (19.99, not available)
+        expect(result.length).toBe(3);
+        const names = result.map((r: any) => r.name).sort();
+        expect(names).toEqual(["Football", "Laptop", "TypeScript Handbook"]);
       });
 
       // Test OR with only string/numeric filters (avoiding boolean)
@@ -351,6 +387,103 @@ export function runTypedFilterSuite(getStore: () => AbstractDatastore): void {
         expect(result.length).toBe(1);
         expect(Array.isArray(result[0].tags)).toBe(true);
         expect(result[0].tags.length).toBeLessThanOrEqual(2);
+      });
+    });
+
+    /**
+     * End-to-end ORDER BY on paginated relationship arrays (SUBSELECT + ORDER BY
+     * in CONSTRUCT). Exercises single- and multi-criterion sort on real Tag data.
+     */
+    describe("filterTypedDocuments — include orderBy (real data)", () => {
+      test("include: { tags: { orderBy: { name: 'asc' } } } — stable name ascending", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: { name: { equals: "Laptop" } },
+          include: { tags: { orderBy: { name: "asc" as const } } },
+        });
+
+        expect(result.length).toBe(1);
+        const names = result[0].tags.map((t: { name: string }) => t.name);
+        expect(names).toEqual(["Featured", "New", "Sale"]);
+      });
+
+      test("include: { tags: { orderBy: { name: 'desc' } } } — name descending", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: { name: { equals: "Laptop" } },
+          include: { tags: { orderBy: { name: "desc" as const } } },
+        });
+
+        expect(result.length).toBe(1);
+        const names = result[0].tags.map((t: { name: string }) => t.name);
+        expect(names).toEqual(["Sale", "New", "Featured"]);
+      });
+
+      test("include: { tags: { orderBy: [ { name: 'asc' }, { description: 'asc' } ] } } — multiple sort keys", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: { name: { equals: "Laptop" } },
+          include: {
+            tags: {
+              orderBy: [
+                { name: "asc" as const },
+                { description: "asc" as const },
+              ],
+            },
+          },
+        });
+
+        expect(result.length).toBe(1);
+        const names = result[0].tags.map((t: { name: string }) => t.name);
+        expect(names).toEqual(["Featured", "New", "Sale"]);
+      });
+
+      test("include: { tags: { orderBy: { description: 'desc' } } } — tie-breaker field", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: { name: { equals: "Laptop" } },
+          include: { tags: { orderBy: { description: "desc" as const } } },
+        });
+
+        expect(result.length).toBe(1);
+        const names = result[0].tags.map((t: { name: string }) => t.name);
+        expect(names).toEqual(["Sale", "New", "Featured"]);
+      });
+
+      test("include: { tags: { take: 2, orderBy: { name: 'asc' } } } — order then limit", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocuments!("Item", {
+          where: { name: { equals: "Laptop" } },
+          include: {
+            tags: {
+              take: 2,
+              orderBy: { name: "asc" as const },
+            },
+          },
+        });
+
+        expect(result.length).toBe(1);
+        expect(result[0].tags.length).toBe(2);
+        const names = result[0].tags.map((t: { name: string }) => t.name);
+        expect(names).toEqual(["Featured", "New"]);
+      });
+
+      test("filterTypedDocument — include tags with multi-key orderBy", async () => {
+        const store = getStore();
+        const result = await store.filterTypedDocument!("Item", item1, {
+          include: {
+            tags: {
+              orderBy: [
+                { name: "desc" as const },
+                { description: "asc" as const },
+              ],
+            },
+          },
+        });
+
+        expect(result).toBeTruthy();
+        const names = result!.tags!.map((t: { name: string }) => t.name);
+        expect(names).toEqual(["Sale", "New", "Featured"]);
       });
     });
 
