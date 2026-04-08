@@ -24,9 +24,10 @@ import type {
   PaginationMetadata,
   GraphTraversalFilterOptions,
   SPARQLFlavour,
+  PaginationOptions,
 } from "@graviola/edb-core-types";
 import df from "@rdfjs/data-model";
-import type { Variable } from "@rdfjs/types";
+import type { NamedNode, Variable } from "@rdfjs/types";
 import get from "lodash-es/get";
 import { convertIRIToNode, createBindOrValuesPattern } from "@/utils";
 import {
@@ -320,6 +321,34 @@ function applyFieldKeyedIncludeWhere(
       : {};
 
   for (const [fieldName, fieldFilter] of Object.entries(whereClause)) {
+    // Handle top-level logical operators (AND, OR, NOT)
+    if (["AND", "OR", "NOT"].includes(fieldName)) {
+      // Create a dummy context for the logical operator to use
+      // It will create proper contexts for each field it processes
+      const logicalContext: FilterContext = {
+        subject: relatedSubjectVar,
+        property: "dummy", // Logical operators will override this
+        propertyVar: relatedSubjectVar,
+        predicateNode: relatedSubjectVar,
+        prefixMap: ctx.prefixMap,
+        flavour,
+        depth: ctx.depth,
+        schema: itemSchema,
+      };
+
+      // For logical operators, we need to process them as a complete where clause
+      // The logical operator handler will recursively process the field-keyed conditions
+      const logicalResult = filterToSparql(
+        { [fieldName]: fieldFilter },
+        logicalContext,
+      );
+
+      patterns.push(...logicalResult.patterns);
+      filters.push(...logicalResult.filters);
+      continue;
+    }
+
+    // Skip other filter operators (they're handled at property level)
     if (FILTER_WHERE_TOP_LEVEL_OPERATORS.has(fieldName)) {
       continue;
     }
@@ -399,7 +428,7 @@ function normalizeOrderBy(
  * Check if pagination has orderBy specified
  * Important: For blank nodes (unnamed nodes), orderBy is required for consistent pagination
  */
-function hasOrderBy(paginationMeta: any): boolean {
+function hasOrderBy(paginationMeta: PaginationOptions | undefined): boolean {
   return paginationMeta && paginationMeta.orderBy !== undefined;
 }
 
@@ -432,11 +461,11 @@ function hasOrderBy(paginationMeta: any): boolean {
  * @returns SPARQL SUBSELECT query using SELECT builder
  */
 function createPaginatedSubselect(
-  subject: any,
-  predicate: any,
-  objectVar: any,
+  subject: Variable,
+  predicate: string | NamedNode,
+  objectVar: Variable,
   itemSchema: JSONSchema7,
-  paginationMeta: any,
+  paginationMeta: PaginationOptions | undefined,
   ctx: QueryConstructionContext,
 ): SparqlTemplateResult {
   // Start with SELECT builder - select the object variable (dots required by SPARQL syntax)
@@ -462,23 +491,28 @@ function createPaginatedSubselect(
 
   if (paginationMeta.orderBy) {
     const normalized = normalizeOrderBy(paginationMeta.orderBy);
-    let orderBuilder = query.ORDER();
 
-    for (let i = 0; i < normalized.length; i++) {
-      const clause = normalized[i];
+    const orderEntries: Array<{ propVar: Variable; isDesc: boolean }> = [];
+    for (const clause of normalized) {
       for (const [property, order] of Object.entries(clause)) {
         if (!order) continue;
-
         const propVar = orderByVars.get(property);
         if (!propVar) continue;
-        const isDesc = order === "desc";
-
-        if (i === 0 && Object.keys(clause).indexOf(property) === 0) {
-          query = orderBuilder.BY(propVar, isDesc);
-        } else {
-          query = (query as any).THEN.BY(propVar, isDesc);
-        }
+        orderEntries.push({ propVar, isDesc: order === "desc" });
       }
+    }
+
+    if (orderEntries.length > 0) {
+      let orderedQuery = query
+        .ORDER()
+        .BY(orderEntries[0].propVar, orderEntries[0].isDesc);
+      for (let i = 1; i < orderEntries.length; i++) {
+        orderedQuery = orderedQuery.THEN.BY(
+          orderEntries[i].propVar,
+          orderEntries[i].isDesc,
+        );
+      }
+      query = orderedQuery;
     }
   }
 
@@ -493,7 +527,7 @@ function createPaginatedSubselect(
   }
 
   // Return the query - when used in a WHERE clause, it will automatically be wrapped in { }
-  return query as any as SparqlTemplateResult;
+  return sparql`${query}`;
 }
 
 /**
@@ -595,6 +629,38 @@ export function normalizedSchema2construct(
   //mark each subject as graviola:QueryResultSubject (construct pattern)
   const queryResultSubjectPattern = sparql`${subject} ${rdf.type} ${QUERY_RESULT_SUBJECT_IRI_NODE} .`;
   constructPatterns.push(queryResultSubjectPattern);
+
+  // Process top-level logical operators (AND, OR, NOT) before per-property filters
+  const topLevelWhere = ctx.filterOptions.where;
+  if (topLevelWhere && typeof topLevelWhere === "object") {
+    for (const [key, value] of Object.entries(topLevelWhere)) {
+      if (["AND", "OR", "NOT"].includes(key)) {
+        // Process logical operator with schema context
+        // We'll use applyFieldKeyedIncludeWhere which now handles logical operators
+        const logicalResult = applyFieldKeyedIncludeWhere(
+          { [key]: value } as Record<string, unknown>,
+          subject,
+          normalizedSchema,
+          ctx,
+          ctx.flavour,
+        );
+
+        // Add patterns and filters as required WHERE parts
+        if (
+          logicalResult.patterns.length > 0 ||
+          logicalResult.filters.length > 0
+        ) {
+          whereParts.push({
+            required: true,
+            whereTemplates: [
+              ...logicalResult.patterns,
+              ...logicalResult.filters,
+            ],
+          });
+        }
+      }
+    }
+  }
 
   // Walk through schema properties
   if (normalizedSchema.properties) {
@@ -714,14 +780,14 @@ function getInversePathFromAnnotation(
  * Create SPARQL patterns for a single property
  */
 function createPropertyPatterns(
-  subject: any,
+  subject: Variable,
   propertyName: string,
   propertySchema: JSONSchema7,
   ctx: QueryConstructionContext,
 ): {
   construct: SparqlTemplateResult[];
   whereParts: WherePart[];
-  pagination?: any;
+  pagination?: PaginationOptions;
   objectVar?: Variable;
 } {
   const construct: SparqlTemplateResult[] = [];
@@ -766,7 +832,7 @@ function createPropertyPatterns(
   if (propertySchema.type === "array" && propertySchema.items) {
     // Get pagination and where filters from filter options (carried through context)
     const includeValue = ctx.filterOptions.include?.[propertyName];
-    const paginationMeta =
+    const paginationMeta: PaginationOptions | undefined =
       typeof includeValue === "object" && includeValue !== null
         ? {
             skip: includeValue.skip,
@@ -916,7 +982,7 @@ function createPropertyPatterns(
  * Handle nested object properties
  */
 function handleNestedObject(
-  subject: any,
+  subject: Variable,
   objectSchema: JSONSchema7,
   ctx: QueryConstructionContext,
 ): { construct: SparqlTemplateResult[]; whereParts: WherePart[] } {
@@ -984,7 +1050,10 @@ function handleNestedObject(
  * @param prefixMap - Prefix mappings (e.g., { "foaf": "http://xmlns.com/foaf/0.1/" })
  * @returns Predicate for SPARQL pattern
  */
-function createPredicate(propertyName: string, prefixMap: Prefixes): any {
+function createPredicate(
+  propertyName: string,
+  prefixMap: Prefixes,
+): string | NamedNode {
   return convertIRIToNode(propertyName, prefixMap);
 }
 

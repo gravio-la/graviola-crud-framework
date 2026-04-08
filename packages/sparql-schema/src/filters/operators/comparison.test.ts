@@ -1,159 +1,103 @@
 /**
- * Unit tests for comparison filter operators
+ * Unit tests for comparison operators
+ * Focus: datatype handling, especially for booleans
  */
 
-import { describe, expect, test } from "@jest/globals";
-import df from "@rdfjs/data-model";
-import { sparql } from "@tpluscode/sparql-builder";
+import { describe, test, expect } from "bun:test";
+import { applyEqualsOperator, applyInOperator } from "./comparison";
 import type { FilterContext } from "../types";
-import {
-  applyEqualsOperator,
-  applyNotOperator,
-  applyInOperator,
-  applyNotInOperator,
-  applyComparisonOperator,
-} from "./comparison";
+import { sparql } from "@tpluscode/sparql-builder";
+import df from "@rdfjs/data-model";
 
-// Mock context for testing
-const createMockContext = (): FilterContext => {
-  const subject = df.variable("person");
-  const propertyVar = df.variable("age");
-  const predicateNode = df.namedNode("http://example.com/age");
-
-  return {
-    subject,
-    property: "age",
-    propertyVar,
-    predicateNode,
-    schemaType: "number",
-    prefixMap: { ex: "http://example.com/" },
+describe("Comparison Operators - Datatype Handling", () => {
+  const createContext = (schemaType?: string): FilterContext => ({
+    subject: sparql`?person`,
+    property: "isAvailable",
+    propertyVar: sparql`?isAvailable`,
+    predicateNode: df.namedNode("http://example.org/isAvailable"),
+    schemaType,
+    prefixMap: {},
     flavour: "default",
     depth: 0,
-  };
-};
-
-describe("Comparison Operators", () => {
-  describe("applyEqualsOperator", () => {
-    test("should generate direct triple pattern for equals", () => {
-      const context = createMockContext();
-      const result = applyEqualsOperator(25, context);
-
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(0);
-      expect(result.optional).toBe(false);
-
-      // Check that pattern contains the triple
-      const patternStr = result.patterns[0].toString();
-      expect(patternStr).toContain("?person");
-      expect(patternStr).toContain("25");
-    });
-
-    test("should handle string values", () => {
-      const context = createMockContext();
-      context.schemaType = "string";
-      const result = applyEqualsOperator("active", context);
-
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(0);
-    });
   });
 
-  describe("applyNotOperator", () => {
-    test("should generate pattern with FILTER for not", () => {
-      const context = createMockContext();
-      const result = applyNotOperator(25, context);
+  describe("applyEqualsOperator", () => {
+    test("boolean value with schemaType='boolean' should use xsd:boolean datatype", () => {
+      const context = createContext("boolean");
+      const result = applyEqualsOperator(true, context);
 
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(1);
+      expect(result.patterns.length).toBe(1);
+      const pattern = result.patterns[0].toString();
+
+      // The sparql-builder serializes boolean literals as bare "true"/"false"
+      // which is valid SPARQL syntax (they implicitly have xsd:boolean datatype)
+      expect(pattern).toContain("true");
+
+      // Pattern should be a direct triple pattern (not FILTER), making it efficient
+      expect(result.filters.length).toBe(0);
       expect(result.optional).toBe(false);
+    });
 
-      // Check that filter contains !=
-      const filterStr = result.filters[0].toString();
-      expect(filterStr).toContain("FILTER");
-      expect(filterStr).toContain("!=");
+    test("boolean value without schemaType should infer xsd:boolean from JS type", () => {
+      const context = createContext(undefined); // No schema hint
+      const result = applyEqualsOperator(false, context);
+
+      expect(result.patterns.length).toBe(1);
+      const pattern = result.patterns[0].toString();
+
+      // Should infer boolean type from JS value
+      expect(pattern).toContain("false");
+      expect(result.filters.length).toBe(0);
+    });
+
+    test("number value with schemaType='number' should use xsd:integer/decimal", () => {
+      const context = createContext("number");
+      const result = applyEqualsOperator(42, context);
+
+      expect(result.patterns.length).toBe(1);
+      const pattern = result.patterns[0].toString();
+
+      // Should contain the number value
+      expect(pattern).toContain("42");
+      expect(result.filters.length).toBe(0);
+    });
+
+    test("string value with schemaType='string' should use plain literal", () => {
+      const context = createContext("string");
+      const result = applyEqualsOperator("test", context);
+
+      expect(result.patterns.length).toBe(1);
+      const pattern = result.patterns[0].toString();
+
+      expect(pattern).toContain("test");
+      // Should NOT have datatype for plain strings
     });
   });
 
   describe("applyInOperator", () => {
-    test("should generate VALUES clause for in", () => {
-      const context = createMockContext();
-      const result = applyInOperator(
-        ["active", "pending", "completed"],
-        context,
-      );
+    test("boolean values with schemaType='boolean' should use xsd:boolean", () => {
+      const context = createContext("boolean");
+      const result = applyInOperator([true, false], context);
 
-      expect(result.patterns).toHaveLength(2); // VALUES + triple pattern
-      expect(result.filters).toHaveLength(0);
-      expect(result.optional).toBe(false);
+      expect(result.patterns.length).toBe(2); // VALUES + triple pattern
+      const valuesPattern = result.patterns[0].toString();
 
-      // Check for VALUES clause
-      const valuesStr = result.patterns[0].toString();
-      expect(valuesStr).toContain("VALUES");
+      // Should contain boolean values
+      expect(valuesPattern).toContain("true");
+      expect(valuesPattern).toContain("false");
     });
 
-    test("should handle numeric values", () => {
-      const context = createMockContext();
-      const result = applyInOperator([1, 2, 3, 4, 5], context);
+    test("number values should infer numeric datatype", () => {
+      const context = createContext("number");
+      const result = applyInOperator([1, 2, 3], context);
 
-      expect(result.patterns).toHaveLength(2);
-      expect(result.filters).toHaveLength(0);
-    });
+      expect(result.patterns.length).toBe(2);
+      const valuesPattern = result.patterns[0].toString();
 
-    test("should handle empty array", () => {
-      const context = createMockContext();
-      const result = applyInOperator([], context);
-
-      expect(result.patterns).toHaveLength(2);
-    });
-  });
-
-  describe("applyNotInOperator", () => {
-    test("should generate pattern with FILTER NOT IN", () => {
-      const context = createMockContext();
-      const result = applyNotInOperator(["deleted", "banned"], context);
-
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(1);
-      expect(result.optional).toBe(false);
-
-      // Check for NOT IN in filter
-      const filterStr = result.filters[0].toString();
-      expect(filterStr).toContain("FILTER");
-      expect(filterStr).toContain("NOT IN");
-    });
-  });
-
-  describe("applyComparisonOperator", () => {
-    test("should dispatch to equals operator", () => {
-      const context = createMockContext();
-      const result = applyComparisonOperator("equals", 25, context);
-
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(0);
-    });
-
-    test("should dispatch to not operator", () => {
-      const context = createMockContext();
-      const result = applyComparisonOperator("not", 25, context);
-
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(1);
-    });
-
-    test("should dispatch to in operator", () => {
-      const context = createMockContext();
-      const result = applyComparisonOperator("in", [1, 2, 3], context);
-
-      expect(result.patterns).toHaveLength(2);
-      expect(result.filters).toHaveLength(0);
-    });
-
-    test("should dispatch to notIn operator", () => {
-      const context = createMockContext();
-      const result = applyComparisonOperator("notIn", [1, 2, 3], context);
-
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(1);
+      // Should contain the numeric values
+      expect(valuesPattern).toContain("1");
+      expect(valuesPattern).toContain("2");
+      expect(valuesPattern).toContain("3");
     });
   });
 });

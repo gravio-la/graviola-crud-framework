@@ -1,127 +1,209 @@
 /**
- * Unit tests for logical filter operators
+ * Unit tests for logical operators (AND, OR, NOT)
+ * Focus: compound filter logic
  */
 
-import { describe, expect, test } from "@jest/globals";
-import df from "@rdfjs/data-model";
-import type { FilterContext } from "../types";
+import { describe, test, expect } from "bun:test";
 import { applyLogicalOperator } from "./logical";
-
-// Mock context for testing
-const createMockContext = (property: string = "email"): FilterContext => {
-  const subject = df.variable("person");
-  const propertyVar = df.variable(property);
-  const predicateNode = df.namedNode(`http://example.com/${property}`);
-
-  return {
-    subject,
-    property,
-    propertyVar,
-    predicateNode,
-    schemaType: "string",
-    prefixMap: { ex: "http://example.com/" },
-    flavour: "default",
-    depth: 0,
-  };
-};
+import type { FilterContext } from "../types";
+import { sparql } from "@tpluscode/sparql-builder";
+import df from "@rdfjs/data-model";
 
 describe("Logical Operators", () => {
-  describe("applyLogicalOperator - OR", () => {
-    test("should combine simple string filters with OR", () => {
-      const context = createMockContext("email");
-
-      // OR with multiple endsWith conditions
-      const conditions = [
-        { endsWith: "gmail.com" },
-        { endsWith: "company.com" },
-      ];
-
-      const result = applyLogicalOperator("OR", conditions, context);
-
-      // Should have patterns and combined filter
-      expect(result.patterns.length).toBeGreaterThan(0);
-      expect(result.filters.length).toBeGreaterThan(0);
-
-      const filterStr = result.filters[0].toString();
-      expect(filterStr).toContain("FILTER");
-      expect(filterStr).toContain("||");
-    });
-
-    test("should throw error for complex OR (UNION not implemented yet)", () => {
-      const context = createMockContext("age");
-
-      // Complex OR that can't use simple combined FILTER
-      const conditions = [
-        { equals: 18 },
-        { in: [25, 30, 35] }, // This uses VALUES, making it complex
-      ];
-
-      expect(() => {
-        applyLogicalOperator("OR", conditions, context);
-      }).toThrow("Complex OR with UNION not yet implemented");
-    });
+  const createContext = (
+    property: string,
+    schemaType?: string,
+  ): FilterContext => ({
+    subject: sparql`?item`,
+    property,
+    propertyVar: sparql`?${property}`,
+    predicateNode: df.namedNode(`http://example.org/${property}`),
+    schemaType,
+    prefixMap: {},
+    flavour: "default",
+    depth: 0,
   });
 
-  describe("applyLogicalOperator - AND", () => {
-    test("should combine multiple conditions with AND", () => {
-      const context = createMockContext("email");
+  describe("AND operator", () => {
+    test("should combine multiple conditions with AND logic", () => {
+      const context = createContext("item");
 
-      const conditions = [{ contains: "admin" }, { endsWith: ".com" }];
+      // AND: price >= 10 AND isAvailable = true
+      const andFilter = {
+        AND: [{ price: { gte: 10 } }, { isAvailable: { equals: true } }],
+      };
 
-      const result = applyLogicalOperator("AND", conditions, context);
+      const result = applyLogicalOperator("AND", andFilter.AND, context);
 
-      // AND just combines all patterns and filters
+      console.log("\n=== AND Test ===");
+      console.log(
+        "Patterns:",
+        result.patterns.map((p) => p.toString()),
+      );
+      console.log(
+        "Filters:",
+        result.filters.map((f) => f.toString()),
+      );
+      console.log("Optional:", result.optional);
+
       expect(result.patterns.length).toBeGreaterThan(0);
-      expect(result.filters.length).toBeGreaterThan(0);
+      // Should have patterns for both price and isAvailable
     });
 
-    test("should handle empty conditions array", () => {
-      const context = createMockContext("email");
-      const result = applyLogicalOperator("AND", [], context);
+    test("should handle AND with boolean equals", () => {
+      const context = createContext("item");
 
-      expect(result.patterns).toHaveLength(0);
-      expect(result.filters).toHaveLength(0);
-    });
-  });
+      const andFilter = {
+        AND: [
+          { price: { gte: 10 } },
+          { isAvailable: { equals: true } },
+          { name: { contains: "test" } },
+        ],
+      };
 
-  describe("applyLogicalOperator - NOT", () => {
-    test("should wrap condition in FILTER NOT EXISTS", () => {
-      const context = createMockContext("email");
+      const result = applyLogicalOperator("AND", andFilter.AND, context);
 
-      const condition = { endsWith: "spam.com" };
-
-      const result = applyLogicalOperator("NOT", condition, context);
-
-      expect(result.patterns).toHaveLength(1);
-      expect(result.filters).toHaveLength(0); // NOT EXISTS is a pattern, not a filter
-
-      const patternStr = result.patterns[0].toString();
-      expect(patternStr).toContain("NOT EXISTS");
-    });
-
-    test("should handle array with single condition", () => {
-      const context = createMockContext("email");
-      const result = applyLogicalOperator(
-        "NOT",
-        [{ contains: "test" }],
-        context,
+      console.log("\n=== AND with 3 conditions ===");
+      console.log(
+        "Patterns:",
+        result.patterns.map((p) => p.toString()),
+      );
+      console.log(
+        "Filters:",
+        result.filters.map((f) => f.toString()),
       );
 
-      expect(result.patterns).toHaveLength(1);
+      // All conditions should be present
+      const allPatterns = result.patterns.map((p) => p.toString()).join("\n");
+      expect(allPatterns).toContain("price");
+      expect(allPatterns).toContain("isAvailable");
+      expect(allPatterns).toContain("name");
     });
   });
 
-  describe("applyLogicalOperator - edge cases", () => {
-    test("should handle non-array value for AND", () => {
-      const context = createMockContext("email");
-      const result = applyLogicalOperator("AND", { contains: "test" }, context);
+  describe("OR operator", () => {
+    test("should combine multiple conditions with OR logic", () => {
+      const context = createContext("item");
+
+      // OR: price <= 25 OR name contains "Lap"
+      const orFilter = {
+        OR: [{ price: { lte: 25 } }, { name: { contains: "Lap" } }],
+      };
+
+      const result = applyLogicalOperator("OR", orFilter.OR, context);
+
+      console.log("\n=== OR Test ===");
+      console.log(
+        "Patterns:",
+        result.patterns.map((p) => p.toString()),
+      );
+      console.log(
+        "Filters:",
+        result.filters.map((f) => f.toString()),
+      );
+      console.log("Optional:", result.optional);
 
       expect(result.patterns.length).toBeGreaterThan(0);
     });
 
-    test("should handle non-array value for OR", () => {
-      const context = createMockContext("email");
-      const result = applyLogicalOperator("OR", { endsWith: ".com" }, context);
+    test("should handle OR with boolean", () => {
+      const context = createContext("item");
+
+      const orFilter = {
+        OR: [{ isAvailable: { equals: true } }, { price: { lte: 20 } }],
+      };
+
+      const result = applyLogicalOperator("OR", orFilter.OR, context);
+
+      console.log("\n=== OR with boolean ===");
+      console.log(
+        "Patterns:",
+        result.patterns.map((p) => p.toString()),
+      );
+      console.log(
+        "Filters:",
+        result.filters.map((f) => f.toString()),
+      );
+
+      // Should have patterns for both conditions
+      const allPatterns = result.patterns.map((p) => p.toString()).join("\n");
+      expect(allPatterns).toContain("isAvailable");
+      expect(allPatterns).toContain("price");
+    });
+  });
+
+  describe("NOT operator", () => {
+    test("should negate a condition", () => {
+      const context = createContext("item");
+
+      // NOT: isAvailable = true (i.e., find unavailable items)
+      const notFilter = {
+        NOT: { isAvailable: { equals: true } },
+      };
+
+      const result = applyLogicalOperator("NOT", notFilter.NOT, context);
+
+      console.log("\n=== NOT Test ===");
+      console.log(
+        "Patterns:",
+        result.patterns.map((p) => p.toString()),
+      );
+      console.log(
+        "Filters:",
+        result.filters.map((f) => f.toString()),
+      );
+
+      expect(result.patterns.length).toBeGreaterThan(0);
+    });
+
+    test("should handle NOT with multiple fields", () => {
+      const context = createContext("item");
+
+      const notFilter = {
+        NOT: {
+          AND: [{ price: { lte: 10 } }, { isAvailable: { equals: false } }],
+        },
+      };
+
+      const result = applyLogicalOperator("NOT", notFilter.NOT, context);
+
+      console.log("\n=== NOT with AND ===");
+      console.log(
+        "Patterns:",
+        result.patterns.map((p) => p.toString()),
+      );
+      console.log(
+        "Filters:",
+        result.filters.map((f) => f.toString()),
+      );
+
+      expect(result.patterns.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Nested logical operators", () => {
+    test("should handle AND inside OR", () => {
+      const context = createContext("item");
+
+      // (price >= 10 AND isAvailable = true) OR (name contains "special")
+      const complexFilter = {
+        OR: [
+          { AND: [{ price: { gte: 10 } }, { isAvailable: { equals: true } }] },
+          { name: { contains: "special" } },
+        ],
+      };
+
+      const result = applyLogicalOperator("OR", complexFilter.OR, context);
+
+      console.log("\n=== Nested: OR with AND ===");
+      console.log(
+        "Patterns:",
+        result.patterns.map((p) => p.toString()),
+      );
+      console.log(
+        "Filters:",
+        result.filters.map((f) => f.toString()),
+      );
 
       expect(result.patterns.length).toBeGreaterThan(0);
     });

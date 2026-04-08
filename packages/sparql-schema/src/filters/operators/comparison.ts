@@ -7,6 +7,7 @@ import { sparql } from "@tpluscode/sparql-builder";
 import df from "@rdfjs/data-model";
 import type { FilterContext, FilterResult } from "../types";
 import { convertIRIToNode } from "../../utils/iriConverter";
+import { inferDatatype } from "../utils/datatype";
 
 /**
  * Check if value is a node reference (object with @id property)
@@ -29,7 +30,7 @@ export function applyEqualsOperator(
   value: any,
   context: FilterContext,
 ): FilterResult {
-  const { subject, predicateNode, prefixMap } = context;
+  const { subject, predicateNode, prefixMap, schemaType } = context;
 
   // Check if value is a node reference (object with @id)
   if (isNodeReference(value)) {
@@ -43,8 +44,8 @@ export function applyEqualsOperator(
     };
   }
 
-  // Regular literal value
-  const literalNode = df.literal(String(value)); // TODO: proper datatype inference
+  // Regular literal value - use proper datatype inference
+  const literalNode = inferDatatype(value, schemaType);
 
   return {
     patterns: [sparql`${subject} ${predicateNode} ${literalNode} .`],
@@ -62,7 +63,8 @@ export function applyNotOperator(
   value: any,
   context: FilterContext,
 ): FilterResult {
-  const { subject, predicateNode, propertyVar, prefixMap } = context;
+  const { subject, predicateNode, propertyVar, prefixMap, schemaType } =
+    context;
 
   // Check if value is a node reference (object with @id)
   if (isNodeReference(value)) {
@@ -78,7 +80,9 @@ export function applyNotOperator(
 
   return {
     patterns: [sparql`${subject} ${predicateNode} ${propertyVar} .`],
-    filters: [sparql`FILTER(${propertyVar} != ${df.literal(String(value))})`],
+    filters: [
+      sparql`FILTER(${propertyVar} != ${inferDatatype(value, schemaType)})`,
+    ],
     optional: false,
   };
 }
@@ -96,14 +100,15 @@ export function applyInOperator(
   values: any[],
   context: FilterContext,
 ): FilterResult {
-  const { subject, predicateNode, propertyVar, prefixMap } = context;
+  const { subject, predicateNode, propertyVar, prefixMap, schemaType } =
+    context;
 
   // Build VALUES clause - handle both literals and node references
   const valuesList = values.map((v) => {
     if (isNodeReference(v)) {
       return convertIRIToNode(v["@id"], prefixMap);
     }
-    return df.literal(String(v));
+    return inferDatatype(v, schemaType);
   });
   const valuesPattern = sparql`VALUES ${propertyVar} { ${valuesList} }`;
   const triplePattern = sparql`${subject} ${predicateNode} ${propertyVar} .`;
@@ -126,14 +131,15 @@ export function applyNotInOperator(
   values: any[],
   context: FilterContext,
 ): FilterResult {
-  const { subject, predicateNode, propertyVar, prefixMap } = context;
+  const { subject, predicateNode, propertyVar, prefixMap, schemaType } =
+    context;
 
   // Handle both literals and node references
   const valuesList = values.map((v) => {
     if (isNodeReference(v)) {
       return convertIRIToNode(v["@id"], prefixMap);
     }
-    return df.literal(String(v));
+    return inferDatatype(v, schemaType);
   });
 
   return {

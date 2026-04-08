@@ -4,8 +4,123 @@
  */
 
 import { sparql } from "@tpluscode/sparql-builder";
+import type { SparqlTemplateResult } from "@tpluscode/sparql-builder";
+import df from "@rdfjs/data-model";
 import type { FilterContext, FilterResult } from "../types";
 import { filterToSparql } from "../filterToSparql";
+import { convertIRIToNode } from "../../utils/iriConverter";
+
+/**
+ * Sanitize variable name (remove special characters)
+ */
+function sanitizeVariableName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_]/g, "_");
+}
+
+/**
+ * Create a predicate node from a property name
+ */
+function createPredicateNode(
+  propertyName: string,
+  prefixMap: Record<string, string>,
+): any {
+  const defaultPrefix = prefixMap[""] || "";
+  if (defaultPrefix) {
+    return convertIRIToNode(defaultPrefix + propertyName, prefixMap);
+  }
+  return df.namedNode(propertyName);
+}
+
+/**
+ * Process a multi-property filter (e.g., { price: { gte: 10 }, name: { contains: "x" } })
+ * by iterating over properties and calling filterToSparql for each
+ */
+function processMultiPropertyFilter(
+  filter: Record<string, any>,
+  baseContext: FilterContext,
+): FilterResult {
+  const result: FilterResult = { patterns: [], filters: [], optional: false };
+
+  // Check if this is actually a single-property operator-only filter
+  const keys = Object.keys(filter);
+  const operatorKeys = [
+    "equals",
+    "not",
+    "in",
+    "notIn",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "contains",
+    "startsWith",
+    "endsWith",
+    "some",
+    "every",
+    "none",
+    "AND",
+    "OR",
+    "NOT",
+    "mode",
+  ];
+
+  // If all keys are operators, this is a single-property filter
+  if (keys.every((k) => operatorKeys.includes(k))) {
+    return filterToSparql(filter, baseContext);
+  }
+
+  // Multi-property filter - iterate over properties
+  // Extract schema properties if available
+  const schemaProps =
+    baseContext.schema &&
+    typeof baseContext.schema === "object" &&
+    "properties" in baseContext.schema
+      ? (baseContext.schema.properties as Record<string, any>)
+      : {};
+
+  for (const [propertyName, propertyFilter] of Object.entries(filter)) {
+    // Skip logical operators at this level (they should be handled recursively)
+    if (["AND", "OR", "NOT"].includes(propertyName)) {
+      const logicalResult = filterToSparql(
+        { [propertyName]: propertyFilter },
+        baseContext,
+      );
+      result.patterns.push(...logicalResult.patterns);
+      result.filters.push(...logicalResult.filters);
+      continue;
+    }
+
+    // Look up schema type for this property
+    const propSchema = schemaProps[propertyName];
+    const propSchemaType =
+      propSchema && typeof propSchema === "object" && "type" in propSchema
+        ? (propSchema.type as string)
+        : undefined;
+
+    // Create proper predicate and variable for this property
+    const predicateNode = createPredicateNode(
+      propertyName,
+      baseContext.prefixMap,
+    );
+    const propertyVar = df.variable(sanitizeVariableName(propertyName));
+
+    // Create context for this specific property with proper predicate and variable
+    const propertyContext: FilterContext = {
+      ...baseContext,
+      property: propertyName,
+      propertyVar,
+      predicateNode,
+      schemaType: propSchemaType,
+    };
+
+    const propResult = filterToSparql(propertyFilter, propertyContext);
+    result.patterns.push(...propResult.patterns);
+    result.filters.push(...propResult.filters);
+    result.optional = result.optional || propResult.optional;
+  }
+
+  return result;
+}
 
 /**
  * AND: Multiple conditions (implicit in SPARQL - just add all patterns)
@@ -19,7 +134,7 @@ function applyAndOperator(
   const result: FilterResult = { patterns: [], filters: [], optional: false };
 
   for (const condition of conditions) {
-    const condResult = filterToSparql(condition, context);
+    const condResult = processMultiPropertyFilter(condition, context);
     result.patterns.push(...condResult.patterns);
     result.filters.push(...condResult.filters);
   }
@@ -28,39 +143,45 @@ function applyAndOperator(
 }
 
 /**
- * OR: Use UNION or combined FILTER with ||
- * For simple cases: FILTER(cond1 || cond2)
- * For complex: { PATTERN1 } UNION { PATTERN2 }
+ * OR: Use UNION pattern for multiple conditions
+ * { OR: [{ price: { lte: 25 } }, { name: { contains: "Lap" } }] }
+ * => { ?subject :price ?price . FILTER(?price <= 25) }
+ *    UNION
+ *    { ?subject :name ?name . FILTER(CONTAINS(?name, "Lap")) }
  */
 function applyOrOperator(
   conditions: any[],
   context: FilterContext,
 ): FilterResult {
-  // Strategy: If all conditions are simple FILTER expressions, combine with ||
-  // TODO: Implement UNION pattern generation
+  const results = conditions.map((c) => processMultiPropertyFilter(c, context));
 
-  const results = conditions.map((c) => filterToSparql(c, context));
+  // OR requires UNION in SPARQL for proper disjunction semantics
+  // Build: { patterns1 filters1 } UNION { patterns2 filters2 } UNION ...
+  const unionBlocks: SparqlTemplateResult[] = [];
 
-  // Check if we can use combined FILTER
-  const canUseCombinedFilter = results.every(
-    (r) => r.patterns.length === 1 && r.filters.length === 1,
-  );
-
-  if (canUseCombinedFilter) {
-    // Combine filters with ||
-    const combinedFilter = sparql`FILTER(${results.map((r) => r.filters[0]).join(" || ")})`;
-    return {
-      patterns: [results[0].patterns[0]], // Use first pattern
-      filters: [combinedFilter],
-      optional: false,
-    };
-  } else {
-    // Use UNION (more complex, less performant)
-    // TODO: Implement UNION pattern generation
-    throw new Error(
-      "Complex OR with UNION not yet implemented - Phase 2 feature",
-    );
+  for (const condResult of results) {
+    const blockParts = [...condResult.patterns, ...condResult.filters];
+    if (blockParts.length > 0) {
+      // Each block is wrapped in { }
+      const block = sparql`{ ${blockParts} }`;
+      unionBlocks.push(block);
+    }
   }
+
+  if (unionBlocks.length === 0) {
+    return { patterns: [], filters: [], optional: false };
+  }
+
+  // Join blocks with UNION
+  const unionPattern = sparql`${unionBlocks.map((b, i) =>
+    i === 0 ? b : sparql`UNION ${b}`,
+  )}`;
+
+  return {
+    patterns: [unionPattern],
+    filters: [],
+    optional: false,
+  };
 }
 
 /**
@@ -72,7 +193,7 @@ function applyNotOperator(
   condition: any,
   context: FilterContext,
 ): FilterResult {
-  const condResult = filterToSparql(condition, context);
+  const condResult = processMultiPropertyFilter(condition, context);
 
   // Wrap in FILTER NOT EXISTS
   const notExistsPattern = sparql`FILTER NOT EXISTS { ${condResult.patterns} ${condResult.filters} }`;
