@@ -2,10 +2,12 @@
 # Start all: docker compose up -d --wait
 # Then run:  OXIGRAPH_URL=http://localhost:7878 BLAZEGRAPH_URL=http://localhost:9999/bigdata \
 #            FUSEKI_URL=http://localhost:3030/ds VIRTUOSO_URL=http://localhost:8890 \
+#            AGRAPH_URL=http://localhost:10035/repositories/graviola_ds_test \
 #            POSTGRES_URL=postgresql://test:test@localhost:5432/graviola_test \
 #            MARIADB_URL=mysql://test:test@localhost:3307/graviola_test \
 #            MONGODB_URL='mongodb://test:test@localhost:27017/graviola_test?authSource=admin&directConnection=true&replicaSet=rs0' \
 #            bun test
+# AllegroGraph (agraph): WebView on http://localhost:10035 — user/password default test/xyzzy (AGRAPH_SUPER_*).
 
 services:
 
@@ -97,6 +99,46 @@ services:
       timeout: 5s
       retries: 30
       start_period: 45s
+
+  # AllegroGraph 8.5 — SPARQL: http://localhost:10035/repositories/<repo>
+  # (see agraph-init; repo `graviola_ds_test` is created for datastore-tests).
+  # Session ports 10000–10034 are mapped for AGWebView / sessions (see Franz Docker docs).
+  agraph:
+    image: franzinc/agraph:v8.5.0
+    platform: linux/amd64
+    shm_size: 2g
+    environment:
+      AGRAPH_SUPER_USER: test
+      AGRAPH_SUPER_PASSWORD: xyzzy
+    ports:
+      - "10000-10035:10000-10035"
+    # Image has agtool; curl/wget are not guaranteed in PATH.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "agtool",
+          "catalogs",
+          "list",
+          "http://test:xyzzy@127.0.0.1:10035",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 45s
+
+  agraph-init:
+    image: franzinc/agraph:v8.5.0
+    platform: linux/amd64
+    depends_on:
+      agraph:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        agtool repos create "http://test:xyzzy@agraph:10035/repositories/graviola_ds_test" || true
+    restart: "no"
 
   # ─── Relational databases ───────────────────────────────────────────────────
 

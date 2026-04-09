@@ -7,6 +7,9 @@
  *   BLAZEGRAPH_URL — e.g. http://localhost:9999/bigdata  (Blazegraph)
  *   FUSEKI_URL     — e.g. http://localhost:3030/ds  (Jena Fuseki dataset base)
  *   VIRTUOSO_URL   — e.g. http://localhost:8890  (OpenLink Virtuoso; see VIRTUOSO_* below)
+ *   AGRAPH_URL     — AllegroGraph repository SPARQL endpoint, e.g.
+ *                    http://localhost:10035/repositories/graviola_ds_test
+ *                    (see AGRAPH_USER / AGRAPH_PASSWORD; default test / xyzzy)
  *
  * Oxigraph HTTP endpoints:
  *   Query:  GET/POST ${base}/query
@@ -23,6 +26,10 @@
  * Virtuoso HTTP endpoints (default SPARQL flavour, `default-graph-uri` on all requests):
  *   Query:  POST ${base}/sparql?default-graph-uri=...
  *   Update: POST ${base}/sparql-auth?default-graph-uri=...  (HTTP Digest: VIRTUOSO_USER / VIRTUOSO_PASSWORD)
+ *
+ * AllegroGraph (SPARQL flavour `allegro`) — repository URL is both query and update:
+ *   Query:  POST ${repoUrl}  (Content-Type: application/sparql-query | Accept: …)
+ *   Update: POST ${repoUrl}  (Content-Type: application/sparql-update)
  */
 import type { AuthConfig, SPARQLFlavour } from "@graviola/edb-core-types";
 import type { AbstractDatastore } from "@graviola/edb-global-types";
@@ -30,6 +37,7 @@ import { initSPARQLStore } from "@graviola/sparql-db-impl";
 import {
   type HttpFetchFn,
   applySparqlUrlSearchParams,
+  createAuthHeaders,
   createHttpSparqlCrudFunctions,
   sparqlUpdateHttp,
 } from "@graviola/remote-query-implementations";
@@ -56,14 +64,14 @@ export type SparqlAdapterOptions = {
   sparqlFlavour?: SPARQLFlavour;
   /** Virtuoso: named graph IRI (`default-graph-uri` query parameter). */
   defaultGraph?: string;
-  /** Virtuoso: Digest credentials for `/sparql-auth`. */
+  /** Virtuoso: Digest credentials for `/sparql-auth`. AllegroGraph: Basic auth (AGRAPH_USER / AGRAPH_PASSWORD). */
   username?: string;
   password?: string;
 };
 
 function buildEndpointConfig(
   baseUrl: string,
-  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso",
+  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso" | "allegro",
   opts?: SparqlAdapterOptions,
 ): EndpointConfig {
   const base = baseUrl.replace(/\/$/, "");
@@ -93,6 +101,16 @@ function buildEndpointConfig(
       customFetch: createVirtuosoDigestFetch(user, pass),
     };
   }
+  if (type === "allegro") {
+    const user = opts?.username ?? "test";
+    const pass = opts?.password ?? "xyzzy";
+    return {
+      queryUrl: base,
+      updateUrl: base,
+      flavour: "allegro",
+      auth: { username: user, password: pass },
+    };
+  }
   return {
     queryUrl: `${base}/query`,
     updateUrl: `${base}/update`,
@@ -103,7 +121,7 @@ function buildEndpointConfig(
 export function createSparqlAdapter(
   name: string,
   baseUrl: string,
-  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso",
+  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso" | "allegro",
   opts?: SparqlAdapterOptions,
 ): DatastoreAdapter {
   const cfg = buildEndpointConfig(baseUrl, type, opts);
@@ -115,6 +133,9 @@ export function createSparqlAdapter(
     auth: cfg.auth,
     urlSearchParams: cfg.urlSearchParams,
     customFetch: cfg.customFetch,
+    ...(type === "allegro"
+      ? { constructResultFormat: "ntriples" as const }
+      : {}),
   };
 
   return {
@@ -142,12 +163,16 @@ export function createSparqlAdapter(
           cfg.queryUrl,
           cfg.urlSearchParams,
         );
-        const res = await fetch(healthUrl, {
+        const fetchImpl = cfg.customFetch ?? globalThis.fetch;
+        const res = await fetchImpl(healthUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/sparql-query",
-            Accept: "application/sparql-results+json",
-          },
+          headers: createAuthHeaders(
+            {
+              "Content-Type": "application/sparql-query",
+              Accept: "application/sparql-results+json",
+            },
+            cfg.auth,
+          ),
           body: "ASK { }",
           signal: AbortSignal.timeout(5000),
         });

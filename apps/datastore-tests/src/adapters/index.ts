@@ -22,6 +22,7 @@ function skipDefaultAdaptersEnv(): boolean {
  *   - BLAZEGRAPH_URL  → SPARQL/Blazegraph (Docker HTTP)
  *   - FUSEKI_URL      → SPARQL/Jena Fuseki TDB (Docker HTTP; dataset base, e.g. …/ds)
  *   - VIRTUOSO_URL    → SPARQL/OpenLink Virtuoso (Docker HTTP; optional VIRTUOSO_DEFAULT_GRAPH, VIRTUOSO_USER, VIRTUOSO_PASSWORD)
+ *   - AGRAPH_URL      → SPARQL/AllegroGraph 8.x (Docker HTTP; repository URL, e.g. …/repositories/graviola_ds_test; AGRAPH_USER, AGRAPH_PASSWORD)
  *   - SQLITE_URL      → Prisma/SQLite (with SKIP_DEFAULT_ADAPTER, must be set explicitly to include SQLite)
  *   - POSTGRES_URL    → Prisma/PostgreSQL
  *   - MARIADB_URL     → Prisma/MariaDB
@@ -34,6 +35,9 @@ function skipDefaultAdaptersEnv(): boolean {
  * Example — run with all SPARQL backends:
  *   OXIGRAPH_URL=http://localhost:7878 BLAZEGRAPH_URL=http://localhost:9999/bigdata FUSEKI_URL=http://localhost:3030/ds \
  *   VIRTUOSO_URL=http://localhost:8890 bun test
+ *
+ * Example — AllegroGraph only (docker compose `agraph` + `agraph-init`; not port 8890 — that is Virtuoso):
+ *   SKIP_DEFAULT_ADAPTER=1 AGRAPH_URL=http://localhost:10035/repositories/graviola_ds_test bun test
  *
  * Example — SQLite Prisma (schema is generated on first Prisma adapter setup):
  *   SQLITE_URL=file:./prisma/test.db bun test
@@ -111,6 +115,20 @@ export async function getActiveAdapters(): Promise<DatastoreAdapter[]> {
           defaultGraph: process.env.VIRTUOSO_DEFAULT_GRAPH ?? "urn:default",
           username: process.env.VIRTUOSO_USER ?? "dba",
           password: process.env.VIRTUOSO_PASSWORD ?? "dba",
+        },
+      ),
+    );
+  }
+
+  if (process.env.AGRAPH_URL) {
+    adapters.push(
+      createSparqlAdapter(
+        "SPARQL/AllegroGraph (Docker)",
+        process.env.AGRAPH_URL,
+        "allegro",
+        {
+          username: process.env.AGRAPH_USER ?? "test",
+          password: process.env.AGRAPH_PASSWORD ?? "xyzzy",
         },
       ),
     );

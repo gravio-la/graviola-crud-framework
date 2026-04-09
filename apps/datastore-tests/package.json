@@ -8,6 +8,7 @@
     "setup:prisma": "bun scripts/setup-prisma.ts",
     "test": "bun test",
     "test:mongo": "SKIP_DEFAULT_ADAPTER=1 MONGODB_URL='mongodb://test:test@localhost:27017/graviola_test?authSource=admin&directConnection=true&replicaSet=rs0' bun run test",
+    "test:agraph": "SKIP_DEFAULT_ADAPTER=1 AGRAPH_URL=http://localhost:10035/repositories/graviola_ds_test bun run test",
     "test:local": "bun test --testPathPattern='datastore'",
     "setup:prisma:plain": "bun scripts/setup-prisma.ts",
     "test:plain": "bun test",
