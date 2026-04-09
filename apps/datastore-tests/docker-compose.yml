@@ -3,11 +3,16 @@
 # Then run:  OXIGRAPH_URL=http://localhost:7878 BLAZEGRAPH_URL=http://localhost:9999/bigdata \
 #            FUSEKI_URL=http://localhost:3030/ds VIRTUOSO_URL=http://localhost:8890 \
 #            AGRAPH_URL=http://localhost:10035/repositories/graviola_ds_test \
+#            GRAPHDB_URL=http://localhost:7200/repositories/graviola_ds_test \
 #            POSTGRES_URL=postgresql://test:test@localhost:5432/graviola_test \
 #            MARIADB_URL=mysql://test:test@localhost:3307/graviola_test \
 #            MONGODB_URL='mongodb://test:test@localhost:27017/graviola_test?authSource=admin&directConnection=true&replicaSet=rs0' \
 #            bun test
 # AllegroGraph (agraph): WebView on http://localhost:10035 — user/password default test/xyzzy (AGRAPH_SUPER_*).
+# GraphDB (graphdb): Workbench on http://localhost:7200 — repo created by graphdb-init from graphdb-repo-config.ttl.
+# GraphDB 11+ requires a Free license for SPARQL. Place `graphdb.license` beside this compose file; mount is
+# `./graphdb.license:/opt/graphdb/home/graphdb.license` with GDB_JAVA_OPTS pointing at that path (avoids work-dir permission issues).
+# On the host: `chmod 644 graphdb.license` and optionally `sudo chown 1000:1000 graphdb.license` so the container user can read it.
 
 services:
 
@@ -140,6 +145,47 @@ services:
         agtool repos create "http://test:xyzzy@agraph:10035/repositories/graviola_ds_test" || true
     restart: "no"
 
+  # Ontotext GraphDB — SPARQL: http://localhost:7200/repositories/<id>
+  # Repository `graviola_ds_test` is created via POST /rest/repositories (see graphdb-init).
+  # License: mount at graphdb home root (not under work/) so root-owned work/ from the volume does not block reads.
+  # GraphDB Free license keys are valid only for a specific 11.x line (e.g. 11.0.x). Pin the image tag to match your key.
+  # After changing tags, if the DB was created on another minor version, consider: docker compose down && docker volume rm …_graphdb_data
+  graphdb:
+    image: ontotext/graphdb:11.0.2
+    platform: linux/amd64
+    ports:
+      - "7200:7200"
+    #environment:
+    #  GDB_JAVA_OPTS: "-Dgraphdb.license.file=/opt/graphdb/home/graphdb.license"
+    volumes:
+      - graphdb_data:/opt/graphdb/home
+    #  - ./graphdb.license:/opt/graphdb/home/graphdb.license:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://127.0.0.1:7200/rest/repositories >/dev/null || exit 1",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  graphdb-init:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      graphdb:
+        condition: service_healthy
+    volumes:
+      - ./graphdb-repo-config.ttl:/repo-config.ttl:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        curl -sf -X POST "http://graphdb:7200/rest/repositories" \
+          -H "Content-Type: multipart/form-data" \
+          -F "config=@/repo-config.ttl" || true
+    restart: "no"
+
   # ─── Relational databases ───────────────────────────────────────────────────
 
   postgres:
@@ -231,6 +277,7 @@ services:
 volumes:
   fuseki_data:
   virtuoso_data:
+  graphdb_data:
   postgres_data:
   mariadb_data:
   mongodb_data:

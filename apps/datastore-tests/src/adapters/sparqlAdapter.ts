@@ -10,6 +10,9 @@
  *   AGRAPH_URL     — AllegroGraph repository SPARQL endpoint, e.g.
  *                    http://localhost:10035/repositories/graviola_ds_test
  *                    (see AGRAPH_USER / AGRAPH_PASSWORD; default test / xyzzy)
+ *   GRAPHDB_URL    — Ontotext GraphDB repository SPARQL endpoint, e.g.
+ *                    http://localhost:7200/repositories/graviola_ds_test
+ *                    (optional GRAPHDB_USER / GRAPHDB_PASSWORD for secured instances)
  *
  * Oxigraph HTTP endpoints:
  *   Query:  GET/POST ${base}/query
@@ -30,6 +33,10 @@
  * AllegroGraph (SPARQL flavour `allegro`) — repository URL is both query and update:
  *   Query:  POST ${repoUrl}  (Content-Type: application/sparql-query | Accept: …)
  *   Update: POST ${repoUrl}  (Content-Type: application/sparql-update)
+ *
+ * GraphDB / RDF4J (flavour `default`) — query and update paths differ:
+ *   Query:  POST ${repoUrl}
+ *   Update: POST ${repoUrl}/statements  (Content-Type: application/sparql-update)
  */
 import type { AuthConfig, SPARQLFlavour } from "@graviola/edb-core-types";
 import type { AbstractDatastore } from "@graviola/edb-global-types";
@@ -64,14 +71,20 @@ export type SparqlAdapterOptions = {
   sparqlFlavour?: SPARQLFlavour;
   /** Virtuoso: named graph IRI (`default-graph-uri` query parameter). */
   defaultGraph?: string;
-  /** Virtuoso: Digest credentials for `/sparql-auth`. AllegroGraph: Basic auth (AGRAPH_USER / AGRAPH_PASSWORD). */
+  /** Virtuoso: Digest credentials for `/sparql-auth`. AllegroGraph / GraphDB: Basic auth when set. */
   username?: string;
   password?: string;
 };
 
 function buildEndpointConfig(
   baseUrl: string,
-  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso" | "allegro",
+  type:
+    | "oxigraph"
+    | "blazegraph"
+    | "fuseki"
+    | "virtuoso"
+    | "allegro"
+    | "graphdb",
   opts?: SparqlAdapterOptions,
 ): EndpointConfig {
   const base = baseUrl.replace(/\/$/, "");
@@ -111,6 +124,18 @@ function buildEndpointConfig(
       auth: { username: user, password: pass },
     };
   }
+  if (type === "graphdb") {
+    const user = opts?.username;
+    const pass = opts?.password;
+    const withAuth =
+      user !== undefined && user !== "" && pass !== undefined && pass !== "";
+    return {
+      queryUrl: base,
+      updateUrl: `${base}/statements`,
+      flavour: "default",
+      ...(withAuth ? { auth: { username: user, password: pass } } : {}),
+    };
+  }
   return {
     queryUrl: `${base}/query`,
     updateUrl: `${base}/update`,
@@ -121,7 +146,13 @@ function buildEndpointConfig(
 export function createSparqlAdapter(
   name: string,
   baseUrl: string,
-  type: "oxigraph" | "blazegraph" | "fuseki" | "virtuoso" | "allegro",
+  type:
+    | "oxigraph"
+    | "blazegraph"
+    | "fuseki"
+    | "virtuoso"
+    | "allegro"
+    | "graphdb",
   opts?: SparqlAdapterOptions,
 ): DatastoreAdapter {
   const cfg = buildEndpointConfig(baseUrl, type, opts);
@@ -164,6 +195,25 @@ export function createSparqlAdapter(
           cfg.urlSearchParams,
         );
         const fetchImpl = cfg.customFetch ?? globalThis.fetch;
+
+        if (type === "graphdb") {
+          const origin = new URL(healthUrl).origin;
+          const listRes = await fetchImpl(`${origin}/rest/repositories`, {
+            method: "GET",
+            headers: createAuthHeaders(
+              { Accept: "application/json" },
+              cfg.auth,
+            ),
+            signal: AbortSignal.timeout(5000),
+          });
+          if (!listRes.ok) {
+            const t = await listRes.text().catch(() => "");
+            throw new Error(
+              `GraphDB REST /rest/repositories failed (${listRes.status})${t ? ` — ${t.slice(0, 300)}` : ""}`,
+            );
+          }
+        }
+
         const res = await fetchImpl(healthUrl, {
           method: "POST",
           headers: createAuthHeaders(
@@ -177,11 +227,34 @@ export function createSparqlAdapter(
           signal: AbortSignal.timeout(5000),
         });
         if (!res.ok) {
-          throw new Error(`Endpoint health check failed with ${res.status}`);
+          const body = await res.text().catch(() => "");
+          if (
+            type === "graphdb" &&
+            /no license was set|license was set/i.test(body)
+          ) {
+            throw new Error(
+              `${name}: GraphDB did not find a license. Mount ./graphdb.license → /opt/graphdb/home/graphdb.license (see \`graphdb\` in docker-compose), set chmod 644 / chown 1000:1000 on the host file if needed, then \`docker compose up -d --force-recreate graphdb\`.`,
+            );
+          }
+          if (
+            type === "graphdb" &&
+            /failed to read license|license validation has failed/i.test(body)
+          ) {
+            throw new Error(
+              `${name}: GraphDB rejected the license file (unreadable, wrong edition, expired, or wrong minor version). Free keys are tied to a version line (e.g. 11.0.x): use a matching \`ontotext/graphdb\` tag in docker-compose and see Ontotext’s license email.`,
+            );
+          }
+          throw new Error(
+            `Endpoint health check failed with ${res.status}${body ? ` — ${body.slice(0, 400)}` : ""}`,
+          );
         }
       } catch (e: any) {
+        const msg = e?.message ?? String(e);
+        if (msg.startsWith(`${name}: GraphDB`)) {
+          throw new Error(msg);
+        }
         throw new Error(
-          `${name}: endpoint ${baseUrl} is not reachable — ${e.message}`,
+          `${name}: endpoint ${baseUrl} is not reachable — ${msg}`,
         );
       }
 

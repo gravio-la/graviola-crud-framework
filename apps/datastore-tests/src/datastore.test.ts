@@ -14,6 +14,7 @@
  *   FUSEKI_URL=http://localhost:3030/ds   → SPARQL/Jena Fuseki TDB (Docker)
  *   VIRTUOSO_URL=http://localhost:8890    → SPARQL/OpenLink Virtuoso (Docker; optional VIRTUOSO_DEFAULT_GRAPH, VIRTUOSO_USER, VIRTUOSO_PASSWORD)
  *   AGRAPH_URL=http://localhost:10035/repositories/graviola_ds_test → SPARQL/AllegroGraph (Docker; optional AGRAPH_USER, AGRAPH_PASSWORD; default test/xyzzy)
+ *   GRAPHDB_URL=http://localhost:7200/repositories/graviola_ds_test → SPARQL/Ontotext GraphDB (Docker; optional GRAPHDB_USER, GRAPHDB_PASSWORD; Free license + image tag must match — see datastore-tests docker-compose)
  *   POSTGRES_URL=postgresql://...        → Prisma/PostgreSQL
  *   MARIADB_URL=mysql://...              → Prisma/MariaDB
  *   MONGODB_URL=mongodb://...            → Prisma/MongoDB (Docker single-node RS: add

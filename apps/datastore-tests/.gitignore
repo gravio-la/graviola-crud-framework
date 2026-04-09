@@ -10,3 +10,6 @@ prisma/*.db-journal
 
 # TypeScript build output
 dist/
+
+# GraphDB Free license (mount into Docker; never commit)
+graphdb.license

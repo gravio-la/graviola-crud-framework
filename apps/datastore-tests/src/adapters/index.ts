@@ -23,6 +23,7 @@ function skipDefaultAdaptersEnv(): boolean {
  *   - FUSEKI_URL      → SPARQL/Jena Fuseki TDB (Docker HTTP; dataset base, e.g. …/ds)
  *   - VIRTUOSO_URL    → SPARQL/OpenLink Virtuoso (Docker HTTP; optional VIRTUOSO_DEFAULT_GRAPH, VIRTUOSO_USER, VIRTUOSO_PASSWORD)
  *   - AGRAPH_URL      → SPARQL/AllegroGraph 8.x (Docker HTTP; repository URL, e.g. …/repositories/graviola_ds_test; AGRAPH_USER, AGRAPH_PASSWORD)
+ *   - GRAPHDB_URL     → SPARQL/Ontotext GraphDB (Docker HTTP; repository URL, e.g. …/repositories/graviola_ds_test; optional GRAPHDB_USER, GRAPHDB_PASSWORD). GraphDB 11+ needs a Free license; image tag must match the license’s version line (see docker-compose.yml).
  *   - SQLITE_URL      → Prisma/SQLite (with SKIP_DEFAULT_ADAPTER, must be set explicitly to include SQLite)
  *   - POSTGRES_URL    → Prisma/PostgreSQL
  *   - MARIADB_URL     → Prisma/MariaDB
@@ -38,6 +39,9 @@ function skipDefaultAdaptersEnv(): boolean {
  *
  * Example — AllegroGraph only (docker compose `agraph` + `agraph-init`; not port 8890 — that is Virtuoso):
  *   SKIP_DEFAULT_ADAPTER=1 AGRAPH_URL=http://localhost:10035/repositories/graviola_ds_test bun test
+ *
+ * Example — GraphDB only (docker compose `graphdb` + `graphdb-init`):
+ *   SKIP_DEFAULT_ADAPTER=1 GRAPHDB_URL=http://localhost:7200/repositories/graviola_ds_test bun test
  *
  * Example — SQLite Prisma (schema is generated on first Prisma adapter setup):
  *   SQLITE_URL=file:./prisma/test.db bun test
@@ -130,6 +134,19 @@ export async function getActiveAdapters(): Promise<DatastoreAdapter[]> {
           username: process.env.AGRAPH_USER ?? "test",
           password: process.env.AGRAPH_PASSWORD ?? "xyzzy",
         },
+      ),
+    );
+  }
+
+  if (process.env.GRAPHDB_URL) {
+    const gdbUser = process.env.GRAPHDB_USER;
+    const gdbPass = process.env.GRAPHDB_PASSWORD;
+    adapters.push(
+      createSparqlAdapter(
+        "SPARQL/GraphDB (Docker)",
+        process.env.GRAPHDB_URL,
+        "graphdb",
+        gdbUser && gdbPass ? { username: gdbUser, password: gdbPass } : {},
       ),
     );
   }
